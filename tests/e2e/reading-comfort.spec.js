@@ -84,6 +84,7 @@ test('Comfortable density is a three-column long-reading surface', async ({ page
 test('Compact density remains the denser four-column option', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 1000 });
   await page.goto('/newtab.html');
+  await page.locator('.grid .card').first().waitFor({ state: 'visible' });
 
   const comfortableTitleSize = (await cardTypography(page)).title;
   await page.getByRole('button', { name: 'Settings' }).click();
