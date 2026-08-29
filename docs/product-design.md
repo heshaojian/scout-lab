@@ -188,8 +188,8 @@ Do not use a large marketing hero, decorative gradients, or generic "AI dashboar
 
 Suggested tone:
 
-- light interface by default
-- restrained dark mode later
+- system-following appearance by default
+- original light and restrained dark themes
 - subtle source colors for GitHub, Hugging Face, arXiv, and Learn
 - cards with stable height and predictable metadata placement
 
@@ -281,7 +281,7 @@ Initial filters should stay simple:
 - topic filter: all, agents, LLMs, RAG, evaluation, multimodal
 - research noise filter: on by default
 
-Avoid building a complex settings system early.
+Keep settings workflow-first and intentionally small. The first settings release covers theme, density, startup behavior, link opening, Today composition, filter defaults, and explicit backup/restore. Detailed behavior lives in [Friendly Settings](./superpowers/specs/2026-08-29-friendly-settings-design.md).
 
 ## Copyright And Source Policy
 

@@ -147,6 +147,12 @@ The UI should feel like a compact research bench:
 
 The design should stay focused on daily learning, not engagement loops.
 
+## Friendly Settings
+
+Settings opens as a compact right-side drawer, becoming a full-width overlay on mobile. It includes system/light/dark theme, comfortable/compact density, startup and link-opening behavior, Today source composition, saved workbench defaults, and validated backup/restore. Preferences apply immediately and preserve the shared workbench grid.
+
+Detailed settings behavior and acceptance criteria live in [Friendly Settings](./superpowers/specs/2026-08-29-friendly-settings-design.md).
+
 ## MVP Interaction Rules
 
 - Show 12-24 items per workbench, depending on layout density.
