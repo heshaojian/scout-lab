@@ -80,6 +80,8 @@ const fallbackCards = {
 
 const clean = (value = '') => value.replace(/\s+/g, ' ').trim();
 
+const REQUEST_TIMEOUT = 8000;
+
 const compactNumber = (value) => {
   if (!Number.isFinite(value)) return '';
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}m`;
@@ -98,8 +100,22 @@ const matchesTopic = (card, topic) => {
   return terms.some((term) => haystack.includes(term.toLowerCase()));
 };
 
+const fetchWithTimeout = async (url, options = {}) => {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+};
+
 const fetchJson = async (url) => {
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       Accept: 'application/json',
     },
@@ -229,7 +245,7 @@ export const fetchPapers = (topic) => withCache('papers', topic, async () => {
     sort_order: 'descending',
   });
   const url = `https://export.arxiv.org/api/query?${params}`;
-  const response = await fetch(url, { headers: { Accept: 'application/atom+xml' } });
+  const response = await fetchWithTimeout(url, { headers: { Accept: 'application/atom+xml' } });
 
   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
 

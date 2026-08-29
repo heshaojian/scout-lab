@@ -583,6 +583,12 @@ button {
   }
 }
 
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(210px, 1fr));
+  }
+}
+
 @media (max-width: 840px) {
   .shell {
     grid-template-columns: 1fr;

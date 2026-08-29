@@ -285,6 +285,7 @@ const render = () => {
 
 const load = async (force = false) => {
   state.loading = true;
+  state.cards = [];
   render();
 
   if (force) {
