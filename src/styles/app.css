@@ -1,9 +1,27 @@
 :root {
+  color-scheme: light;
   --ink: #17211f;
   --muted: #6d7774;
   --line: #d9dfdd;
   --soft: #f3f6f5;
   --white: #ffffff;
+  --rail: #fdfefd;
+  --panel: #fbfcfb;
+  --subtle: #edf1f0;
+  --hover: #eef2f1;
+  --nav-ink: #384341;
+  --control-ink: #34413e;
+  --summary-ink: #4f5a57;
+  --tag-ink: #4c5653;
+  --line-soft: #edf0ef;
+  --notice-bg: #fffdf0;
+  --notice-ink: #4c4937;
+  --favorite-line: #ccb035;
+  --favorite-bg: #fff8c8;
+  --comment-ink: #555f5c;
+  --focus: rgba(49, 84, 165, .28);
+  --control-shadow: rgba(23, 33, 31, .1);
+  --card-shadow: rgba(23, 33, 31, .04);
   --signal: #f2d95c;
   --code: #3154a5;
   --model: #a96119;
@@ -11,6 +29,56 @@
   --paper: #943558;
   --learn: #66529f;
   --danger: #a13939;
+  --rail-padding: 22px 16px;
+  --main-padding: 22px 28px 36px;
+  --grid-gap: 14px;
+  --card-min-height: 270px;
+  --card-padding: 14px;
+  --card-gap: 10px;
+  --summary-lines: 3;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #eef3f1;
+  --muted: #a5afac;
+  --line: #3a4441;
+  --soft: #151a19;
+  --white: #202624;
+  --rail: #1a201e;
+  --panel: #1d2321;
+  --subtle: #2a312f;
+  --hover: #272e2c;
+  --nav-ink: #c5cecb;
+  --control-ink: #e3e9e7;
+  --summary-ink: #c0c9c6;
+  --tag-ink: #c2cbc8;
+  --line-soft: #333c39;
+  --notice-bg: #302e20;
+  --notice-ink: #ece5b8;
+  --favorite-line: #bda94d;
+  --favorite-bg: #393521;
+  --comment-ink: #c4cdca;
+  --focus: rgba(119, 151, 230, .5);
+  --control-shadow: rgba(0, 0, 0, .24);
+  --card-shadow: rgba(0, 0, 0, .2);
+  --signal: #e5cf63;
+  --code: #82a7ff;
+  --model: #e5a564;
+  --dataset: #5bc49f;
+  --paper: #e286aa;
+  --learn: #b5a2ef;
+  --danger: #f08d8d;
+}
+
+:root[data-density="compact"] {
+  --rail-padding: 16px 13px;
+  --main-padding: 16px 20px 28px;
+  --grid-gap: 9px;
+  --card-min-height: 236px;
+  --card-padding: 11px;
+  --card-gap: 7px;
+  --summary-lines: 2;
 }
 
 * {
@@ -39,6 +107,13 @@ textarea {
   letter-spacing: 0;
 }
 
+input,
+select,
+textarea {
+  background: var(--white);
+  color: var(--ink);
+}
+
 button,
 select {
   cursor: pointer;
@@ -49,7 +124,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(49, 84, 165, .28);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
@@ -75,9 +150,9 @@ a:focus-visible {
   position: sticky;
   top: 0;
   height: 100vh;
-  padding: 22px 16px;
+  padding: var(--rail-padding);
   border-right: 1px solid var(--line);
-  background: #fdfefd;
+  background: var(--rail);
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -98,7 +173,7 @@ a:focus-visible {
   background: var(--signal);
   display: grid;
   place-items: center;
-  color: #111;
+  color: #111111;
   font-size: 14px;
   font-weight: 850;
 }
@@ -148,7 +223,7 @@ a:focus-visible {
   border-radius: 7px;
   padding: 0 10px;
   background: transparent;
-  color: #384341;
+  color: var(--nav-ink);
   display: grid;
   grid-template-columns: 9px 1fr auto;
   gap: 9px;
@@ -157,7 +232,7 @@ a:focus-visible {
 }
 
 .nav button:hover {
-  background: #eef2f1;
+  background: var(--hover);
 }
 
 .nav button.active {
@@ -223,9 +298,29 @@ a:focus-visible {
   font-weight: 720;
 }
 
+.settings-trigger {
+  min-height: 34px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0 10px;
+  background: transparent;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.settings-trigger:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+
 .main {
   min-width: 0;
-  padding: 22px 28px 36px;
+  padding: var(--main-padding);
 }
 
 .header {
@@ -279,7 +374,7 @@ a:focus-visible {
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #fbfcfb;
+  background: var(--panel);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -296,7 +391,7 @@ a:focus-visible {
   border: 1px solid var(--line);
   padding: 0 28px 0 10px;
   background: var(--white);
-  color: #34413e;
+  color: var(--control-ink);
   font-size: 12px;
   font-weight: 650;
 }
@@ -306,7 +401,7 @@ a:focus-visible {
   padding: 2px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #edf1f0;
+  background: var(--subtle);
 }
 
 .segment button {
@@ -322,7 +417,7 @@ a:focus-visible {
 .segment button.selected {
   background: var(--white);
   color: var(--ink);
-  box-shadow: 0 1px 2px rgba(23, 33, 31, .1);
+  box-shadow: 0 1px 2px var(--control-shadow);
 }
 
 .filter-spacer {
@@ -352,28 +447,28 @@ a:focus-visible {
   margin-bottom: 11px;
   padding: 9px 11px;
   border-left: 3px solid var(--signal);
-  background: #fffdf0;
-  color: #4c4937;
+  background: var(--notice-bg);
+  color: var(--notice-ink);
   font-size: 12px;
 }
 
 .grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(220px, 1fr));
-  gap: 14px;
+  gap: var(--grid-gap);
 }
 
 .card {
   min-width: 0;
-  min-height: 270px;
-  padding: 14px;
+  min-height: var(--card-min-height);
+  padding: var(--card-padding);
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--white);
   display: grid;
   grid-template-rows: auto auto minmax(54px, 1fr) auto auto auto;
-  gap: 10px;
-  box-shadow: 0 1px 0 rgba(23, 33, 31, .04);
+  gap: var(--card-gap);
+  box-shadow: 0 1px 0 var(--card-shadow);
 }
 
 .card-head,
@@ -427,10 +522,10 @@ a:focus-visible {
 
 .summary {
   margin: 0;
-  color: #4f5a57;
+  color: var(--summary-ink);
   display: -webkit-box;
   overflow: hidden;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: var(--summary-lines);
   -webkit-box-orient: vertical;
   font-size: 12px;
   line-height: 1.46;
@@ -457,8 +552,8 @@ a:focus-visible {
   max-width: 100%;
   border-radius: 5px;
   padding: 2px 6px;
-  background: #eef2f1;
-  color: #4c5653;
+  background: var(--subtle);
+  color: var(--tag-ink);
   display: inline-flex;
   align-items: center;
   overflow: hidden;
@@ -471,7 +566,7 @@ a:focus-visible {
 .secondary {
   min-height: 28px;
   padding-top: 7px;
-  border-top: 1px solid #edf0ef;
+  border-top: 1px solid var(--line-soft);
   color: var(--muted);
   font-size: 10px;
   font-weight: 700;
@@ -517,8 +612,8 @@ a:focus-visible {
 
 .icon-button:hover,
 .icon-button.active {
-  border-color: #ccb035;
-  background: #fff8c8;
+  border-color: var(--favorite-line);
+  background: var(--favorite-bg);
 }
 
 .open {
@@ -558,7 +653,7 @@ a:focus-visible {
   overflow: hidden;
   border-left: 2px solid var(--signal);
   padding-left: 8px;
-  color: #555f5c;
+  color: var(--comment-ink);
   font-size: 11px;
   line-height: 1.4;
 }
@@ -637,7 +732,7 @@ a:focus-visible {
 
 .skeleton {
   border-radius: 5px;
-  background: #edf1f0;
+  background: var(--subtle);
   animation: pulse 1.2s ease-in-out infinite alternate;
 }
 
@@ -648,111 +743,4 @@ a:focus-visible {
 @keyframes pulse {
   from { opacity: .55; }
   to { opacity: 1; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-
-@media (max-width: 1240px) {
-  .grid {
-    grid-template-columns: repeat(3, minmax(210px, 1fr));
-  }
-}
-
-@media (max-width: 980px) {
-  .shell {
-    grid-template-columns: 190px minmax(0, 1fr);
-  }
-
-  .main {
-    padding: 18px;
-  }
-
-  .grid {
-    grid-template-columns: repeat(2, minmax(210px, 1fr));
-  }
-}
-
-@media (max-width: 720px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
-
-  .rail {
-    position: static;
-    height: auto;
-    padding: 14px;
-    border-right: 0;
-    border-bottom: 1px solid var(--line);
-  }
-
-  .intention,
-  .archive-controls {
-    display: none;
-  }
-
-  .nav {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .nav button {
-    grid-template-columns: 8px minmax(0, 1fr);
-    padding: 0 7px;
-  }
-
-  .count {
-    display: none;
-  }
-
-  .main {
-    padding: 15px;
-  }
-
-  .header {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .tools,
-  .search {
-    width: 100%;
-  }
-
-  .control-wrap,
-  .control {
-    flex: 1 1 140px;
-    max-width: none;
-  }
-
-  .segment {
-    width: 100%;
-    flex: 1 1 100%;
-  }
-
-  .segment button {
-    flex: 1;
-    min-width: 0;
-    padding: 0 5px;
-  }
-
-  .filter-spacer {
-    display: none;
-  }
-
-  .grid,
-  .note-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .feed-status {
-    flex-direction: column;
-    gap: 3px;
-  }
 }

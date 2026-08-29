@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Scout Lab",
   "description": "AI learning signals from code, models, datasets, and papers.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },

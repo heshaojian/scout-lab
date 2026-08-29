@@ -1,6 +1,6 @@
 # Scout Lab Friendly Settings
 
-**Status:** Proposed for written review
+**Status:** Implemented in v0.3.0
 **Date:** 2026-08-29
 **Product:** Scout Lab Chrome new-tab extension
 
@@ -293,6 +293,8 @@ src/
     settings.js               drawer and control rendering
   styles/
     app.css                   semantic theme and density tokens
+    settings.css              settings drawer and control styles
+    responsive.css            shared responsive behavior
 ```
 
 Responsibilities:

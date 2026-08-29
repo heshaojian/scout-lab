@@ -7,9 +7,13 @@ import {
   getSnapshot,
   getSettings,
   getUserState,
+  getWorkbenchFilterDefaults,
   getWorkbenchFilters,
   removeCache,
+  resetPreferences,
+  restoreWorkbenchFilterDefaults,
   setCache,
+  setFilterDefaults,
   setLearnProgress,
   setDailyNote,
   setSnapshot,
@@ -44,6 +48,29 @@ describe('query-aware storage', () => {
     expect(before.language).toBe('all');
     expect(after.language).toBe('python');
     expect(getWorkbenchFilters('models').rank).toBe('trending');
+  });
+
+  it('keeps current filters separate from saved defaults', () => {
+    setWorkbenchFilters('code', { language: 'python' });
+    setFilterDefaults('code', { language: 'python' });
+    setWorkbenchFilters('code', { language: 'rust' });
+
+    expect(getWorkbenchFilters('code').language).toBe('rust');
+    expect(getWorkbenchFilterDefaults('code').language).toBe('python');
+    expect(restoreWorkbenchFilterDefaults('code').language).toBe('python');
+    expect(getWorkbenchFilters('code').language).toBe('python');
+  });
+
+  it('resets preferences and filter defaults without deleting learning data', () => {
+    setLearnProgress('learn:one', 'done');
+    setUserItemState('github:one', { favorite: true });
+    setFilterDefaults('code', { language: 'python' });
+
+    resetPreferences();
+
+    expect(getWorkbenchFilterDefaults('code').language).toBe('all');
+    expect(getLearnProgress()['learn:one'].status).toBe('done');
+    expect(getUserState()['github:one'].favorite).toBe(true);
   });
 
   it('stores cache entries by the complete query and expires them', () => {

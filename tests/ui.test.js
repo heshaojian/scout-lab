@@ -82,6 +82,14 @@ describe('shared workbench renderer', () => {
     expect(document.querySelectorAll('.segment, .control')).toHaveLength(4);
     expect(document.querySelector('[aria-label="Mode"]')).toBeTruthy();
     expect(document.querySelector('[data-command="reset-filters"]')).toBeTruthy();
+    expect(document.querySelector('[data-command="save-filter-default"]')).toBeTruthy();
+  });
+
+  it('keeps Today composition in Settings instead of offering a filter-default command', () => {
+    document.body.innerHTML = renderFilters(WORKBENCHES.today, WORKBENCHES.today.defaults);
+
+    expect(document.querySelector('[data-command="save-filter-default"]')).toBeNull();
+    expect(document.querySelector('[data-command="reset-filters"]')).toBeTruthy();
   });
 
   it('renders paper PDF links, comments, favorites, and learning progress in shared slots', () => {

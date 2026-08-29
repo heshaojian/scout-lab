@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { fetchSection } from '../src/services/feeds.js';
+import { composeTodayCards, fetchSection } from '../src/services/feeds.js';
 import { setCache } from '../src/services/storage.js';
 import { createDefaultFilters } from '../src/workbenches.js';
 
@@ -169,5 +169,50 @@ describe('feed integration', () => {
     expect(result.cards).toHaveLength(7);
     expect(result.cards.map((card) => card.type)).toEqual(['Code', 'Code', 'Model', 'Dataset', 'Paper', 'Paper', 'Learn']);
     expect(result.status).toMatchObject({ label: 'All sources live', stale: false });
+  });
+
+  it('composes custom Today lanes, alternates papers, and replaces hidden cards', () => {
+    const card = (id, type) => ({ id, type });
+    const result = composeTodayCards({
+      code: [card('code:one', 'Code'), card('code:two', 'Code'), card('code:three', 'Code')],
+      models: [card('model:one', 'Model')],
+      datasets: [card('dataset:one', 'Dataset')],
+      community: [card('paper:community-one', 'Paper'), card('paper:community-two', 'Paper')],
+      arxiv: [card('paper:arxiv-one', 'Paper'), card('paper:arxiv-two', 'Paper')],
+      learn: [card('learn:one', 'Learn')],
+    }, {
+      code: 2,
+      models: 0,
+      datasets: 0,
+      papers: 4,
+      learn: 1,
+    }, {
+      'code:one': { hidden: true },
+    });
+
+    expect(result.cards.map(({ id }) => id)).toEqual([
+      'code:two',
+      'code:three',
+      'paper:community-one',
+      'paper:arxiv-one',
+      'paper:community-two',
+      'paper:arxiv-two',
+      'learn:one',
+    ]);
+    expect(result.shortfalls).toEqual({});
+  });
+
+  it('reports Today source shortfalls instead of silently substituting another lane', () => {
+    const result = composeTodayCards({
+      code: [{ id: 'code:one' }],
+      models: [],
+      datasets: [],
+      community: [],
+      arxiv: [],
+      learn: [],
+    }, { code: 2, models: 1, datasets: 0, papers: 0, learn: 0 }, {});
+
+    expect(result.cards.map(({ id }) => id)).toEqual(['code:one']);
+    expect(result.shortfalls).toEqual({ code: 1, models: 1 });
   });
 });

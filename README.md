@@ -46,10 +46,14 @@ Open `http://127.0.0.1:5179/newtab.html` to preview the page, or load the reposi
 - topic lenses
 - source-specific rank, time, language, task, size, access, category, and progress filters
 - one consistent responsive card grid across every section
+- system, light, and dark themes with comfortable or compact density
+- configurable startup workbench, link opening, and Today source mix
+- saved filter defaults for every workbench
+- validated JSON backup and restore for durable learning data
 - favorite, hide, and comment actions
 - local cache and daily snapshot
 - manual Markdown archive to a chosen iCloud Drive folder
 
 ## Architecture
 
-Scout Lab has no build step. Source adapters normalize GitHub, Hugging Face, and arXiv data into a shared card contract. Query-aware local caches preserve fast startup, while favorites, hidden items, comments, learning progress, and daily snapshots remain on-device.
+Scout Lab has no build step. Source adapters normalize GitHub, Hugging Face, and arXiv data into a shared card contract. Query-aware local caches preserve fast startup, while versioned preferences, favorites, hidden items, comments, learning progress, and daily snapshots remain on-device. Explicit JSON backup keeps durable data portable without exporting caches or the iCloud folder handle.

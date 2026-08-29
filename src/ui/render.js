@@ -56,7 +56,7 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
         ${card.type === 'Learn'
           ? progressControl(card, progress)
           : secondaryLink
-            ? `<a class="secondary-link" href="${escapeHtml(validateSourceUrl(secondaryLink.url, card.source))}" target="_blank" rel="noopener noreferrer">${escapeHtml(secondaryLink.label)}</a>`
+            ? `<a class="secondary-link" data-open-link href="${escapeHtml(validateSourceUrl(secondaryLink.url, card.source))}" target="_blank" rel="noopener noreferrer">${escapeHtml(secondaryLink.label)}</a>`
             : `<span>${escapeHtml(card.secondary?.right || 'Not specified')}</span>`}
       </div>
       <div class="card-footer">
@@ -66,7 +66,7 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
           ${actionButton('Comment', 'comment', '&#9998;', Boolean(note))}
         </div>
         ${safeUrl
-          ? `<a class="open" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">Open <span aria-hidden="true">&rarr;</span></a>`
+          ? `<a class="open" data-open-link href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">Open <span aria-hidden="true">&rarr;</span></a>`
           : '<span class="open disabled">Link unavailable</span>'}
       </div>
     </article>
@@ -95,6 +95,7 @@ export const renderFilters = (workbench, filters) => `
     control.type === 'segment' ? renderSegment(control, filters[control.id]) : renderSelect(control, filters[control.id])
   )).join('')}
   <span class="filter-spacer"></span>
+  ${workbench.id === 'today' ? '' : '<button class="reset" type="button" data-command="save-filter-default">Save as default</button>'}
   <button class="reset" type="button" data-command="reset-filters">Reset filters</button>
 `;
 

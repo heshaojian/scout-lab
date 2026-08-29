@@ -1,0 +1,304 @@
+.settings-open {
+  overflow: hidden;
+}
+
+.settings-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: rgba(8, 12, 11, .52);
+  cursor: default;
+}
+
+.settings-drawer {
+  position: relative;
+  width: min(420px, 100vw);
+  height: 100%;
+  border-left: 1px solid var(--line);
+  background: var(--rail);
+  color: var(--ink);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  box-shadow: -14px 0 40px rgba(0, 0, 0, .18);
+}
+
+.settings-header {
+  min-height: 72px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-header h2 {
+  margin: 3px 0 0;
+  font-size: 20px;
+}
+
+.drawer-close {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.settings-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.settings-section {
+  padding: 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-section h3 {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.settings-section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-section-heading span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.settings-field {
+  margin-top: 13px;
+  display: grid;
+  gap: 7px;
+}
+
+.settings-label {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.settings-field select {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0 10px;
+}
+
+.settings-segment {
+  min-height: 36px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--subtle);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+
+.settings-segment button {
+  min-width: 0;
+  min-height: 28px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.settings-segment button.selected {
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: 0 1px 2px var(--control-shadow);
+}
+
+.today-mix,
+.default-list {
+  display: grid;
+}
+
+.today-lane,
+.default-row {
+  min-height: 46px;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.today-lane > span,
+.default-row strong {
+  font-size: 12px;
+}
+
+.stepper {
+  width: 100px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--white);
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+}
+
+.stepper button {
+  width: 32px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.stepper output {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 820;
+}
+
+.settings-help {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.default-row > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.default-row span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-text-button,
+.settings-secondary,
+.settings-primary,
+.settings-danger {
+  min-height: 34px;
+  border-radius: 7px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 780;
+}
+
+.icon-text-button,
+.settings-secondary {
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+}
+
+.icon-text-button {
+  min-height: 30px;
+  flex: 0 0 auto;
+}
+
+.settings-primary {
+  border: 0;
+  background: var(--ink);
+  color: var(--white);
+}
+
+:root[data-theme="dark"] .settings-primary {
+  background: var(--signal);
+  color: #111111;
+}
+
+.settings-danger {
+  border: 0;
+  background: var(--danger);
+  color: var(--white);
+}
+
+.settings-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings-secondary.wide {
+  width: 100%;
+  margin-top: 11px;
+}
+
+.settings-link {
+  min-height: 34px;
+  margin-top: 12px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 760;
+}
+
+.settings-link.danger {
+  color: var(--danger);
+}
+
+.settings-message {
+  margin: 12px 18px 0;
+  padding: 9px 10px;
+  border-left: 3px solid var(--dataset);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.settings-message.error {
+  border-left-color: var(--danger);
+}
+
+.import-review {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.import-review strong {
+  font-size: 12px;
+}
+
+.import-review p {
+  margin: 6px 0 11px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}

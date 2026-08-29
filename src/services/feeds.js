@@ -159,6 +159,38 @@ const liveFetcher = (section, filters, options) => {
   throw new Error(`Unknown workbench: ${section}`);
 };
 
+const visibleLane = (cards = [], userState = {}) => cards.filter((card) => !userState[card.id]?.hidden);
+
+const alternatePapers = (community, arxiv, count) => {
+  const cards = [];
+  for (let index = 0; cards.length < count && (community[index] || arxiv[index]); index += 1) {
+    if (community[index]) cards.push(community[index]);
+    if (cards.length < count && arxiv[index]) cards.push(arxiv[index]);
+  }
+  return cards;
+};
+
+export const composeTodayCards = (lanes, mix, userState = {}) => {
+  const selected = {
+    code: visibleLane(lanes.code, userState).slice(0, mix.code),
+    models: visibleLane(lanes.models, userState).slice(0, mix.models),
+    datasets: visibleLane(lanes.datasets, userState).slice(0, mix.datasets),
+    papers: alternatePapers(
+      visibleLane(lanes.community, userState),
+      visibleLane(lanes.arxiv, userState),
+      mix.papers,
+    ),
+    learn: visibleLane(lanes.learn, userState).slice(0, mix.learn),
+  };
+  const shortfalls = Object.fromEntries(Object.entries(selected)
+    .filter(([lane, cards]) => cards.length < mix[lane])
+    .map(([lane, cards]) => [lane, mix[lane] - cards.length]));
+  return {
+    cards: ['code', 'models', 'datasets', 'papers', 'learn'].flatMap((lane) => selected[lane]),
+    shortfalls,
+  };
+};
+
 const fetchToday = async (filters, options) => {
   const allFilters = options.allFilters || {};
   const sourceFilters = {
@@ -179,19 +211,24 @@ const fetchToday = async (filters, options) => {
     fetchSection('learn', sourceFilters.learn, sharedOptions),
   ]);
   const results = [code, models, datasets, community, arxiv, learn];
+  const composition = composeTodayCards({
+    code: code.cards,
+    models: models.cards,
+    datasets: datasets.cards,
+    community: community.cards,
+    arxiv: arxiv.cards,
+    learn: learn.cards,
+  }, options.todayMix, options.userState);
+  const missing = Object.entries(composition.shortfalls)
+    .map(([lane, count]) => `${count} ${lane}`)
+    .join(', ');
 
   return {
-    cards: [
-      ...code.cards.slice(0, 2),
-      ...models.cards.slice(0, 1),
-      ...datasets.cards.slice(0, 1),
-      ...community.cards.slice(0, 1),
-      ...arxiv.cards.slice(0, 1),
-      ...learn.cards.slice(0, 1),
-    ],
+    cards: composition.cards,
     status: {
       label: results.some((result) => result.status.stale) ? 'Mixed live and fallback sources' : 'All sources live',
       stale: results.some((result) => result.status.stale),
+      ...(missing ? { message: `Today could not fill: ${missing}.` } : {}),
       sources: Object.fromEntries(['code', 'models', 'datasets', 'communityPapers', 'arxiv', 'learn']
         .map((id, index) => [id, results[index].status])),
     },
@@ -199,8 +236,21 @@ const fetchToday = async (filters, options) => {
 };
 
 export const fetchSection = async (section, filters, options = {}) => {
-  const normalizedOptions = { force: false, learnProgress: {}, ...options };
-  const query = { section, filters };
+  const normalizedOptions = {
+    force: false,
+    learnProgress: {},
+    todayMix: { code: 2, models: 1, datasets: 1, papers: 2, learn: 1 },
+    userState: {},
+    ...options,
+  };
+  const hiddenIds = section === 'today'
+    ? Object.entries(normalizedOptions.userState).filter(([, value]) => value.hidden).map(([id]) => id).sort()
+    : [];
+  const query = {
+    section,
+    filters,
+    ...(section === 'today' ? { todayMix: normalizedOptions.todayMix, hiddenIds } : {}),
+  };
   const key = stableSerialize(query);
 
   if (!normalizedOptions.force) {

@@ -1,35 +1,68 @@
 import { connectArchiveFolder, getArchiveStatus, writeDailyArchive } from './services/archive.js';
 import { buildDailyArchive } from './services/archiveFormat.js';
-import { fetchSection } from './services/feeds.js';
 import {
+  backupFileName,
+  createBackup,
+  mergeBackupData,
+  parseBackup,
+  summarizeBackup,
+} from './services/backup.js?v=0.3.0';
+import { fetchSection } from './services/feeds.js?v=0.3.0';
+import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=0.3.0';
+import {
+  applyDurableData,
+  getDurableData,
   getDailyNote,
   getLearnProgress,
   getSettings,
   getSnapshot,
   getUserState,
+  resetPreferences,
+  restoreAllFactoryFilterDefaults,
+  restoreFactoryFilterDefaults,
+  restoreWorkbenchFilterDefaults,
   setDailyNote,
+  setFilterDefaults,
   setLearnProgress,
+  setPreferences,
   setSettings,
   setSnapshot,
   setUserItemState,
   setWorkbenchFilters,
-} from './services/storage.js';
+} from './services/storage.js?v=0.3.0';
+import { isValidTodayMix, resolveStartupSection } from './settings.js?v=0.3.0';
 import {
   escapeHtml,
   renderCard,
   renderEmptyState,
   renderFilters,
   updateSearchResults,
-} from './ui/render.js?v=0.2.1';
+} from './ui/render.js?v=0.3.1';
+import { renderSettingsDrawer } from './ui/settings.js?v=0.3.0';
 import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.js';
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const app = document.querySelector('#app');
-const settings = getSettings();
+const initialSettings = getSettings();
+
+const systemTheme = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
+
+const applyAppearance = (preferences) => {
+  const resolvedTheme = preferences.theme === 'system'
+    ? (systemTheme?.matches ? 'dark' : 'light')
+    : preferences.theme;
+  document.documentElement.dataset.theme = resolvedTheme;
+  document.documentElement.dataset.themeChoice = preferences.theme;
+  document.documentElement.dataset.density = preferences.density;
+  document.documentElement.style.colorScheme = resolvedTheme;
+};
+
+applyAppearance(initialSettings.preferences);
 
 let state = {
-  selectedSection: settings.selectedSection,
-  filters: settings.filters,
+  selectedSection: resolveStartupSection(initialSettings),
+  filters: initialSettings.filters,
+  settings: initialSettings,
   cards: [],
   userState: getUserState(),
   learnProgress: getLearnProgress(),
@@ -39,6 +72,12 @@ let state = {
   search: '',
   commentingId: null,
   notice: '',
+  settingsOpen: false,
+  settingsError: '',
+  settingsNotice: '',
+  importReview: null,
+  pendingImport: null,
+  confirmReset: false,
   requestId: 0,
 };
 
@@ -163,6 +202,7 @@ const render = () => {
           <div class="archive-status"><span>iCloud archive</span><span>${escapeHtml(archiveLabel())}</span></div>
           <button class="ghost-button" type="button" data-command="connect-archive">${state.archive.connected ? 'Reconnect folder' : 'Choose folder'}</button>
           <button class="ghost-button" type="button" data-command="save-today">Save today</button>
+          <button class="settings-trigger" type="button" data-command="open-settings" title="Settings"><span aria-hidden="true">&#9881;</span><span>Settings</span></button>
         </div>
       </aside>
 
@@ -203,7 +243,16 @@ const render = () => {
         </section>
       </main>
     </div>
+    ${renderSettingsDrawer({
+      settings: state.settings,
+      open: state.settingsOpen,
+      importReview: state.importReview,
+      confirmReset: state.confirmReset,
+      error: state.settingsError,
+      notice: state.settingsNotice,
+    })}
   `;
+  document.body.classList.toggle('settings-open', state.settingsOpen);
 };
 
 const snapshotResult = (section, filters, result) => {
@@ -234,6 +283,8 @@ const load = async ({ force = false, clear = false } = {}) => {
     force,
     allFilters: state.filters,
     learnProgress: state.learnProgress,
+    todayMix: state.settings.preferences.todayMix,
+    userState: state.userState,
   });
   if (state.requestId !== requestId) return;
 
@@ -262,8 +313,8 @@ const updateFilters = async (patch) => {
 
   const nextFilters = setWorkbenchFilters(section, { ...current, ...nextPatch });
   const allFilters = { ...state.filters, [section]: nextFilters };
-  setSettings({ selectedSection: section, filters: allFilters });
-  setState({ filters: allFilters, search: '', commentingId: null });
+  const nextSettings = setSettings({ selectedSection: section, filters: allFilters });
+  setState({ settings: nextSettings, filters: allFilters, search: '', commentingId: null });
   await load({ clear: true });
 };
 
@@ -291,18 +342,187 @@ const archiveData = () => {
   });
 };
 
+const focusAfterRender = (selector) => queueMicrotask(() => app.querySelector(selector)?.focus());
+
+const openSettings = () => {
+  setState({
+    settingsOpen: true,
+    settingsError: '',
+    settingsNotice: '',
+    importReview: null,
+    pendingImport: null,
+    confirmReset: false,
+  });
+  render();
+  focusAfterRender('.settings-drawer');
+};
+
+const closeSettings = () => {
+  setState({
+    settingsOpen: false,
+    settingsError: '',
+    settingsNotice: '',
+    importReview: null,
+    pendingImport: null,
+    confirmReset: false,
+  });
+  render();
+  focusAfterRender('[data-command="open-settings"]');
+};
+
+const savePreference = async (patch, focusSelector) => {
+  const preferences = setPreferences(patch);
+  const nextSettings = getSettings();
+  applyAppearance(preferences);
+  setState({ settings: nextSettings, filters: nextSettings.filters, settingsError: '', settingsNotice: 'Saved.' });
+  render();
+  if (state.selectedSection === 'today' && patch.todayMix) await load({ force: true, clear: true });
+  focusAfterRender(focusSelector);
+};
+
+const downloadBackup = () => {
+  const backup = createBackup(getDurableData());
+  const blob = new Blob([`${JSON.stringify(backup, null, 2)}\n`], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = backupFileName();
+  anchor.hidden = true;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+};
+
+const reviewImportFile = async (file) => {
+  if (!file) return;
+  try {
+    const backup = parseBackup(await file.text());
+    setState({
+      pendingImport: backup,
+      importReview: { fileName: file.name, summary: summarizeBackup(backup) },
+      settingsError: '',
+      settingsNotice: '',
+    });
+  } catch (error) {
+    setState({ pendingImport: null, importReview: null, settingsError: error.message, settingsNotice: '' });
+  }
+  render();
+  focusAfterRender(state.importReview ? '[data-command="confirm-import"]' : '[data-command="choose-import"]');
+};
+
+const applyPendingImport = async () => {
+  if (!state.pendingImport) return;
+  try {
+    const merged = mergeBackupData(getDurableData(), state.pendingImport.data);
+    applyDurableData(merged);
+    const nextSettings = getSettings();
+    applyAppearance(nextSettings.preferences);
+    setState({
+      settings: nextSettings,
+      filters: nextSettings.filters,
+      selectedSection: resolveStartupSection(nextSettings),
+      userState: getUserState(),
+      learnProgress: getLearnProgress(),
+      pendingImport: null,
+      importReview: null,
+      settingsError: '',
+      settingsNotice: 'Backup imported.',
+      search: '',
+      commentingId: null,
+    });
+    await load({ force: true, clear: true });
+    focusAfterRender('[data-command="choose-import"]');
+  } catch (error) {
+    setState({ settingsError: error.message, settingsNotice: '' });
+    render();
+  }
+};
+
 const handleCommand = async (command) => {
   if (command === 'refresh') {
     await load({ force: true });
     return;
   }
   if (command === 'reset-filters') {
-    const defaults = getWorkbench(state.selectedSection).defaults;
-    const next = setWorkbenchFilters(state.selectedSection, defaults);
+    const next = restoreWorkbenchFilterDefaults(state.selectedSection);
     const filters = { ...state.filters, [state.selectedSection]: next };
-    setState({ filters, search: '', commentingId: null });
-    setSettings({ filters });
+    const nextSettings = setSettings({ filters });
+    setState({ settings: nextSettings, filters, search: '', commentingId: null, notice: 'Saved defaults restored.' });
     await load({ clear: true });
+    return;
+  }
+  if (command === 'save-filter-default') {
+    setFilterDefaults(state.selectedSection, state.filters[state.selectedSection]);
+    setState({ settings: getSettings(), notice: `${activeWorkbench().label} defaults saved.` });
+    render();
+    return;
+  }
+  if (command === 'open-settings') {
+    openSettings();
+    return;
+  }
+  if (command === 'close-settings') {
+    closeSettings();
+    return;
+  }
+  if (command === 'export-backup') {
+    try {
+      downloadBackup();
+      setState({ settingsNotice: 'Backup exported.', settingsError: '' });
+    } catch (error) {
+      setState({ settingsError: `Backup could not be exported. ${error.message}`, settingsNotice: '' });
+    }
+    render();
+    focusAfterRender('[data-command="export-backup"]');
+    return;
+  }
+  if (command === 'choose-import') {
+    app.querySelector('[data-import-file]')?.click();
+    return;
+  }
+  if (command === 'cancel-import') {
+    setState({ pendingImport: null, importReview: null, settingsError: '' });
+    render();
+    focusAfterRender('[data-command="choose-import"]');
+    return;
+  }
+  if (command === 'confirm-import') {
+    await applyPendingImport();
+    return;
+  }
+  if (command === 'restore-all-filter-defaults') {
+    restoreAllFactoryFilterDefaults();
+    setState({ settings: getSettings(), settingsNotice: 'Factory filter defaults restored.', settingsError: '' });
+    render();
+    focusAfterRender('[data-command="restore-all-filter-defaults"]');
+    return;
+  }
+  if (command === 'request-reset-preferences') {
+    setState({ confirmReset: true, settingsError: '', settingsNotice: '' });
+    render();
+    focusAfterRender('[data-command="confirm-reset-preferences"]');
+    return;
+  }
+  if (command === 'cancel-reset-preferences') {
+    setState({ confirmReset: false });
+    render();
+    focusAfterRender('[data-command="request-reset-preferences"]');
+    return;
+  }
+  if (command === 'confirm-reset-preferences') {
+    const nextSettings = resetPreferences();
+    applyAppearance(nextSettings.preferences);
+    setState({
+      settings: nextSettings,
+      filters: nextSettings.filters,
+      confirmReset: false,
+      settingsNotice: 'Preferences reset. Learning data was preserved.',
+      settingsError: '',
+    });
+    render();
+    if (state.selectedSection === 'today') await load({ force: true, clear: true });
+    focusAfterRender('[data-command="request-reset-preferences"]');
     return;
   }
   if (command === 'connect-archive') {
@@ -327,11 +547,52 @@ const handleCommand = async (command) => {
 };
 
 const onClick = async (event) => {
+  const link = event.target.closest('a[data-open-link]');
+  if (link && shouldOpenInBackground(event, state.settings.preferences.openLinks)) {
+    event.preventDefault();
+    await openInBackground(link.href);
+    return;
+  }
+
+  const preferenceButton = event.target.closest('button[data-setting]');
+  if (preferenceButton) {
+    const setting = preferenceButton.dataset.setting;
+    if (setting === 'todayMix') {
+      const lane = preferenceButton.dataset.lane;
+      const step = Number(preferenceButton.dataset.step);
+      const current = state.settings.preferences.todayMix;
+      const todayMix = { ...current, [lane]: current[lane] + step };
+      if (!isValidTodayMix(todayMix)) {
+        setState({ settingsError: 'Today needs 1-12 cards total, with 0-4 from each source.', settingsNotice: '' });
+        render();
+        focusAfterRender(`[data-lane="${lane}"][data-step="${step}"]`);
+        return;
+      }
+      await savePreference({ todayMix }, `[data-lane="${lane}"][data-step="${step}"]`);
+      return;
+    }
+    await savePreference(
+      { [setting]: preferenceButton.dataset.value },
+      `[data-setting="${setting}"][data-value="${preferenceButton.dataset.value}"]`,
+    );
+    return;
+  }
+
+  const restoreWorkbench = event.target.closest('[data-restore-workbench]');
+  if (restoreWorkbench) {
+    const section = restoreWorkbench.dataset.restoreWorkbench;
+    restoreFactoryFilterDefaults(section);
+    setState({ settings: getSettings(), settingsNotice: `${getWorkbench(section).label} factory default restored.`, settingsError: '' });
+    render();
+    focusAfterRender(`[data-restore-workbench="${section}"]`);
+    return;
+  }
+
   const sectionButton = event.target.closest('[data-section]');
   if (sectionButton) {
     const selectedSection = sectionButton.dataset.section;
-    setSettings({ selectedSection });
-    setState({ selectedSection, search: '', commentingId: null, cards: [], status: { label: 'Loading sources', stale: false } });
+    const nextSettings = setSettings({ selectedSection });
+    setState({ settings: nextSettings, selectedSection, search: '', commentingId: null, cards: [], status: { label: 'Loading sources', stale: false } });
     await load({ clear: true });
     return;
   }
@@ -356,7 +617,10 @@ const onClick = async (event) => {
   const current = state.userState[id] || {};
 
   if (action === 'favorite') updateItem(id, { favorite: !current.favorite });
-  if (action === 'hide') updateItem(id, { hidden: true });
+  if (action === 'hide') {
+    updateItem(id, { hidden: true });
+    if (state.selectedSection === 'today') await load({ force: true });
+  }
   if (action === 'comment') {
     setState({ commentingId: id });
     render();
@@ -374,6 +638,19 @@ const onClick = async (event) => {
 };
 
 const onChange = async (event) => {
+  if (event.target.matches('select[data-setting]')) {
+    await savePreference(
+      { [event.target.dataset.setting]: event.target.value },
+      `select[data-setting="${event.target.dataset.setting}"]`,
+    );
+    return;
+  }
+
+  if (event.target.matches('[data-import-file]')) {
+    await reviewImportFile(event.target.files?.[0]);
+    return;
+  }
+
   if (event.target.matches('select[data-filter]')) {
     await updateFilters({ [event.target.dataset.filter]: event.target.value });
     return;
@@ -386,6 +663,29 @@ const onChange = async (event) => {
     setLearnProgress(id, progress);
     setState({ learnProgress: getLearnProgress() });
     await load({ force: true });
+  }
+};
+
+const onKeydown = (event) => {
+  if (!state.settingsOpen) return;
+  if (event.key === 'Escape' && !state.importReview && !state.confirmReset) {
+    event.preventDefault();
+    closeSettings();
+    return;
+  }
+  if (event.key !== 'Tab') return;
+  const drawer = app.querySelector('.settings-drawer');
+  const focusable = [...(drawer?.querySelectorAll('button:not([disabled]), select:not([disabled]), input:not([disabled]), [tabindex="0"]') || [])]
+    .filter((element) => !element.hidden);
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable.at(-1);
+  if (event.shiftKey && (document.activeElement === first || document.activeElement === drawer)) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
   }
 };
 
@@ -403,6 +703,10 @@ const boot = async () => {
   app.addEventListener('click', onClick);
   app.addEventListener('change', onChange);
   app.addEventListener('input', onInput);
+  app.addEventListener('keydown', onKeydown);
+  systemTheme?.addEventListener?.('change', () => {
+    if (state.settings.preferences.theme === 'system') applyAppearance(state.settings.preferences);
+  });
   setState({ archive: await getArchiveStatus() });
 
   const snapshot = getSnapshot(todayKey())?.sections?.[state.selectedSection];
