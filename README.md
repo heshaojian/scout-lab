@@ -1,5 +1,8 @@
 # Scout Lab
 
+[![Quality](https://github.com/heshaojian/scout-lab/actions/workflows/quality.yml/badge.svg)](https://github.com/heshaojian/scout-lab/actions/workflows/quality.yml)
+[![Live sources](https://github.com/heshaojian/scout-lab/actions/workflows/live-sources.yml/badge.svg)](https://github.com/heshaojian/scout-lab/actions/workflows/live-sources.yml)
+
 Scout Lab is an AI learning new-tab extension.
 
 Its job is simple: every new tab should surface a small set of useful AI signals from open sources such as GitHub, Hugging Face, arXiv, and curated learning materials.
@@ -34,6 +37,8 @@ python3 -m http.server 5179
 ```
 
 Open `http://127.0.0.1:5179/newtab.html` to preview the page, or load the repository root as an unpacked Chrome extension.
+
+The complete automated test map, browser acceptance cases, coverage gate, and maintenance rules are documented in [Testing](./docs/testing.md).
 
 ## Features
 

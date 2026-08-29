@@ -1,0 +1,52 @@
+# Testing Scout Lab
+
+Tests are part of the repository and are release gates. Product behavior must not rely on a test checklist that exists only in a chat or a local browser session.
+
+## Automated Test Map
+
+| Area | Test file |
+| --- | --- |
+| Daily snapshots and restore behavior | `tests/archive.test.js` |
+| Markdown archive output and escaping | `tests/archiveFormat.test.js` |
+| Backup validation, export, and atomic import | `tests/backup.test.js` |
+| Source requests, fallback behavior, and cache use | `tests/feeds.test.js` |
+| Curated learning resources | `tests/learnSources.test.js` |
+| Foreground and background link opening | `tests/linkOpening.test.js` |
+| GitHub, Hugging Face, and arXiv normalization | `tests/normalizers.test.js` |
+| Query construction and cache keys | `tests/query.test.js` |
+| Settings drawer rendering and interaction | `tests/settings-ui.test.js` |
+| Settings validation, migration, and defaults | `tests/settings.test.js` |
+| Local persistence and immutable state updates | `tests/storage.test.js` |
+| Shared cards, controls, and workbench rendering | `tests/ui.test.js` |
+
+Deterministic source fixtures live in `tests/fixtures/`. They keep parser behavior testable when an upstream site is unavailable or changes unexpectedly.
+
+## Browser Acceptance
+
+The reproducible manual browser cases are tracked in [`tests/acceptance/browser-matrix.md`](../tests/acceptance/browser-matrix.md). They cover every workbench, interactive control, destination link, persistence path, responsive viewport, theme, density, backup flow, and failure state required for daily use.
+
+Browser acceptance is intentionally separate from deterministic unit and integration tests. A result is recorded only after running the unpacked extension or the local extension preview in a real browser and inspecting navigation, layout, console output, and persistence.
+
+## Continuous Integration
+
+`quality.yml` runs on every push and pull request. It verifies the extension structure, executes the deterministic suite with coverage, enforces the configured 80% coverage thresholds, and rejects high-severity dependency vulnerabilities.
+
+`live-sources.yml` runs daily and on demand. It performs bounded read-only checks against GitHub, Hugging Face, and arXiv. Keeping it separate prevents temporary source downtime or rate limiting from blocking deterministic pull-request validation.
+
+## Local Release Gate
+
+Run these commands before committing:
+
+```bash
+npm ci
+npm run check
+npm run test:coverage
+npm run test:live
+npm audit --audit-level=high
+```
+
+Then complete the browser acceptance matrix for behavior that changed.
+
+## Maintenance Rule
+
+Every behavior change must update or add the nearest automated test. Changes to controls, navigation, persistence, responsive layout, themes, source contracts, or user workflows must also update the browser acceptance matrix. Pull requests record both obligations explicitly in `.github/pull_request_template.md`, and CI prevents merging code whose deterministic checks or coverage gate fail.

@@ -22,7 +22,9 @@ const requiredFiles = [
   'src/styles/settings.css',
   'src/styles/responsive.css',
   'docs/product-design.md',
+  'docs/testing.md',
   'docs/ui-design.md',
+  'tests/acceptance/browser-matrix.md',
 ];
 
 const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'));
