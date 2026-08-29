@@ -44,7 +44,7 @@ The design should optimize for repeated daily use rather than one-time explorati
 
 ## Core Sections
 
-### Build
+### Code
 
 Source: GitHub
 
@@ -146,7 +146,7 @@ All feeds should normalize into one card model:
 type FeedCard = {
   id: string;
   source: "github" | "huggingface" | "arxiv" | "learn";
-  section: "build" | "models" | "datasets" | "papers" | "research" | "learn";
+  section: "code" | "models" | "datasets" | "papers" | "learn";
   title: string;
   url: string;
   summary: string;

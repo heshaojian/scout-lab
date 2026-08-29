@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Scout Lab",
+  "description": "AI learning signals from code, models, datasets, and papers.",
+  "version": "0.1.0",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://api.github.com/*",
+    "https://huggingface.co/*",
+    "https://export.arxiv.org/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://api.github.com https://huggingface.co https://export.arxiv.org"
+  }
+}
+
