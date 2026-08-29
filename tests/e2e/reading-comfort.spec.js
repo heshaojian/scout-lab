@@ -60,7 +60,7 @@ test('Comfortable density is a three-column long-reading surface', async ({ page
   await page.goto('/newtab.html');
 
   await expect(page.locator('.grid .card')).toHaveCount(2);
-  expect(await columnCount(page)).toBe(3);
+  await expect.poll(() => columnCount(page)).toBe(3);
 
   const typography = await cardTypography(page);
   expect(typography).toMatchObject({
@@ -91,19 +91,20 @@ test('Compact density remains the denser four-column option', async ({ page }) =
   await page.getByRole('group', { name: 'Density' }).getByRole('button', { name: 'Compact' }).click();
 
   await expect(page.locator('html')).toHaveAttribute('data-density', 'compact');
-  expect(await columnCount(page)).toBe(4);
+  await expect.poll(() => columnCount(page)).toBe(4);
   expect((await cardTypography(page)).title).toBeLessThan(comfortableTitleSize);
 });
 
 test('Comfortable grid reduces to two and one columns without overflow', async ({ page }) => {
   await page.setViewportSize({ width: 1100, height: 900 });
   await page.goto('/newtab.html');
+  await page.locator('.grid .card').first().waitFor({ state: 'visible' });
 
-  expect(await columnCount(page)).toBe(2);
+  await expect.poll(() => columnCount(page)).toBe(2);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   await page.setViewportSize({ width: 390, height: 844 });
-  expect(await columnCount(page)).toBe(1);
+  await expect.poll(() => columnCount(page)).toBe(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -181,7 +182,7 @@ test('all workbenches retain shared reading type and source-specific controls', 
     const type = await cardTypography(page);
     expect(type.title).toBe(18);
     expect(type.summary).toBe(15);
-    expect(await columnCount(page)).toBe(3);
+    await expect.poll(() => columnCount(page)).toBe(3);
   }
 
   await page.getByRole('button', { name: /^Papers/ }).click();
