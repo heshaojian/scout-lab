@@ -1,6 +1,6 @@
 import { createDefaultFilters, normalizeWorkbenchFilters, SECTION_ORDER } from './workbenches.js';
 
-export const SETTINGS_VERSION = 2;
+export const SETTINGS_VERSION = 3;
 export const TODAY_LANES = ['code', 'models', 'datasets', 'papers', 'learn'];
 
 const THEMES = new Set(['system', 'light', 'dark']);

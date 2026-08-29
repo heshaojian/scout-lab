@@ -83,20 +83,61 @@ export const parseGithubTrending = (html, time = 'week') => {
 
 const tagValue = (tags, prefix) => tags.find((tag) => tag.startsWith(prefix))?.slice(prefix.length) || '';
 
+const MODEL_LIBRARIES = new Map([
+  ['transformers', 'Transformers'],
+  ['diffusers', 'Diffusers'],
+  ['pytorch', 'PyTorch'],
+  ['tf', 'TensorFlow'],
+  ['jax', 'JAX'],
+  ['gguf', 'GGUF'],
+  ['mlx', 'MLX'],
+]);
+
+const formatParameters = (value) => {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return 'Not specified';
+  const units = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M'], [1e3, 'K']];
+  const [divisor, suffix] = units.find(([threshold]) => number >= threshold) || [1, ''];
+  return `${(number / divisor).toFixed(1).replace('.0', '')}${suffix}`;
+};
+
+const directBaseModel = (tags) => tagValue(tags, 'base_model:')
+  .replace(/^(quantized|finetune|adapter|merge):/, '');
+
+const modelLibrary = (tags) => {
+  const key = [...MODEL_LIBRARIES.keys()].find((item) => tags.includes(item));
+  return MODEL_LIBRARIES.get(key) || 'Not specified';
+};
+
 export const normalizeModel = (model, rank = 'trending') => {
   const id = model.id || model.modelId;
   const tags = model.tags || [];
   const downloads = Number(model.downloads) || 0;
   const likes = Number(model.likes) || 0;
   const trending = Number(model.trendingScore) || 0;
+  const parameters = Number(model.safetensors?.total || model.gguf?.total) || 0;
+  const parameterLabel = formatParameters(parameters);
+  const inferenceProviders = Array.isArray(model.inferenceProviderMapping)
+    ? model.inferenceProviderMapping.filter(({ status }) => status !== 'error').map(({ provider }) => provider).filter(Boolean)
+    : [];
+  const inferenceAvailable = inferenceProviders.length > 0;
+  const library = modelLibrary(tags);
+  const parameterMetric = parameterLabel === 'Not specified'
+    ? 'Parameters not specified'
+    : `${parameterLabel} parameters`;
   const primary = {
     trending: [`${compactNumber(trending)} trending`, 'Trending score', trending, 'Hugging Face trending signal'],
-    newest: [`Created ${formatDate(model.createdAt)}`, 'Created', model.createdAt, 'Model creation date'],
-    downloads: [`${compactNumber(downloads)} downloads`, 'Downloads', downloads, 'Cumulative Hugging Face downloads'],
     likes: [`${compactNumber(likes)} likes`, 'Likes', likes, 'Cumulative Hugging Face likes'],
+    downloads: [`${compactNumber(downloads)} downloads`, 'Downloads', downloads, 'Cumulative Hugging Face downloads'],
+    created: [`Created ${formatDate(model.createdAt)}`, 'Created', model.createdAt, 'Model creation date'],
+    updated: [`Updated ${formatDate(model.lastModified)}`, 'Updated', model.lastModified, 'Model update date'],
+    'most-parameters': [parameterMetric, 'Parameters', parameters, 'Model parameter count'],
+    'least-parameters': [parameterMetric, 'Parameters', parameters, 'Model parameter count'],
   }[rank] || [`${compactNumber(trending)} trending`, 'Trending score', trending, 'Hugging Face trending signal'];
   const access = model.gated ? 'Gated' : 'Open';
   const pipeline = model.pipeline_tag || 'Task not specified';
+  const license = tagValue(tags, 'license:') || 'Not specified';
+  const baseModelId = directBaseModel(tags);
   const card = baseCard({
     id: `hf-model:${id}`,
     source: 'huggingface',
@@ -105,7 +146,12 @@ export const normalizeModel = (model, rank = 'trending') => {
     title: id,
     url: `https://huggingface.co/${id}`,
     summary: `${pipeline.replaceAll('-', ' ')} model on Hugging Face.`,
-    tags: [pipeline, tagValue(tags, 'license:'), ...tags.filter((tag) => !tag.includes(':'))],
+    tags: [
+      pipeline,
+      parameters ? parameterLabel : '',
+      library === 'Not specified' ? '' : library,
+      license === 'Not specified' ? '' : license,
+    ],
     owner: id?.split('/')[0],
     publishedAt: model.createdAt || model.lastModified,
   });
@@ -118,10 +164,61 @@ export const normalizeModel = (model, rank = 'trending') => {
       metric('trending', 'Trending score', trending, 'Hugging Face trending signal'),
       metric('downloads', 'Downloads', downloads, 'Cumulative Hugging Face downloads'),
       metric('likes', 'Likes', likes, 'Cumulative Hugging Face likes'),
+      metric('parameters', 'Parameters', parameters, 'Model parameter count'),
     ],
-    secondary: { left: pipeline.replaceAll('-', ' '), right: `${access} · ${compactNumber(downloads)} downloads` },
-    details: { access, pipeline, license: tagValue(tags, 'license:'), createdAt: model.createdAt, lastModified: model.lastModified },
+    facts: [
+      { label: 'Downloads', value: compactNumber(downloads) },
+      { label: 'Likes', value: compactNumber(likes) },
+      { label: 'Trending', value: compactNumber(trending) },
+    ],
+    secondary: {
+      left: `${access}${inferenceAvailable ? ' · Inference available' : ''}`,
+      right: `Updated ${formatDate(model.lastModified)}`,
+    },
+    details: {
+      access,
+      pipeline,
+      license,
+      library,
+      parameters,
+      parameterLabel,
+      inferenceAvailable,
+      inferenceProviders,
+      baseModelId,
+      createdAt: model.createdAt,
+      lastModified: model.lastModified,
+    },
   };
+};
+
+export const groupModelCards = (cards) => {
+  const families = new Map();
+  cards.forEach((card) => {
+    const familyId = card.details?.baseModelId || card.title;
+    families.set(familyId, [...(families.get(familyId) || []), card]);
+  });
+
+  return [...families.entries()].map(([familyId, family]) => {
+    const representative = family.find(({ title }) => title === familyId) || family[0];
+    const relatedVariants = family
+      .filter(({ id }) => id !== representative.id)
+      .map(({ title, url, details }) => ({
+        title,
+        url,
+        relation: details?.baseModelId ? 'Variant' : 'Related model',
+      }));
+    return relatedVariants.length ? { ...representative, relatedVariants } : { ...representative };
+  });
+};
+
+export const filterModelsByUpdated = (cards, range, now = new Date()) => {
+  const days = { day: 1, week: 7, month: 30 }[range];
+  if (!days) return [...cards];
+  const cutoff = now.getTime() - days * 24 * 60 * 60 * 1000;
+  return cards.filter((card) => {
+    const updatedAt = new Date(card.details?.lastModified || card.publishedAt).getTime();
+    return Number.isFinite(updatedAt) && updatedAt >= cutoff;
+  });
 };
 
 export const normalizeDataset = (dataset, rank = 'trending') => {

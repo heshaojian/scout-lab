@@ -1,0 +1,138 @@
+.filter-toggle {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0 10px;
+  background: var(--white);
+  color: var(--control-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.toggle-track {
+  width: 22px;
+  height: 13px;
+  padding: 2px;
+  border-radius: 999px;
+  background: var(--line);
+  display: flex;
+  align-items: center;
+  transition: background .15s ease;
+}
+
+.toggle-track span {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 2px var(--control-shadow);
+  transition: transform .15s ease;
+}
+
+.filter-toggle.active .toggle-track {
+  background: var(--signal);
+}
+
+.filter-toggle.active .toggle-track span {
+  transform: translateX(9px);
+}
+
+.more-filters {
+  position: relative;
+}
+
+.more-filters summary {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 0 10px;
+  background: var(--white);
+  color: var(--control-ink);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.more-filters summary::-webkit-details-marker {
+  display: none;
+}
+
+.more-filters summary::after {
+  content: "▾";
+  color: var(--muted);
+}
+
+.more-filters[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.more-filters summary span {
+  color: var(--signal);
+  font-size: 10px;
+}
+
+.advanced-controls {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 7px);
+  right: 0;
+  width: min(620px, calc(100vw - 64px));
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  box-shadow: 0 8px 24px var(--control-shadow);
+}
+
+.card-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 11px;
+  color: var(--muted);
+  font-size: var(--card-meta-size);
+}
+
+.card-facts strong {
+  color: var(--ink);
+  font-weight: 760;
+}
+
+.model-variants {
+  color: var(--muted);
+  font-size: var(--card-meta-size);
+}
+
+.model-variants summary {
+  cursor: pointer;
+  color: var(--signal);
+  font-weight: 720;
+}
+
+.model-variants div {
+  margin-top: 6px;
+  display: grid;
+  gap: 4px;
+}
+
+.model-variants a {
+  overflow: hidden;
+  color: var(--ink);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-variants a:hover {
+  color: var(--signal);
+  text-decoration: underline;
+}

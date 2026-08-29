@@ -13,6 +13,7 @@ Tests are part of the repository and are release gates. Product behavior must no
 | Local GitHub Trending proxy validation | `tests/devServer.test.js` |
 | Curated learning resources | `tests/learnSources.test.js` |
 | Real-browser Code parity and failure states | `tests/e2e/code-results.spec.js` |
+| Real-browser Models sorting, filters, grouping, links, actions, and mobile layout | `tests/e2e/models-workbench.spec.js` |
 | Reading typography, density, themes, and responsive grid | `tests/e2e/reading-comfort.spec.js` |
 | Foreground and background link opening | `tests/linkOpening.test.js` |
 | GitHub, Hugging Face, and arXiv normalization | `tests/normalizers.test.js` |
@@ -34,7 +35,7 @@ Browser acceptance is intentionally separate from deterministic unit and integra
 
 `quality.yml` runs on every push and pull request. It verifies the extension structure, executes the deterministic suite with coverage, enforces the configured 80% coverage thresholds, and rejects high-severity dependency vulnerabilities.
 
-The same workflow runs the Playwright browser regression suite against the real local page. Its Code tests verify exact Trending order and metrics, English and Chinese filtering, legacy Search-cache rejection, and the no-fallback unavailable state without relying on live network availability. Reading-comfort tests measure desktop, medium, and mobile column counts; minimum card font sizes; summary line height and clamp; Comfortable versus Compact density; overflow; and low-glare light/dark surfaces.
+The same workflow runs the Playwright browser regression suite against the real local page. Its Code tests verify exact Trending order and metrics, English and Chinese filtering, legacy Search-cache rejection, and the no-fallback unavailable state without relying on live network availability. Models tests verify all seven Hugging Face sort mappings, primary and advanced filters, source metadata, family grouping, base and variant links, saved defaults, reset, search, card actions, and mobile overflow. Reading-comfort tests measure desktop, medium, and mobile column counts; minimum card font sizes; summary line height and clamp; Comfortable versus Compact density; overflow; and low-glare light/dark surfaces.
 
 `live-sources.yml` runs daily and on demand. It performs bounded read-only checks against GitHub, Hugging Face, and arXiv. GitHub checks cover daily, weekly, and monthly Trending HTML plus English and Chinese spoken-language variants; no token or repository secret is required. Keeping it separate prevents temporary source downtime or rate limiting from blocking deterministic pull-request validation.
 

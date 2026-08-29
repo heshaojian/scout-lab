@@ -93,24 +93,65 @@ describe('workbench query builders', () => {
     expect(resolveGithubRequestUrl(request, { protocol: 'https:', hostname: 'example.com' })).toBe(request.url);
   });
 
-  it('maps Hugging Face model controls to supported parameters', () => {
+  it('maps every Hugging Face model sort to the source field and direction', () => {
+    const expected = [
+      ['trending', 'trendingScore', '-1'],
+      ['likes', 'likes', '-1'],
+      ['downloads', 'downloads', '-1'],
+      ['created', 'createdAt', '-1'],
+      ['updated', 'lastModified', '-1'],
+      ['most-parameters', 'num_parameters', '-1'],
+      ['least-parameters', 'num_parameters', '1'],
+    ];
+
+    expect(expected.map(([rank, sort, direction]) => {
+      const url = new URL(buildModelsUrl({
+        rank, task: 'all', size: 'any', baseOnly: 'off', inference: 'off',
+        library: 'all', license: 'all', access: 'all', app: 'all', updated: 'all',
+      }));
+      return [url.searchParams.get('sort'), url.searchParams.get('direction')];
+    })).toEqual(expected.map(([, sort, direction]) => [sort, direction]));
+  });
+
+  it('maps Hugging Face discovery and runtime filters to supported parameters', () => {
     const url = new URL(buildModelsUrl({
       rank: 'trending',
       task: 'text-generation',
       size: '1b-7b',
+      baseOnly: 'on',
+      inference: 'on',
+      library: 'transformers',
+      license: 'apache-2.0',
       access: 'open',
+      app: 'ollama',
+      updated: 'week',
     }));
 
     expect(url.searchParams.get('sort')).toBe('trendingScore');
     expect(url.searchParams.get('pipeline_tag')).toBe('text-generation');
     expect(url.searchParams.get('num_parameters')).toBe('min:1B,max:7B');
+    expect(url.searchParams.get('base_model_relation')).toBe('base');
+    expect(url.searchParams.get('inference_provider')).toBe('all');
+    expect(url.searchParams.getAll('filter')).toEqual(['transformers', 'license:apache-2.0']);
     expect(url.searchParams.get('gated')).toBe('false');
+    expect(url.searchParams.get('apps')).toBe('ollama');
+    expect(url.searchParams.has('updated')).toBe(false);
+    expect(url.searchParams.getAll('expand[]')).toEqual(expect.arrayContaining([
+      'safetensors', 'gguf', 'inferenceProviderMapping', 'createdAt', 'lastModified',
+    ]));
 
-    const newest = new URL(buildModelsUrl({ rank: 'newest', task: 'all', size: '30b-plus', access: 'gated' }));
-    expect(newest.searchParams.get('sort')).toBe('createdAt');
-    expect(newest.searchParams.get('pipeline_tag')).toBeNull();
-    expect(newest.searchParams.get('num_parameters')).toBe('min:30B');
-    expect(newest.searchParams.get('gated')).toBe('true');
+    const minimal = new URL(buildModelsUrl({
+      rank: 'created', task: 'all', size: '30b-plus', baseOnly: 'off', inference: 'off',
+      library: 'all', license: 'all', access: 'gated', app: 'all', updated: 'all',
+    }));
+    expect(minimal.searchParams.get('sort')).toBe('createdAt');
+    expect(minimal.searchParams.get('pipeline_tag')).toBeNull();
+    expect(minimal.searchParams.get('num_parameters')).toBe('min:30B');
+    expect(minimal.searchParams.get('gated')).toBe('true');
+    expect(minimal.searchParams.get('base_model_relation')).toBeNull();
+    expect(minimal.searchParams.get('inference_provider')).toBeNull();
+    expect(minimal.searchParams.getAll('filter')).toEqual([]);
+    expect(minimal.searchParams.get('apps')).toBeNull();
   });
 
   it('maps dataset rank, task, size, and extra filters', () => {

@@ -34,7 +34,7 @@ describe('portable backup', () => {
       version: 1,
       exportedAt: '2026-08-29T12:00:00.000Z',
     });
-    expect(backup.data.settings.version).toBe(2);
+    expect(backup.data.settings.version).toBe(3);
     expect(backup.data.cache).toBeUndefined();
     expect(backup.data.archiveHandle).toBeUndefined();
   });

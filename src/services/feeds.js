@@ -13,6 +13,8 @@ import {
   normalizeCommunityPaper,
   normalizeDataset,
   normalizeModel,
+  filterModelsByUpdated,
+  groupModelCards,
   parseArxivFeed,
   parseGithubTrending,
 } from './normalizers.js';
@@ -98,7 +100,9 @@ const fetchCode = async (filters) => {
 const fetchModels = async (filters) => {
   const data = await fetchJson(buildModelsUrl(filters));
   if (!Array.isArray(data)) throw new Error('Hugging Face models returned an unexpected response');
-  const cards = data.map((item) => normalizeModel(item, filters.rank)).filter((card) => matchesTopic(card, filters.topic));
+  const normalized = data.map((item) => normalizeModel(item, filters.rank));
+  const cards = groupModelCards(filterModelsByUpdated(normalized, filters.updated)
+    .filter((card) => matchesTopic(card, filters.topic))).slice(0, 24);
   return { cards, status: { label: 'Hugging Face models', stale: false } };
 };
 

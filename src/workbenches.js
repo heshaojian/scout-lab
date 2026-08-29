@@ -7,7 +7,9 @@ export const TOPICS = [
   { value: 'multimodal', label: 'Multimodal' },
 ];
 
-const control = (id, label, options, type = 'select') => ({ id, label, options, type });
+const control = (id, label, options, type = 'select', placement = 'primary') => ({
+  id, label, options, type, placement,
+});
 
 const option = (value, label) => ({ value, label });
 
@@ -69,19 +71,39 @@ export const WORKBENCHES = {
     label: 'Models',
     title: 'Models',
     subtitle: 'Compare releases using Hugging Face source signals.',
-    defaults: { rank: 'trending', task: 'all', size: 'any', access: 'all', topic: 'all' },
+    defaults: {
+      rank: 'trending',
+      task: 'all',
+      size: 'any',
+      baseOnly: 'off',
+      inference: 'off',
+      library: 'all',
+      license: 'all',
+      access: 'all',
+      app: 'all',
+      updated: 'all',
+      topic: 'all',
+    },
     controls: [
-      control('rank', 'Rank', [
+      control('rank', 'Sort', [
         option('trending', 'Trending'),
-        option('newest', 'Newest'),
-        option('downloads', 'Downloads'),
-        option('likes', 'Likes'),
+        option('likes', 'Most likes'),
+        option('downloads', 'Most downloads'),
+        option('created', 'Recently created'),
+        option('updated', 'Recently updated'),
+        option('most-parameters', 'Most parameters'),
+        option('least-parameters', 'Least parameters'),
       ]),
       control('task', 'Task', [
         option('all', 'All tasks'),
         option('text-generation', 'Text generation'),
+        option('any-to-any', 'Any-to-any'),
         option('image-text-to-text', 'Image-text-to-text'),
+        option('image-to-text', 'Image-to-text'),
+        option('image-to-image', 'Image-to-image'),
         option('text-to-image', 'Text-to-image'),
+        option('text-to-video', 'Text-to-video'),
+        option('text-to-speech', 'Text-to-speech'),
         option('feature-extraction', 'Feature extraction'),
         option('automatic-speech-recognition', 'Speech recognition'),
       ]),
@@ -92,11 +114,42 @@ export const WORKBENCHES = {
         option('7b-30b', '7B-30B'),
         option('30b-plus', '30B+'),
       ]),
+      control('baseOnly', 'Base models only', [option('off', 'Off'), option('on', 'On')], 'toggle', 'quick'),
+      control('inference', 'Inference available', [option('off', 'Off'), option('on', 'On')], 'toggle', 'quick'),
+      control('library', 'Library or format', [
+        option('all', 'All libraries and formats'),
+        option('transformers', 'Transformers'),
+        option('diffusers', 'Diffusers'),
+        option('pytorch', 'PyTorch'),
+        option('gguf', 'GGUF'),
+        option('mlx', 'MLX'),
+      ], 'select', 'advanced'),
+      control('license', 'License', [
+        option('all', 'All licenses'),
+        option('apache-2.0', 'Apache-2.0'),
+        option('mit', 'MIT'),
+        option('creativeml-openrail-m', 'OpenRAIL-M'),
+        option('other', 'Other'),
+      ], 'select', 'advanced'),
       control('access', 'Access', [
         option('all', 'All access'),
         option('open', 'Open'),
         option('gated', 'Gated'),
-      ]),
+      ], 'select', 'advanced'),
+      control('app', 'Compatible app', [
+        option('all', 'All compatible apps'),
+        option('vllm', 'vLLM'),
+        option('ollama', 'Ollama'),
+        option('llama.cpp', 'llama.cpp'),
+        option('mlx-lm', 'MLX LM'),
+        option('lmstudio', 'LM Studio'),
+      ], 'select', 'advanced'),
+      control('updated', 'Updated date', [
+        option('all', 'Any updated date'),
+        option('day', 'Updated today'),
+        option('week', 'Updated this week'),
+        option('month', 'Updated this month'),
+      ], 'select', 'advanced'),
     ],
     cacheTtl: 60 * 60 * 1000,
   },
@@ -204,13 +257,16 @@ export const getWorkbench = (id) => WORKBENCHES[id] || WORKBENCHES.today;
 
 export const normalizeWorkbenchFilters = (id, values = {}) => {
   const workbench = getWorkbench(id);
+  const candidate = id === 'models' && values.rank === 'newest'
+    ? { ...values, rank: 'created' }
+    : values;
   const allowedByControl = Object.fromEntries(workbench.controls.map((item) => [
     item.id,
     new Set(item.options.map(({ value }) => value)),
   ]));
 
   return Object.fromEntries(Object.entries(workbench.defaults).map(([key, fallback]) => {
-    if (!allowedByControl[key]) return [key, values[key] || fallback];
-    return [key, allowedByControl[key].has(values[key]) ? values[key] : fallback];
+    if (!allowedByControl[key]) return [key, candidate[key] || fallback];
+    return [key, allowedByControl[key].has(candidate[key]) ? candidate[key] : fallback];
   }));
 };

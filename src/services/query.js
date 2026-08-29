@@ -8,10 +8,14 @@ export const TOPIC_TERMS = {
 };
 
 const MODEL_SORT = {
-  trending: 'trendingScore',
-  newest: 'createdAt',
-  downloads: 'downloads',
-  likes: 'likes',
+  trending: { field: 'trendingScore', direction: '-1' },
+  likes: { field: 'likes', direction: '-1' },
+  downloads: { field: 'downloads', direction: '-1' },
+  newest: { field: 'createdAt', direction: '-1' },
+  created: { field: 'createdAt', direction: '-1' },
+  updated: { field: 'lastModified', direction: '-1' },
+  'most-parameters': { field: 'num_parameters', direction: '-1' },
+  'least-parameters': { field: 'num_parameters', direction: '1' },
 };
 
 const MODEL_SIZE = {
@@ -93,22 +97,32 @@ export const resolveGithubRequestUrl = (request, location = globalThis.location)
 const appendExpand = (params, fields) => fields.forEach((field) => params.append('expand[]', field));
 
 export const buildModelsUrl = (filters) => {
+  const sort = MODEL_SORT[filters.rank] || MODEL_SORT.trending;
   const params = new URLSearchParams({
-    sort: MODEL_SORT[filters.rank] || MODEL_SORT.trending,
-    direction: '-1',
-    limit: '24',
+    sort: sort.field,
+    direction: sort.direction,
+    limit: '48',
   });
   if (filters.task !== 'all') params.set('pipeline_tag', filters.task);
   if (MODEL_SIZE[filters.size]) params.set('num_parameters', MODEL_SIZE[filters.size]);
+  if (filters.baseOnly === 'on') params.set('base_model_relation', 'base');
+  if (filters.inference === 'on') params.set('inference_provider', 'all');
+  if (filters.library && filters.library !== 'all') params.append('filter', filters.library);
+  if (filters.license && filters.license !== 'all') params.append('filter', `license:${filters.license}`);
   if (filters.access !== 'all') params.set('gated', `${filters.access === 'gated'}`);
-  appendExpand(params, ['downloads', 'likes', 'tags', 'pipeline_tag', 'trendingScore', 'gated', 'createdAt', 'lastModified']);
+  if (filters.app && filters.app !== 'all') params.set('apps', filters.app);
+  appendExpand(params, [
+    'downloads', 'likes', 'tags', 'pipeline_tag', 'trendingScore', 'gated',
+    'createdAt', 'lastModified', 'safetensors', 'gguf', 'inferenceProviderMapping',
+  ]);
   return `https://huggingface.co/api/models?${params}`;
 };
 
 export const buildDatasetsUrl = (filters) => {
+  const sort = MODEL_SORT[filters.rank] || MODEL_SORT.trending;
   const params = new URLSearchParams({
-    sort: MODEL_SORT[filters.rank] || MODEL_SORT.trending,
-    direction: '-1',
+    sort: sort.field,
+    direction: sort.direction,
     limit: '24',
   });
   if (filters.task !== 'all') params.append('filter', `task_categories:${filters.task}`);

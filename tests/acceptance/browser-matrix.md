@@ -34,7 +34,11 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 - [ ] English and Chinese spoken-language choices match the corresponding GitHub Trending pages.
 - [ ] In the unpacked Chrome extension, Code loads GitHub Trending directly without the local preview server or a CORS/CSP error.
 - [ ] Code cards show repository identity, description, language, total stars, period stars, and destination link.
-- [ ] Models task, library, sort, access, topic, and search controls work and metrics are labeled correctly.
+- [ ] Models exposes the seven Hugging Face sort choices in source order and each returns the expected ranking.
+- [ ] Models task and parameter-size filters, Base models only, and Inference available work independently and together.
+- [ ] Models More filters supports library or format, license, access, compatible app, and updated date without viewport overflow.
+- [ ] Quantizations, fine-tunes, adapters, and merges are grouped beneath the base model, and every variant link opens the matching Hugging Face page.
+- [ ] Model cards show task, parameter count, library or format, license, access, inference status, updated date, downloads, likes, and trending score when supplied by Hugging Face.
 - [ ] Datasets task, size, sort, access, topic, and search controls work and metrics are labeled correctly.
 - [ ] Papers source mode, category, time, sort, topic, and search controls work.
 - [ ] Papers switch correctly between community papers and raw arXiv entries.

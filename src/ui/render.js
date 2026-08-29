@@ -31,6 +31,10 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
   const safeUrl = validateSourceUrl(card.url, card.source);
   const isCommenting = commentingId === card.id;
   const secondaryLink = (card.links || []).find((link) => validateSourceUrl(link.url, card.source));
+  const relatedVariants = (card.relatedVariants || []).map((variant) => ({
+    ...variant,
+    url: validateSourceUrl(variant.url, 'huggingface'),
+  })).filter(({ url }) => url);
 
   return `
     <article class="card" data-id="${escapeHtml(card.id)}" data-type="${escapeHtml(card.type)}">
@@ -41,6 +45,13 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
       <h3>${escapeHtml(card.title)}</h3>
       <p class="summary">${card.summaryLabel ? `<span class="summary-label">${escapeHtml(card.summaryLabel)}</span> ` : ''}${escapeHtml(card.summary)}</p>
       <div class="tags">${(card.tags || []).slice(0, 4).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}</div>
+      ${(card.facts || []).length ? `<div class="card-facts">${card.facts.map((fact) => `<span><strong>${escapeHtml(fact.value)}</strong> ${escapeHtml(fact.label)}</span>`).join('')}</div>` : ''}
+      ${relatedVariants.length ? `
+        <details class="model-variants">
+          <summary>${relatedVariants.length} related ${relatedVariants.length === 1 ? 'variant' : 'variants'}</summary>
+          <div>${relatedVariants.map((variant) => `<a data-open-link href="${escapeHtml(variant.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(variant.title)}</a>`).join('')}</div>
+        </details>
+      ` : ''}
       ${isCommenting ? `
         <div class="comment-editor">
           <textarea data-comment-draft aria-label="Comment for ${escapeHtml(card.title)}">${escapeHtml(note)}</textarea>
@@ -90,14 +101,41 @@ const renderSelect = (control, value) => `
   </label>
 `;
 
-export const renderFilters = (workbench, filters) => `
-  ${workbench.controls.map((control) => (
-    control.type === 'segment' ? renderSegment(control, filters[control.id]) : renderSelect(control, filters[control.id])
-  )).join('')}
-  <span class="filter-spacer"></span>
-  ${workbench.id === 'today' ? '' : '<button class="reset" type="button" data-command="save-filter-default">Save as default</button>'}
-  <button class="reset" type="button" data-command="reset-filters">Reset filters</button>
-`;
+const renderToggle = (control, value) => {
+  const active = value === 'on';
+  return `
+    <button class="filter-toggle ${active ? 'active' : ''}" type="button" role="switch"
+      aria-label="${escapeHtml(control.label)}" aria-checked="${active}"
+      data-filter="${escapeHtml(control.id)}" data-value="${active ? 'off' : 'on'}">
+      <span class="toggle-track" aria-hidden="true"><span></span></span>
+      <span>${escapeHtml(control.label)}</span>
+    </button>
+  `;
+};
+
+const renderControl = (control, filters) => {
+  if (control.type === 'segment') return renderSegment(control, filters[control.id]);
+  if (control.type === 'toggle') return renderToggle(control, filters[control.id]);
+  return renderSelect(control, filters[control.id]);
+};
+
+export const renderFilters = (workbench, filters) => {
+  const visible = workbench.controls.filter(({ placement }) => placement !== 'advanced');
+  const advanced = workbench.controls.filter(({ placement }) => placement === 'advanced');
+  const activeAdvanced = advanced.filter(({ id }) => filters[id] !== workbench.defaults[id]).length;
+  return `
+    ${visible.map((item) => renderControl(item, filters)).join('')}
+    ${advanced.length ? `
+      <details class="more-filters" ${activeAdvanced ? 'open' : ''}>
+        <summary>More filters${activeAdvanced ? ` <span>${activeAdvanced} active</span>` : ''}</summary>
+        <div class="advanced-controls">${advanced.map((item) => renderControl(item, filters)).join('')}</div>
+      </details>
+    ` : ''}
+    <span class="filter-spacer"></span>
+    ${workbench.id === 'today' ? '' : '<button class="reset" type="button" data-command="save-filter-default">Save as default</button>'}
+    <button class="reset" type="button" data-command="reset-filters">Reset filters</button>
+  `;
+};
 
 export const renderEmptyState = (filters, { clearTopic = false } = {}) => `
   <section class="empty-state">

@@ -7,6 +7,8 @@ import {
   compactNumber,
   normalizeDataset,
   normalizeModel,
+  groupModelCards,
+  filterModelsByUpdated,
   parseArxivFeed,
   parseGithubTrending,
 } from '../src/services/normalizers.js';
@@ -47,6 +49,8 @@ describe('source normalizers', () => {
       trendingScore: 4050,
       gated: false,
       tags: ['transformers', 'license:other'],
+      safetensors: { total: 180_000_000_000 },
+      inferenceProviderMapping: [{ provider: 'together', status: 'live' }],
       createdAt: '2026-08-24T08:24:59Z',
       lastModified: '2026-08-27T05:03:36Z',
     }, 'trending');
@@ -60,15 +64,67 @@ describe('source normalizers', () => {
     }, 'downloads');
 
     expect(model.metricValue).toBe('4k trending');
-    expect(model.details.access).toBe('Open');
+    expect(model.details).toMatchObject({
+      access: 'Open', parameters: 180_000_000_000, parameterLabel: '180B',
+      library: 'Transformers', inferenceAvailable: true,
+    });
+    expect(model.tags).toEqual(expect.arrayContaining(['180B', 'Transformers', 'other']));
+    expect(model.secondary.left).toBe('Open · Inference available');
     expect(dataset.metricValue).toBe('56.9k downloads');
     expect(dataset.details).toMatchObject({ size: '1K<n<10K', language: 'en', license: 'apache-2.0' });
 
-    expect(normalizeModel({ id: 'owner/new', tags: [], createdAt: '2026-08-28T00:00:00Z' }, 'newest').metricValue)
+    expect(normalizeModel({ id: 'owner/new', tags: [], createdAt: '2026-08-28T00:00:00Z' }, 'created').metricValue)
       .toBe('Created Aug 28');
     expect(normalizeModel({ id: 'owner/liked', tags: [], likes: 12 }, 'likes').metricValue).toBe('12 likes');
+    expect(normalizeModel({ id: 'owner/updated', tags: [], lastModified: '2026-08-28T00:00:00Z' }, 'updated').metricValue)
+      .toBe('Updated Aug 28');
+    expect(normalizeModel({ id: 'owner/large', tags: [], gguf: { total: 27_000_000_000 } }, 'most-parameters').metricValue)
+      .toBe('27B parameters');
     expect(normalizeDataset({ id: 'owner/new-data', tags: [], lastModified: '2026-08-28T00:00:00Z' }, 'newest').details)
       .toMatchObject({ size: 'Not specified', language: 'Not specified', license: 'Not specified' });
+  });
+
+  it('groups variants beneath a present base model without mutating source cards', () => {
+    const base = normalizeModel({
+      id: 'Qwen/Qwen-7B', tags: ['transformers'], likes: 100,
+    });
+    const quantized = normalizeModel({
+      id: 'community/Qwen-7B-GGUF',
+      tags: ['gguf', 'base_model:Qwen/Qwen-7B', 'base_model:quantized:Qwen/Qwen-7B'],
+      likes: 90,
+    });
+    const fineTune = normalizeModel({
+      id: 'community/Qwen-7B-instruct',
+      tags: ['transformers', 'base_model:finetune:Qwen/Qwen-7B'],
+      likes: 80,
+    });
+    const source = [quantized, base, fineTune];
+
+    const grouped = groupModelCards(source);
+
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].title).toBe('Qwen/Qwen-7B');
+    expect(grouped[0].relatedVariants.map(({ title }) => title)).toEqual([
+      'community/Qwen-7B-GGUF', 'community/Qwen-7B-instruct',
+    ]);
+    expect(source.every((card) => card.relatedVariants === undefined)).toBe(true);
+  });
+
+  it('uses the highest-ranked variant when the base is absent and filters updated ranges', () => {
+    const recent = normalizeModel({
+      id: 'community/Qwen-7B-GGUF', tags: ['base_model:quantized:Qwen/Qwen-7B'],
+      lastModified: '2026-08-28T00:00:00Z',
+    });
+    const older = normalizeModel({
+      id: 'community/Qwen-7B-MLX', tags: ['base_model:quantized:Qwen/Qwen-7B'],
+      lastModified: '2026-07-01T00:00:00Z',
+    });
+
+    expect(groupModelCards([recent, older])[0].title).toBe(recent.title);
+    expect(filterModelsByUpdated([recent, older], 'week', new Date('2026-08-29T00:00:00Z')))
+      .toEqual([recent]);
+    expect(filterModelsByUpdated([recent, older], 'all', new Date('2026-08-29T00:00:00Z')))
+      .toEqual([recent, older]);
   });
 
   it('normalizes Hugging Face community papers with source-provided summaries', () => {

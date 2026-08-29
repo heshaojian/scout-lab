@@ -109,6 +109,32 @@
     padding: 0 5px;
   }
 
+  .filter-toggle,
+  .more-filters {
+    flex: 1 1 160px;
+  }
+
+  .more-filters summary {
+    justify-content: space-between;
+  }
+
+  .advanced-controls {
+    position: fixed;
+    z-index: 40;
+    right: 15px;
+    bottom: 15px;
+    left: 15px;
+    width: auto;
+    max-height: calc(100vh - 30px);
+    overflow: auto;
+  }
+
+  .advanced-controls .control-wrap,
+  .advanced-controls .control {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
   .filter-spacer {
     display: none;
   }

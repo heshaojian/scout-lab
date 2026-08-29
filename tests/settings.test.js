@@ -16,12 +16,24 @@ describe('settings schema', () => {
       filters: { code: { language: 'python' } },
     });
 
-    expect(settings.version).toBe(2);
+    expect(settings.version).toBe(3);
     expect(settings.selectedSection).toBe('models');
     expect(settings.filters.code).toMatchObject({ language: 'python', topic: 'rag' });
     expect(settings.filters.models.topic).toBe('rag');
     expect(settings.filterDefaults.code.language).toBe('all');
     expect(settings.preferences).toEqual(DEFAULT_PREFERENCES);
+  });
+
+  it('migrates the former Models newest sort and adds balanced defaults', () => {
+    const settings = normalizeSettings({
+      selectedSection: 'models',
+      filters: { models: { rank: 'newest', task: 'text-generation', access: 'gated' } },
+    });
+
+    expect(settings.filters.models).toMatchObject({
+      rank: 'created', task: 'text-generation', size: 'any', baseOnly: 'off', inference: 'off',
+      library: 'all', license: 'all', access: 'gated', app: 'all', updated: 'all', topic: 'all',
+    });
   });
 
   it('falls back malformed preferences independently', () => {

@@ -91,6 +91,39 @@ describe('shared workbench renderer', () => {
     expect(document.querySelector('[data-command="save-filter-default"]')).toBeTruthy();
   });
 
+  it('renders the balanced Models controls and independent More filters', () => {
+    document.body.innerHTML = renderFilters(WORKBENCHES.models, WORKBENCHES.models.defaults);
+
+    expect([...document.querySelector('[aria-label="Sort"]').options].map(({ textContent }) => textContent)).toEqual([
+      'Trending', 'Most likes', 'Most downloads', 'Recently created', 'Recently updated',
+      'Most parameters', 'Least parameters',
+    ]);
+    expect(document.querySelector('[role="switch"][aria-label="Base models only"]')?.getAttribute('aria-checked')).toBe('false');
+    expect(document.querySelector('[role="switch"][aria-label="Inference available"]')?.getAttribute('aria-checked')).toBe('false');
+    expect(document.querySelector('.more-filters summary')?.textContent).toContain('More filters');
+    expect([...document.querySelectorAll('.more-filters select')].map(({ ariaLabel }) => ariaLabel)).toEqual([
+      'Library or format', 'License', 'Access', 'Compatible app', 'Updated date',
+    ]);
+  });
+
+  it('renders validated related-model links inside a collapsed family list', () => {
+    document.body.innerHTML = renderCard({
+      ...baseCard,
+      source: 'huggingface',
+      type: 'Model',
+      url: 'https://huggingface.co/Qwen/Qwen-7B',
+      relatedVariants: [
+        { title: 'community/Qwen-7B-GGUF', url: 'https://huggingface.co/community/Qwen-7B-GGUF' },
+        { title: '<unsafe>', url: 'javascript:alert(1)' },
+      ],
+    });
+
+    expect(document.querySelector('.model-variants')?.open).toBe(false);
+    expect(document.querySelector('.model-variants summary')?.textContent).toContain('1 related variant');
+    expect(document.querySelector('.model-variants a')?.href).toBe('https://huggingface.co/community/Qwen-7B-GGUF');
+    expect(document.querySelector('.model-variants').textContent).not.toContain('<unsafe>');
+  });
+
   it('keeps Today composition in Settings instead of offering a filter-default command', () => {
     document.body.innerHTML = renderFilters(WORKBENCHES.today, WORKBENCHES.today.defaults);
 
