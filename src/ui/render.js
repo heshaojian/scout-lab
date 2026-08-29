@@ -105,3 +105,17 @@ export const renderEmptyState = (filters) => `
     <button class="mini-button" type="button" data-command="reset-filters">Reset filters</button>
   </section>
 `;
+
+export const updateSearchResults = (root, {
+  gridHtml,
+  countLabel,
+  navCount,
+}) => {
+  const grid = root.querySelector('.grid');
+  const feedCount = root.querySelector('.feed-count');
+  const activeNavCount = root.querySelector('.nav [aria-current="page"] .count');
+
+  if (grid) grid.innerHTML = gridHtml;
+  if (feedCount) feedCount.textContent = countLabel;
+  if (activeNavCount) activeNavCount.textContent = navCount;
+};

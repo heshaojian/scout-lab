@@ -14,7 +14,13 @@ import {
   setUserItemState,
   setWorkbenchFilters,
 } from './services/storage.js';
-import { escapeHtml, renderCard, renderEmptyState, renderFilters } from './ui/render.js';
+import {
+  escapeHtml,
+  renderCard,
+  renderEmptyState,
+  renderFilters,
+  updateSearchResults,
+} from './ui/render.js?v=0.2.1';
 import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.js';
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -105,18 +111,38 @@ const statusMessage = () => {
   return state.status.label || 'Ready';
 };
 
+const cardsHtml = (filters, cards) => {
+  if (cards.length) {
+    return cards.slice(0, 24).map((card) => renderCard(card, {
+      user: state.userState,
+      progress: state.learnProgress,
+      commentingId: state.commentingId,
+    })).join('');
+  }
+  return state.loading ? loadingCardsHtml() : renderEmptyState(filters);
+};
+
+const visibleCountLabel = (cards) => (
+  `${cards.length} visible ${cards.length === 1 ? 'item' : 'items'}${state.status.stale ? ' · cached or fallback' : ''}`
+);
+
+const renderSearchView = () => {
+  const filters = state.filters[state.selectedSection];
+  const cards = visibleCards();
+
+  updateSearchResults(app, {
+    gridHtml: cardsHtml(filters, cards),
+    countLabel: visibleCountLabel(cards),
+    navCount: state.loading ? '' : `${cards.length}`,
+  });
+};
+
 const render = () => {
   const workbench = activeWorkbench();
   const filters = state.filters[state.selectedSection];
   const cards = visibleCards();
   const note = getDailyNote(todayKey());
-  const grid = cards.length
-    ? cards.slice(0, 24).map((card) => renderCard(card, {
-      user: state.userState,
-      progress: state.learnProgress,
-      commentingId: state.commentingId,
-    })).join('')
-    : state.loading ? loadingCardsHtml() : renderEmptyState(filters);
+  const grid = cardsHtml(filters, cards);
 
   app.innerHTML = `
     <div class="shell">
@@ -155,7 +181,7 @@ const render = () => {
 
         <div class="feed-status" aria-live="polite">
           <span>${escapeHtml(statusMessage())}</span>
-          <span>${cards.length} visible ${cards.length === 1 ? 'item' : 'items'}${state.status.stale ? ' · cached or fallback' : ''}</span>
+          <span class="feed-count">${visibleCountLabel(cards)}</span>
         </div>
 
         ${state.notice ? `<div class="notice" role="status">${escapeHtml(state.notice)}</div>` : ''}
@@ -366,8 +392,7 @@ const onChange = async (event) => {
 const onInput = (event) => {
   if (event.target.matches('.search')) {
     setState({ search: event.target.value });
-    render();
-    app.querySelector('.search')?.focus();
+    renderSearchView();
   }
   if (event.target.matches('[data-daily-note]')) {
     setDailyNote(todayKey(), event.target.value);

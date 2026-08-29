@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { renderCard, renderEmptyState, renderFilters } from '../src/ui/render.js';
+import {
+  renderCard,
+  renderEmptyState,
+  renderFilters,
+  updateSearchResults,
+} from '../src/ui/render.js';
 import { WORKBENCHES } from '../src/workbenches.js';
 
 const baseCard = {
@@ -18,6 +23,30 @@ const baseCard = {
 };
 
 describe('shared workbench renderer', () => {
+  it('updates search results without replacing the focused search input', () => {
+    document.body.innerHTML = `
+      <main id="app">
+        <input class="search" aria-label="Search this tab">
+        <nav class="nav"><button aria-current="page"><span class="count">24</span></button></nav>
+        <span class="feed-count">24 visible items</span>
+        <section class="grid"><article>Old result</article></section>
+      </main>
+    `;
+    const search = document.querySelector('.search');
+    search.focus();
+
+    updateSearchResults(document.querySelector('#app'), {
+      gridHtml: '<article>Filtered result</article>',
+      countLabel: '1 visible item',
+      navCount: '1',
+    });
+
+    expect(document.activeElement).toBe(search);
+    expect(document.querySelector('.grid').textContent).toContain('Filtered result');
+    expect(document.querySelector('.feed-count').textContent).toBe('1 visible item');
+    expect(document.querySelector('.nav .count').textContent).toBe('1');
+  });
+
   it.each(['Code', 'Model', 'Dataset', 'Paper', 'Learn'])('uses identical card anatomy for %s', (type) => {
     const html = renderCard({ ...baseCard, type }, { user: {}, progress: {} });
     document.body.innerHTML = html;
