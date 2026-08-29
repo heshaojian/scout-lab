@@ -51,6 +51,16 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 - [ ] Comment creates, edits, and removes a note without changing the source content.
 - [ ] Card actions remain usable on desktop, compact desktop, and mobile.
 
+## Long-Session Reading Comfort
+
+- [ ] Comfortable density shows three columns on wide desktop, two on medium widths, and one on mobile.
+- [ ] Comfortable card titles are at least 18px and summaries are at least 15px with generous line spacing.
+- [ ] Badges, tags, metrics, metadata, and action text are at least 12px in Comfortable density.
+- [ ] Comfortable summaries expose up to four lines without changing footer alignment.
+- [ ] Compact density remains visibly denser and shows four columns on wide desktop.
+- [ ] Light cards are near-white rather than pure white; dark page and card surfaces remain charcoal rather than pure black.
+- [ ] Muted and summary text remains clearly readable in Light, Dark, and System themes during sustained reading.
+
 ## Settings And Persistence
 
 - [ ] Theme changes immediately; System follows the operating-system theme without reload.

@@ -1,18 +1,18 @@
 :root {
   color-scheme: light;
   --ink: #17211f;
-  --muted: #6d7774;
+  --muted: #65716d;
   --line: #d9dfdd;
-  --soft: #f3f6f5;
-  --white: #ffffff;
-  --rail: #fdfefd;
-  --panel: #fbfcfb;
-  --subtle: #edf1f0;
-  --hover: #eef2f1;
+  --soft: #edf2f0;
+  --white: #fbfdfc;
+  --rail: #f7faf8;
+  --panel: #f5f8f7;
+  --subtle: #e7edeb;
+  --hover: #e8eeec;
   --nav-ink: #384341;
   --control-ink: #34413e;
-  --summary-ink: #4f5a57;
-  --tag-ink: #4c5653;
+  --summary-ink: #42504c;
+  --tag-ink: #44514d;
   --line-soft: #edf0ef;
   --notice-bg: #fffdf0;
   --notice-ink: #4c4937;
@@ -30,30 +30,42 @@
   --learn: #66529f;
   --danger: #a13939;
   --rail-padding: 22px 16px;
-  --main-padding: 22px 28px 36px;
-  --grid-gap: 14px;
-  --card-min-height: 270px;
-  --card-padding: 14px;
-  --card-gap: 10px;
-  --summary-lines: 3;
+  --main-padding: 24px 30px 40px;
+  --grid-gap: 18px;
+  --card-min-height: 360px;
+  --card-padding: 18px;
+  --card-gap: 12px;
+  --card-title-size: 18px;
+  --card-title-line-height: 1.3;
+  --card-title-min-height: 47px;
+  --card-summary-size: 15px;
+  --card-summary-line-height: 1.6;
+  --card-summary-min-height: 96px;
+  --card-badge-size: 12px;
+  --card-metric-size: 12px;
+  --card-tag-size: 12px;
+  --card-meta-size: 12px;
+  --card-action-size: 13px;
+  --card-label-size: 12px;
+  --summary-lines: 4;
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
   --ink: #eef3f1;
-  --muted: #a5afac;
-  --line: #3a4441;
+  --muted: #b2bcba;
+  --line: #414b48;
   --soft: #151a19;
   --white: #202624;
-  --rail: #1a201e;
-  --panel: #1d2321;
+  --rail: #181e1c;
+  --panel: #1b211f;
   --subtle: #2a312f;
-  --hover: #272e2c;
+  --hover: #29312e;
   --nav-ink: #c5cecb;
   --control-ink: #e3e9e7;
-  --summary-ink: #c0c9c6;
-  --tag-ink: #c2cbc8;
-  --line-soft: #333c39;
+  --summary-ink: #c8d0cd;
+  --tag-ink: #cbd3d0;
+  --line-soft: #37413e;
   --notice-bg: #302e20;
   --notice-ink: #ece5b8;
   --favorite-line: #bda94d;
@@ -78,6 +90,18 @@
   --card-min-height: 236px;
   --card-padding: 11px;
   --card-gap: 7px;
+  --card-title-size: 16px;
+  --card-title-line-height: 1.25;
+  --card-title-min-height: 40px;
+  --card-summary-size: 12px;
+  --card-summary-line-height: 1.46;
+  --card-summary-min-height: 54px;
+  --card-badge-size: 10px;
+  --card-metric-size: 11px;
+  --card-tag-size: 10px;
+  --card-meta-size: 10px;
+  --card-action-size: 11px;
+  --card-label-size: 10px;
   --summary-lines: 2;
 }
 
@@ -454,8 +478,14 @@ a:focus-visible {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  max-width: 1680px;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
   gap: var(--grid-gap);
+}
+
+:root[data-density="compact"] .grid {
+  max-width: none;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
 }
 
 .card {
@@ -466,7 +496,7 @@ a:focus-visible {
   border-radius: 8px;
   background: var(--white);
   display: grid;
-  grid-template-rows: auto auto minmax(54px, 1fr) auto auto auto;
+  grid-template-rows: auto auto minmax(var(--card-summary-min-height), 1fr) auto auto auto;
   gap: var(--card-gap);
   box-shadow: 0 1px 0 var(--card-shadow);
 }
@@ -488,7 +518,7 @@ a:focus-visible {
   padding: 2px 8px;
   display: inline-flex;
   align-items: center;
-  font-size: 10px;
+  font-size: var(--card-badge-size);
   font-weight: 820;
 }
 
@@ -502,22 +532,22 @@ a:focus-visible {
   max-width: 58%;
   overflow: hidden;
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--card-metric-size);
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .card h3 {
-  min-height: 40px;
+  min-height: var(--card-title-min-height);
   margin: 0;
   display: -webkit-box;
   overflow: hidden;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow-wrap: anywhere;
-  font-size: 16px;
-  line-height: 1.25;
+  font-size: var(--card-title-size);
+  line-height: var(--card-title-line-height);
 }
 
 .summary {
@@ -527,13 +557,13 @@ a:focus-visible {
   overflow: hidden;
   -webkit-line-clamp: var(--summary-lines);
   -webkit-box-orient: vertical;
-  font-size: 12px;
-  line-height: 1.46;
+  font-size: var(--card-summary-size);
+  line-height: var(--card-summary-line-height);
 }
 
 .summary-label {
   color: var(--paper);
-  font-size: 10px;
+  font-size: var(--card-label-size);
   font-weight: 800;
   text-transform: uppercase;
 }
@@ -557,7 +587,7 @@ a:focus-visible {
   display: inline-flex;
   align-items: center;
   overflow: hidden;
-  font-size: 10px;
+  font-size: var(--card-tag-size);
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -568,7 +598,7 @@ a:focus-visible {
   padding-top: 7px;
   border-top: 1px solid var(--line-soft);
   color: var(--muted);
-  font-size: 10px;
+  font-size: var(--card-meta-size);
   font-weight: 700;
 }
 
@@ -590,7 +620,7 @@ a:focus-visible {
   border: 1px solid var(--line);
   background: var(--white);
   color: var(--ink);
-  font-size: 10px;
+  font-size: var(--card-meta-size);
   font-weight: 700;
 }
 
@@ -619,7 +649,7 @@ a:focus-visible {
 .open {
   color: var(--ink);
   text-decoration: none;
-  font-size: 11px;
+  font-size: var(--card-action-size);
   font-weight: 820;
   white-space: nowrap;
 }
@@ -654,7 +684,7 @@ a:focus-visible {
   border-left: 2px solid var(--signal);
   padding-left: 8px;
   color: var(--comment-ink);
-  font-size: 11px;
+  font-size: var(--card-meta-size);
   line-height: 1.4;
 }
 
@@ -672,6 +702,10 @@ a:focus-visible {
   border: 1px solid var(--line);
   background: var(--white);
   color: var(--ink);
+}
+
+.card .mini-button {
+  font-size: var(--card-action-size);
 }
 
 .empty-state {
