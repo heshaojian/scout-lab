@@ -1,27 +1,27 @@
-# Scout Lab Source-Native Workbenches
+# Scout Lab Filtered Grid Workbenches
 
-**Status:** Approved proposal, implementation specification  
+**Status:** Proposed revision, awaiting visual approval
 **Date:** 2026-08-28  
 **Product:** Scout Lab Chrome new-tab extension
 
 ## 1. Summary
 
-Scout Lab will replace its universal feed grid with a shared application shell containing six source-native workbenches:
+Scout Lab will keep one consistent content-card grid inside a shared application shell while adding source-specific filtering to six workbenches:
 
-- Today: a concise cross-source briefing
-- Code: a GitHub repository discovery board
-- Models: a Hugging Face model comparison shelf
-- Datasets: a Hugging Face dataset comparison table
-- Papers: a community and raw-research reading feed
-- Learn: a curated personal learning path
+- Today: a concise cross-source card queue
+- Code: GitHub repository cards
+- Models: Hugging Face model cards
+- Datasets: Hugging Face dataset cards
+- Papers: community and raw-research cards
+- Learn: curated learning cards
 
-The workbenches share navigation, search, topic vocabulary, item actions, daily notes, local persistence, and iCloud archiving. Each workbench owns its filters, default ranking, layout, metadata, loading state, and fallback behavior.
+The workbenches share navigation, search, topic vocabulary, card geometry, item actions, daily notes, local persistence, and iCloud archiving. Each workbench owns its filters, default ranking, metadata mapping, loading state, and fallback behavior.
 
 The product remains a focused daily scanner. It will not become a general-purpose database browser.
 
 ## 2. Goals
 
-1. Make each tab useful for its actual source and data shape.
+1. Make each tab useful through source-specific filters while preserving one consistent grid and card design.
 2. Let the user change the few filters that materially improve daily discovery.
 3. Label trends, totals, dates, and community signals honestly.
 4. Keep common actions predictable across every content type.
@@ -40,9 +40,9 @@ The product remains a focused daily scanner. It will not become a general-purpos
 
 ## 4. Product Principles
 
-### 4.1 Source-native, product-consistent
+### 4.1 Shared geometry, source-native meaning
 
-Layouts and controls should reflect what the source data is good at. Navigation, action placement, terminology, spacing, keyboard behavior, loading states, and archive behavior should remain consistent.
+Every tab uses the same grid, card dimensions, information order, action placement, spacing, keyboard behavior, loading states, and archive behavior. Filters and metadata labels reflect what each source is good at.
 
 ### 4.2 Focused controls
 
@@ -70,7 +70,7 @@ The existing left rail remains the stable navigation surface. The main area chan
 | Scout Lab        | Workbench title                         Search  Refresh |
 | AI learning tab  | Workbench-specific controls                           |
 |                  +-------------------------------------------------------+
-| Today            | Workbench content                                     |
+| Today            | Consistent content-card grid                          |
 | Code             |                                                       |
 | Models           |                                                       |
 | Datasets         |                                                       |
@@ -113,6 +113,27 @@ Topic is rendered inside the active workbench filter bar rather than as a global
 - A `Reset filters` command restores that workbench's defaults.
 - Loading a new query must never show cards from the previous query or section.
 
+### 5.4 Shared grid and card contract
+
+Every workbench renders content through the same responsive grid:
+
+- Wide desktop: four equal columns
+- Desktop/tablet: three or two equal columns as space decreases
+- Mobile: one column
+- Stable 14-pixel gap
+- Cards use the same minimum height, padding, border, radius, and footer position
+
+Every card uses this information order:
+
+1. Source/type badge and primary metric
+2. Title
+3. Summary clamped to three lines
+4. Up to four tags
+5. Secondary metadata row
+6. Favorite, Hide, Comment, and Open actions
+
+Source colors, labels, and metrics may change. Card geometry, typography scale, and action placement may not. Missing optional values are omitted or shown as `Not specified` without shifting the action footer.
+
 ## 6. Today Workbench
 
 ### 6.1 Purpose
@@ -121,19 +142,17 @@ Today answers: "What deserves my attention now?"
 
 ### 6.2 Layout
 
-Today uses a briefing layout rather than the reusable card grid:
+Today uses the same reusable card grid as every source tab:
 
 ```txt
-+--------------------------------------+-----------------------------+
-| Lead signal                          | Continue learning           |
-+-------------------+------------------+-----------------------------+
-| Code, 2 items     | Models, 1 item  | Papers, 2 items             |
-+-------------------+------------------+-----------------------------+
-| Dataset, 1 item  | Daily note and archive status                  |
-+-------------------------------------------------------------------+
++------------------+------------------+------------------+------------------+
+| Code card        | Code card        | Model card       | Dataset card     |
++------------------+------------------+------------------+------------------+
+| Paper card       | Paper card       | Learn card       |                  |
++------------------+------------------+------------------+------------------+
 ```
 
-On narrow screens, sections stack in the same priority order.
+On narrow screens, cards reflow while preserving the same priority order.
 
 ### 6.3 Controls
 
@@ -152,7 +171,7 @@ The briefing contains:
 - 2 Papers, preferring one community paper and one arXiv paper
 - 1 next learning item
 
-The lead signal is the highest-ranked visible non-Learn item. Today does not invent a cross-source numeric score.
+The first card is the highest-ranked visible non-Learn item, but it keeps the standard card design. Today does not invent a cross-source numeric score.
 
 ## 7. Code Workbench
 
@@ -162,7 +181,7 @@ Code helps the user discover AI repositories worth reading, running, or learning
 
 ### 7.2 Layout
 
-Use a dense repository grid inspired by GitHub Trending's scanability. Repository cards have stable heights and show:
+Use the shared content-card grid. Repository cards map these values into the shared slots:
 
 - Owner/repository name
 - Description
@@ -240,7 +259,7 @@ Models helps the user compare noteworthy model releases and decide which model p
 
 ### 8.2 Layout
 
-Use a two-column comparison shelf on wide screens and a one-column shelf on narrow screens. Each item shows:
+Use the shared content-card grid. Model cards map these values into the shared slots:
 
 - Model ID and owner
 - Pipeline task
@@ -277,19 +296,17 @@ Datasets helps the user compare what problems, languages, scales, and evaluation
 
 ### 9.2 Layout
 
-Use a compact comparison table on wide screens with these columns:
+Use the shared content-card grid. Dataset cards map these values into the shared slots:
 
-- Dataset
-- Task
-- Size
+- Dataset ID and owner
+- Description
+- Primary task
+- Size category
 - Language
 - License
-- Downloads
-- Likes
-- Updated
-- Actions
-
-Rows may expand inline to show the description and remaining tags. On narrow screens, each row becomes a structured card with the same information order.
+- Downloads and likes
+- Updated date
+- Shared item actions
 
 ### 9.3 Controls
 
@@ -304,7 +321,7 @@ Defaults: `Trending`, `All tasks`, `Any size`, no additional restrictions.
 
 Use the Hugging Face datasets endpoint. Translate controls into `sort`, task-category, size-category, language, license, and benchmark filters. Parse normalized task, size, language, and license values from source tags.
 
-Missing metadata is displayed as `Not specified`, not as an empty cell.
+Missing metadata is displayed as `Not specified`, not as an empty card slot.
 
 ## 10. Papers Workbench
 
@@ -317,7 +334,7 @@ Papers supports two different research behaviors without pretending they are the
 
 ### 10.2 Layout
 
-Use an editorial list rather than cards. Each row contains:
+Use the shared content-card grid. Paper cards map these values into the shared slots:
 
 - Source and category
 - Title
@@ -328,7 +345,7 @@ Use an editorial list rather than cards. Each row contains:
 - Abstract and PDF links when available
 - Shared item actions
 
-Community rows show upvotes and comments. arXiv rows show categories and dates only.
+Community cards show upvotes and comments. arXiv cards show categories and dates only.
 
 ### 10.3 Controls
 
@@ -390,17 +407,7 @@ Learn turns the curated link list into a small personal syllabus rather than ano
 
 ### 11.2 Layout
 
-```txt
-+------------------------------------------------------------------+
-| Continue learning: current item                     Resume lesson |
-+------------------------------------------------------------------+
-| Courses                                                          |
-| [path with progress] [path with progress]                         |
-+------------------------------------------------------------------+
-| Cookbooks and exercises                                          |
-| [recipe] [recipe] [exercise]                                     |
-+------------------------------------------------------------------+
-```
+Learn uses the shared content-card grid. The first card is the current in-progress item, followed by courses, cookbooks, and exercises. Progress is shown in the card's secondary metadata row without changing the shared geometry.
 
 ### 11.3 Controls
 
@@ -480,10 +487,12 @@ Each workbench declares:
   defaults,
   controls,
   fetch,
-  render,
+  mapCardMetadata,
   cacheTtl
 }
 ```
+
+The shared renderer owns grid and card markup. Workbenches cannot provide alternate list, table, shelf, or feature-card markup.
 
 ### 12.3 Cache key
 
@@ -527,7 +536,7 @@ An empty state names the active restrictions and provides `Reset filters`. It do
 
 ### 15.3 Partial failure
 
-- Today renders successful source lanes even if another source fails.
+- Today renders successful source cards even if another source fails.
 - A failed workbench retains matching stale data when available.
 - Fallback source or mode is named explicitly.
 - Refresh errors remain in the workbench and do not use blocking alerts.
@@ -540,7 +549,7 @@ GitHub Trending parser failure is distinct from a network failure. Log a concise
 ## 16. Responsive And Accessibility Requirements
 
 - No horizontal page overflow at 390, 768, 900, 1280, or 1440 CSS pixels.
-- Dataset tables transform into cards below the table breakpoint.
+- The shared grid collapses from four to three, two, and one columns without changing card anatomy.
 - All controls are keyboard reachable and have visible focus states.
 - Filter controls have programmatic labels and current-value announcements.
 - Segmented controls use appropriate selected-state semantics.
@@ -578,7 +587,7 @@ Target: at least 80% statement and branch coverage for source adapters, query st
 
 ### 18.2 Integration tests
 
-- Workbench filter change to request, cache, normalization, and render
+- Workbench filter change to request, cache, normalization, and shared-card render
 - Cached-first refresh behavior
 - GitHub Trending parser failure to official-search fallback
 - Today partial-source failure
@@ -590,7 +599,7 @@ Target: at least 80% statement and branch coverage for source adapters, query st
 
 Run the unpacked extension or an equivalent extension-context harness and verify:
 
-1. Open each workbench and confirm its unique layout.
+1. Open each workbench and confirm the same grid and card geometry with the correct source-specific controls.
 2. Change every primary control and verify visible query meaning.
 3. Search locally and reset filters.
 4. Favorite, hide, comment, and restore state after reload.
@@ -638,9 +647,10 @@ Implementation is complete only when:
 
 ## 19. Implementation Boundaries
 
-The first implementation may split the current large `src/app.js` and `src/services/feeds.js` into focused modules, because unique workbenches cannot remain maintainable inside one renderer and one feed service. The refactor should stay limited to:
+The first implementation may split the current large `src/app.js` and `src/services/feeds.js` into focused modules, because source-specific controls and adapters cannot remain maintainable inside one renderer and one feed service. The refactor should stay limited to:
 
-- Workbench definitions and rendering
+- Workbench definitions and metadata mapping
+- Shared grid and card rendering
 - Source adapters and query builders
 - Shared item actions and shell
 - Query-aware storage and cache
@@ -656,4 +666,3 @@ Unrelated styling, archive-provider expansion, account systems, build frameworks
 - Hugging Face Daily Papers supports date, week, month, trending/recent sorting, community metrics, and source-provided summaries.
 - arXiv supports category, field, Boolean, submitted-date, relevance, and date queries, but no popularity metric.
 - Curated Learn sources are intentionally maintained locally so Scout Lab can define a stable learning path without pretending that course popularity equals usefulness.
-

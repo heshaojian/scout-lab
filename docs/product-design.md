@@ -44,7 +44,7 @@ The design should optimize for repeated daily use rather than one-time explorati
 
 ## Core Sections
 
-Scout Lab uses one shared shell with six source-native workbenches. The detailed behavior, data contracts, failure states, and acceptance criteria are defined in [Source-Native Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
+Scout Lab uses one shared shell and one consistent content-card grid across six filtered workbenches. The detailed behavior, data contracts, failure states, and acceptance criteria are defined in [Filtered Grid Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
 
 ### Today
 
@@ -52,7 +52,7 @@ Sources: all configured sources
 
 Purpose: provide a concise daily briefing without inventing a cross-source popularity score.
 
-The briefing contains a lead signal, two code items, one model, one dataset, two papers, and the next learning item. Each source uses its saved default query.
+The briefing grid contains two code items, one model, one dataset, two papers, and the next learning item. Every item uses the same card structure as its source tab. Each source uses its saved default query.
 
 ### Code
 
@@ -87,7 +87,7 @@ Purpose: learn what problems people are training and evaluating against.
 
 Datasets are important because they reveal demand, task framing, and evaluation culture. This section should not be treated as secondary to models.
 
-The workbench uses a comparison table on wide screens and structured cards on narrow screens. It supports rank, task, size, language, license, and official-benchmark filters.
+The workbench uses the shared content-card grid and supports rank, task, size, language, license, and official-benchmark filters.
 
 ### Papers
 
@@ -109,7 +109,7 @@ The Community mode shows Hugging Face upvotes, comments, and source-provided sum
 - inference
 - datasets
 
-Rows show title, authors, date, summary or abstract snippet, source-specific signals, and PDF/abstract links. arXiv rows never display a popularity metric.
+Cards show title, authors, date, summary or abstract snippet, source-specific signals, and PDF/abstract links. arXiv cards never display a popularity metric.
 
 ### Learn
 
@@ -135,7 +135,7 @@ Layout:
 - left rail with Scout Lab identity, section navigation, and archive status
 - sections: Today, Code, Models, Datasets, Papers, Learn
 - workbench-specific filter bar with no more than four primary controls
-- source-native content layouts instead of a universal card grid
+- one stable content-card grid with source-specific filters and metadata
 - shared daily note and archive status
 
 The interface should make it easy to scan 10-20 items without feeling like a social feed.
@@ -172,7 +172,7 @@ Every item should answer:
 3. How strong is the signal?
 4. Where can I open it?
 
-Avoid overloading an item with every available metric. Source-specific views should emphasize the two or three fields needed for comparison and retain remaining metadata in `details`.
+Avoid overloading an item with every available metric. Each source adapter selects the two or three fields that fit the shared card slots and retains remaining metadata in `details`.
 
 ## Visual Direction
 
@@ -258,7 +258,7 @@ Each source service should expose one source-specific fetch function and return 
 4. If cache is fresh, render cached cards immediately.
 5. If cache is missing or stale, fetch source data.
 6. Source adapter normalizes data into shared item fields plus source-specific `details`.
-7. The owning workbench renders its source-native layout and stores a fresh cache entry.
+7. The shared grid renderer displays normalized cards using source-selected metadata and stores a fresh cache entry.
 8. If fetch fails, UI keeps old cache if available and shows a compact error state.
 
 ## Error Handling

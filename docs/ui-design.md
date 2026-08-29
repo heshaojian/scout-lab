@@ -13,11 +13,11 @@ The screen should help the user:
 
 ## Layout
 
-The approved source-native layout uses:
+The approved filtered-grid layout uses:
 
 - a left rail for identity, section navigation, and iCloud archive status
 - a workbench header with source-specific controls
-- a unique content layout for every section
+- one identical content-card grid for every section
 - a daily note and archive preview strip
 
 ```txt
@@ -25,7 +25,7 @@ The approved source-native layout uses:
 | Scout Lab          | Workbench title                     [Search] [↻]   |
 | AI learning tab    | [Source-specific controls]                          |
 |                   +----------------------------------------------------+
-| Today              | Source-native workbench                            |
+| Today              | Consistent content-card grid                       |
 | Code               |                                                    |
 | Models             |                                                    |
 | Datasets           |                                                    |
@@ -40,27 +40,40 @@ The approved source-native layout uses:
 
 ### Today
 
-The default section. It uses a briefing layout with a lead signal, source lanes, and the next learning item.
+The default section. It mixes a small cross-source queue in the same grid and card design used by every source tab.
 
 ### Code
 
-GitHub repositories in a dense grid. Controls: mode, time range, language, and AI topic.
+GitHub repositories in the shared grid. Controls: mode, time range, language, and AI topic.
 
 ### Models
 
-Hugging Face models in a comparison shelf. Controls: rank, task, parameter size, and access.
+Hugging Face models in the shared grid. Controls: rank, task, parameter size, and access.
 
 ### Datasets
 
-Hugging Face datasets in a comparison table that becomes structured cards on narrow screens. Controls: rank, task, size, and additional language/license/benchmark filters.
+Hugging Face datasets in the shared grid. Controls: rank, task, size, and additional language/license/benchmark filters.
 
 ### Papers
 
-Hugging Face Daily Papers and arXiv in an editorial list. A source segment switches between Community and Raw arXiv, with time, topic/category, and source-valid sort controls.
+Hugging Face Daily Papers and arXiv in the shared grid. A source segment switches between Community and Raw arXiv, with time, topic/category, and source-valid sort controls.
 
 ### Learn
 
-A curated learning path with Continue learning, Courses, and Cookbooks and exercises. Controls: focus, format, and progress.
+A curated catalog in the shared grid. The first card is the current learning item, followed by courses, cookbooks, and exercises. Controls: focus, format, and progress.
+
+## Shared Card Anatomy
+
+Every content card uses the same dimensions and information order:
+
+1. Source/type badge and primary metric
+2. Title
+3. Three-line summary
+4. Up to four tags
+5. Secondary metadata row
+6. Favorite, Hide, Comment, and Open actions
+
+Source colors identify content without changing card geometry. Missing metadata is omitted or labelled `Not specified`; it never changes the footer position.
 
 ## Topic Vocabulary
 
@@ -145,4 +158,4 @@ The design should stay focused on daily learning, not engagement loops.
 - Comments autosave locally.
 - iCloud export is manual-first: the user clicks "Save today".
 
-Detailed behavior and complete acceptance criteria live in [Source-Native Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
+Detailed behavior and complete acceptance criteria live in [Filtered Grid Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
