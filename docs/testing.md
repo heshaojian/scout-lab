@@ -11,6 +11,7 @@ Tests are part of the repository and are release gates. Product behavior must no
 | Backup validation, export, and atomic import | `tests/backup.test.js` |
 | Source requests, fallback behavior, and cache use | `tests/feeds.test.js` |
 | Curated learning resources | `tests/learnSources.test.js` |
+| Live-source GitHub authentication headers | `tests/liveSourceAuth.test.js` |
 | Foreground and background link opening | `tests/linkOpening.test.js` |
 | GitHub, Hugging Face, and arXiv normalization | `tests/normalizers.test.js` |
 | Query construction and cache keys | `tests/query.test.js` |
@@ -31,7 +32,7 @@ Browser acceptance is intentionally separate from deterministic unit and integra
 
 `quality.yml` runs on every push and pull request. It verifies the extension structure, executes the deterministic suite with coverage, enforces the configured 80% coverage thresholds, and rejects high-severity dependency vulnerabilities.
 
-`live-sources.yml` runs daily and on demand. It performs bounded read-only checks against GitHub, Hugging Face, and arXiv. Keeping it separate prevents temporary source downtime or rate limiting from blocking deterministic pull-request validation.
+`live-sources.yml` runs daily and on demand. It performs bounded read-only checks against GitHub, Hugging Face, and arXiv. GitHub API requests use the workflow's built-in read token for an isolated rate limit; no personal token or repository secret is required. Keeping it separate prevents temporary source downtime or rate limiting from blocking deterministic pull-request validation.
 
 ## Local Release Gate
 

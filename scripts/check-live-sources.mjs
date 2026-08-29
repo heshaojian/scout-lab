@@ -7,6 +7,7 @@ import {
 } from '../src/services/query.js';
 import { learningLinks } from '../src/services/learnSources.js';
 import { createDefaultFilters } from '../src/workbenches.js';
+import { buildGithubHeaders } from './live-source-auth.mjs';
 
 const TIMEOUT = 15_000;
 const checks = [];
@@ -43,7 +44,7 @@ const trending = await record('GitHub Trending contract', async () => {
 const github = await record('GitHub search contract', async () => {
   const request = buildGithubRequest({ ...defaults.code, mode: 'rising', time: 'month', language: 'python', topic: 'agents' });
   const response = await fetchChecked(request.url, {
-    headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'Scout-Lab-Contract-Test' },
+    headers: buildGithubHeaders(process.env.GITHUB_TOKEN),
   });
   const data = await response.json();
   if (!data.items?.length || !Number.isFinite(data.items[0].stargazers_count)) throw new Error('Missing repository star data');

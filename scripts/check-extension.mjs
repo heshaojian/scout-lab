@@ -3,6 +3,7 @@ import { access, readFile } from 'node:fs/promises';
 const requiredFiles = [
   'manifest.json',
   'newtab.html',
+  'scripts/live-source-auth.mjs',
   'src/app.js',
   'src/settings.js',
   'src/theme-init.js',

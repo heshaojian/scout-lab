@@ -32,3 +32,5 @@ jobs:
 
       - name: Check live source contracts
         run: npm run test:live
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
