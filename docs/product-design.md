@@ -77,7 +77,9 @@ Source: Hugging Face
 
 Purpose: see what models are being released, liked, downloaded, or discussed.
 
-The workbench supports ranking by trending, newest, downloads, or likes, plus task, parameter-size, and access filters. Items show model name, owner, task, library, license, access, likes, downloads, and direct model link when those fields are available.
+The workbench uses a balanced discovery-and-runtime layout. Its visible controls are Hugging Face-aligned sorting, task, parameter size, Base models only, and Inference available. Library or format, license, access, application compatibility, and updated date are available under More filters.
+
+The sort menu follows Hugging Face exactly: Trending, Most likes, Most downloads, Recently created, Recently updated, Most parameters, and Least parameters. Quantizations, fine-tunes, adapters, and merges are grouped beneath their base model by default so one model family cannot overwhelm the grid. Items show model name, owner, task, parameter count, library or format, license, access, inference availability, dates, likes, downloads, trending score, and direct model and variant links when those fields are available.
 
 ### Datasets
 
