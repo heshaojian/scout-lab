@@ -44,6 +44,16 @@ The design should optimize for repeated daily use rather than one-time explorati
 
 ## Core Sections
 
+Scout Lab uses one shared shell with six source-native workbenches. The detailed behavior, data contracts, failure states, and acceptance criteria are defined in [Source-Native Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
+
+### Today
+
+Sources: all configured sources
+
+Purpose: provide a concise daily briefing without inventing a cross-source popularity score.
+
+The briefing contains a lead signal, two code items, one model, one dataset, two papers, and the next learning item. Each source uses its saved default query.
+
 ### Code
 
 Source: GitHub
@@ -59,7 +69,7 @@ Examples:
 - evaluation tools
 - multimodal projects
 
-Cards should show repo name, description, language, stars, forks, and today/week/month signal when available.
+The workbench supports Trending, New & rising, and Active modes with daily, weekly, and monthly ranges, language, and AI topic controls. Cards show repo name, description, language, total stars, forks, and period stars only when GitHub's public Trending page provides that metric.
 
 ### Models
 
@@ -67,7 +77,7 @@ Source: Hugging Face
 
 Purpose: see what models are being released, liked, downloaded, or discussed.
 
-Cards should show model name, owner, task tags, likes/downloads when available, and direct model link.
+The workbench supports ranking by trending, newest, downloads, or likes, plus task, parameter-size, and access filters. Items show model name, owner, task, library, license, access, likes, downloads, and direct model link when those fields are available.
 
 ### Datasets
 
@@ -77,23 +87,15 @@ Purpose: learn what problems people are training and evaluating against.
 
 Datasets are important because they reveal demand, task framing, and evaluation culture. This section should not be treated as secondary to models.
 
-Cards should show dataset name, owner, tags, likes/downloads when available, and direct dataset link.
+The workbench uses a comparison table on wide screens and structured cards on narrow screens. It supports rank, task, size, language, license, and official-benchmark filters.
 
 ### Papers
 
-Source: Hugging Face Papers
+Sources: Hugging Face Daily Papers and arXiv
 
-Purpose: show papers with community context and links to code or arXiv when available.
+Purpose: support both community discovery and raw research inspection without treating them as the same signal.
 
-Cards should show paper title, short summary, upvotes or discussion signal when available, and links to GitHub/arXiv where present.
-
-### Research
-
-Sources: arXiv `cs.AI` and `cs.LG`
-
-Purpose: provide access to the raw research feed without letting it dominate the experience.
-
-This section should be filtered aggressively. arXiv is powerful but noisy, so the default view should prioritize papers related to:
+The Community mode shows Hugging Face upvotes, comments, and source-provided summaries. The Raw arXiv mode filters `cs.AI`, `cs.LG`, or both by date and topic. arXiv remains aggressively filtered around:
 
 - LLMs
 - agents
@@ -107,7 +109,7 @@ This section should be filtered aggressively. arXiv is powerful but noisy, so th
 - inference
 - datasets
 
-Cards should show title, authors, category, submitted date, abstract snippet, and PDF/abstract links.
+Rows show title, authors, date, summary or abstract snippet, source-specific signals, and PDF/abstract links. arXiv rows never display a popularity metric.
 
 ### Learn
 
@@ -122,7 +124,7 @@ Initial sources:
 - Google Machine Learning Crash Course
 - selected foundational AI/ML resources
 
-This section should feel curated, not scraped. It is acceptable to start with a maintained local list and add live sources later.
+This section is a curated personal syllabus, not a scraped popularity feed. It tracks Not started, In progress, and Done states for maintained course, cookbook, and exercise links.
 
 ## First-Screen Experience
 
@@ -130,11 +132,11 @@ The first screen is the product. There should be no marketing hero and no onboar
 
 Layout:
 
-- top bar with the Scout Lab name and a compact source switcher
-- section tabs: Build, Models, Datasets, Papers, Research, Learn
-- optional small filter row for timeframe and topic
-- dense card grid optimized for scanning
-- right or top summary area for "today's signal" if it earns its place
+- left rail with Scout Lab identity, section navigation, and archive status
+- sections: Today, Code, Models, Datasets, Papers, Learn
+- workbench-specific filter bar with no more than four primary controls
+- source-native content layouts instead of a universal card grid
+- shared daily note and archive status
 
 The interface should make it easy to scan 10-20 items without feeling like a social feed.
 
@@ -151,12 +153,11 @@ type FeedCard = {
   url: string;
   summary: string;
   tags: string[];
-  metricLabel?: string;
-  metricValue?: string;
-  secondaryMetricLabel?: string;
-  secondaryMetricValue?: string;
+  metrics: Array<{ id: string; label: string; value: string; meaning: string }>;
+  links: Array<{ id: string; label: string; url: string }>;
   owner?: string;
   publishedAt?: string;
+  details: Record<string, unknown>;
 };
 ```
 
@@ -164,14 +165,14 @@ The UI should not need to know source-specific response shapes. Source adapters 
 
 ## Information Hierarchy
 
-Every card should answer:
+Every item should answer:
 
 1. What is it?
 2. Why might I care?
 3. How strong is the signal?
 4. Where can I open it?
 
-Avoid overloading cards with every available metric. One primary metric is usually enough.
+Avoid overloading an item with every available metric. Source-specific views should emphasize the two or three fields needed for comparison and retain remaining metadata in `details`.
 
 ## Visual Direction
 
@@ -219,31 +220,31 @@ Keep or rebuild from scratch:
 
 ## Architecture
 
-Recommended structure:
+Target structure:
 
 ```txt
 src/
-  app/
-    App.tsx
-    routes.ts
+  app.js
+  workbenches/
+    today.js
+    code.js
+    models.js
+    datasets.js
+    papers.js
+    learn.js
   components/
-    FeedCard.tsx
-    FeedTabs.tsx
-    FilterBar.tsx
-    EmptyState.tsx
+    shell.js
+    controls.js
+    itemActions.js
+    status.js
   services/
-    cache.ts
-    github.ts
-    huggingface.ts
-    arxiv.ts
-    learnSources.ts
-  state/
-    feeds.ts
-    settings.ts
-  types/
-    feed.ts
+    github.js
+    huggingface.js
+    arxiv.js
+    learnSources.js
+    storage.js
+    archive.js
   styles/
-    tokens.css
     app.css
 ```
 
@@ -252,12 +253,12 @@ Each source service should expose one source-specific fetch function and return 
 ## Data Flow
 
 1. User opens a new tab.
-2. App loads current section and filters from local settings.
-3. Feed state checks cache by source + section + filters.
+2. App loads current workbench and its saved filters from local settings.
+3. The workbench builds a stable query and checks cache by source + all network-affecting filters.
 4. If cache is fresh, render cached cards immediately.
 5. If cache is missing or stale, fetch source data.
-6. Source adapter normalizes data into `FeedCard[]`.
-7. UI renders cards and stores a fresh cache entry.
+6. Source adapter normalizes data into shared item fields plus source-specific `details`.
+7. The owning workbench renders its source-native layout and stores a fresh cache entry.
 8. If fetch fails, UI keeps old cache if available and shows a compact error state.
 
 ## Error Handling

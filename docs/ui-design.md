@@ -13,25 +13,23 @@ The screen should help the user:
 
 ## Layout
 
-The approved MVP layout uses:
+The approved source-native layout uses:
 
 - a left rail for identity, section navigation, and iCloud archive status
-- a top filter bar for topic lenses
-- a primary "Today's signal" module
-- a compact learning prompt
-- a daily queue card grid
+- a workbench header with source-specific controls
+- a unique content layout for every section
 - a daily note and archive preview strip
 
 ```txt
 +-------------------+----------------------------------------------------+
-| Scout Lab          | [All] [Agents] [LLMs] [RAG] [Eval] [Multimodal]   |
-| AI learning tab    |                                      [Filter] [↻] |
+| Scout Lab          | Workbench title                     [Search] [↻]   |
+| AI learning tab    | [Source-specific controls]                          |
 |                   +----------------------------------------------------+
-| Today              | Today's signal                 Learning prompt     |
+| Today              | Source-native workbench                            |
 | Code               |                                                    |
-| Models             +----------------------------------------------------+
-| Datasets           | Today's queue                                      |
-| Papers             | [Code] [Model] [Dataset] [Paper]                  |
+| Models             |                                                    |
+| Datasets           |                                                    |
+| Papers             |                                                    |
 |                    |                                                    |
 | iCloud Connected   +----------------------------------------------------+
 | [Save today]       | Daily note + archive preview                       |
@@ -42,25 +40,29 @@ The approved MVP layout uses:
 
 ### Today
 
-The default section. It mixes the most useful items across sources and includes a learning prompt.
+The default section. It uses a briefing layout with a lead signal, source lanes, and the next learning item.
 
 ### Code
 
-GitHub repositories. This section means runnable or readable code, not generic AI news.
+GitHub repositories in a dense grid. Controls: mode, time range, language, and AI topic.
 
 ### Models
 
-Hugging Face models. This section helps the user notice model releases and useful weights.
+Hugging Face models in a comparison shelf. Controls: rank, task, parameter size, and access.
 
 ### Datasets
 
-Hugging Face datasets. This section helps the user understand what people are training and evaluating against.
+Hugging Face datasets in a comparison table that becomes structured cards on narrow screens. Controls: rank, task, size, and additional language/license/benchmark filters.
 
 ### Papers
 
-Hugging Face Papers and arXiv. This section is for ideas and research context. arXiv results should be filtered by default to reduce noise.
+Hugging Face Daily Papers and arXiv in an editorial list. A source segment switches between Community and Raw arXiv, with time, topic/category, and source-valid sort controls.
 
-## Topic Lenses
+### Learn
+
+A curated learning path with Continue learning, Courses, and Cookbooks and exercises. Controls: focus, format, and progress.
+
+## Topic Vocabulary
 
 Initial filters:
 
@@ -71,7 +73,15 @@ Initial filters:
 - Eval
 - Multimodal
 
-Filters should affect all feed sections, not just one source.
+Topic is a source-translated workbench control. It does not imply that every source supports identical query semantics.
+
+## Source-Specific Metrics
+
+- GitHub period stars appear only in true Trending results.
+- GitHub API fallbacks show total stars without a growth label.
+- Hugging Face trending score is labelled as a source rank signal.
+- Community papers show upvotes and comments.
+- Raw arXiv papers show categories and dates, never popularity.
 
 ## Card Actions
 
@@ -126,11 +136,13 @@ The design should stay focused on daily learning, not engagement loops.
 
 ## MVP Interaction Rules
 
-- Show 12-20 cards per section.
+- Show 12-24 items per workbench, depending on layout density.
 - Never blank the page if one source fails.
 - Keep stale cached data visible when possible.
+- Never show old-section items beneath a newly selected workbench.
 - Hidden items stay hidden across refreshes.
 - Favorited items stay visible in the reading list and daily archive.
 - Comments autosave locally.
 - iCloud export is manual-first: the user clicks "Save today".
 
+Detailed behavior and complete acceptance criteria live in [Source-Native Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
