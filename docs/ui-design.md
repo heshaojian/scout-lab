@@ -44,7 +44,7 @@ The default section. It mixes a small cross-source queue in the same grid and ca
 
 ### Code
 
-GitHub Trending repositories in the shared grid. Controls: time range, language, and AI topic. Trending is the only user-facing Code mode.
+GitHub Trending repositories in the shared grid. Controls: time range, spoken language, programming language, and AI topic. Trending is the only Code source.
 
 ### Models
 
@@ -91,7 +91,7 @@ Topic is a source-translated workbench control. It does not imply that every sou
 ## Source-Specific Metrics
 
 - GitHub period stars appear only in true Trending results.
-- GitHub API fallbacks show total stars without a growth label.
+- GitHub source failures show no substitute repository cards.
 - Hugging Face trending score is labelled as a source rank signal.
 - Community papers show upvotes and comments.
 - Raw arXiv papers show categories and dates, never popularity.

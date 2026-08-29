@@ -81,38 +81,6 @@ export const parseGithubTrending = (html, time = 'week') => {
   }).filter(Boolean);
 };
 
-export const normalizeGithubRepository = (repository, mode = 'rising') => {
-  const title = cleanText(repository.full_name);
-  const language = repository.language || 'Not specified';
-  const totalStars = Number(repository.stargazers_count) || 0;
-  const forks = Number(repository.forks_count) || 0;
-  const date = mode === 'active' ? repository.pushed_at : repository.created_at;
-  const card = baseCard({
-    id: `github:${title}`,
-    source: 'github',
-    section: 'code',
-    type: 'Code',
-    title,
-    url: repository.html_url,
-    summary: repository.description,
-    tags: [language, ...(repository.topics || [])],
-    owner: repository.owner?.login,
-    publishedAt: date,
-  });
-
-  return {
-    ...card,
-    metricLabel: 'Total stars',
-    metricValue: `${compactNumber(totalStars)} stars`,
-    metrics: [
-      metric('total-stars', 'Total stars', totalStars, 'Cumulative GitHub stars'),
-      metric('forks', 'Forks', forks, 'Cumulative GitHub forks'),
-    ],
-    secondary: { left: language, right: `${mode === 'active' ? 'Pushed' : 'Created'} ${formatDate(date)}` },
-    details: { language, totalStars, forks, mode, createdAt: repository.created_at, pushedAt: repository.pushed_at },
-  };
-};
-
 const tagValue = (tags, prefix) => tags.find((tag) => tag.startsWith(prefix))?.slice(prefix.length) || '';
 
 export const normalizeModel = (model, rank = 'trending') => {

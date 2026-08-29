@@ -11,6 +11,31 @@ const control = (id, label, options, type = 'select') => ({ id, label, options, 
 
 const option = (value, label) => ({ value, label });
 
+export const SPOKEN_LANGUAGE_OPTIONS = [
+  option('all', 'Any spoken language'),
+  option('en', 'English'),
+  option('zh', 'Chinese'),
+  option('ja', 'Japanese'),
+  option('ko', 'Korean'),
+  option('es', 'Spanish'),
+  option('fr', 'French'),
+  option('de', 'German'),
+  option('pt', 'Portuguese'),
+  option('ru', 'Russian'),
+];
+
+export const CODE_LANGUAGE_OPTIONS = [
+  option('all', 'All languages'),
+  option('python', 'Python'),
+  option('typescript', 'TypeScript'),
+  option('javascript', 'JavaScript'),
+  option('jupyter-notebook', 'Jupyter Notebook'),
+  option('rust', 'Rust'),
+  option('go', 'Go'),
+  option('c++', 'C++'),
+  option('java', 'Java'),
+];
+
 export const WORKBENCHES = {
   today: {
     id: 'today',
@@ -26,24 +51,15 @@ export const WORKBENCHES = {
     label: 'Code',
     title: 'Code',
     subtitle: 'GitHub repositories worth reading, running, or learning from.',
-    defaults: { time: 'week', language: 'all', topic: 'all' },
+    defaults: { time: 'week', spokenLanguage: 'all', language: 'all', topic: 'all' },
     controls: [
       control('time', 'Time range', [
         option('day', 'Today'),
         option('week', 'This week'),
         option('month', 'This month'),
       ]),
-      control('language', 'Language', [
-        option('all', 'All languages'),
-        option('python', 'Python'),
-        option('typescript', 'TypeScript'),
-        option('javascript', 'JavaScript'),
-        option('jupyter-notebook', 'Jupyter Notebook'),
-        option('rust', 'Rust'),
-        option('go', 'Go'),
-        option('c++', 'C++'),
-        option('java', 'Java'),
-      ]),
+      control('spokenLanguage', 'Spoken language', SPOKEN_LANGUAGE_OPTIONS),
+      control('language', 'Language', CODE_LANGUAGE_OPTIONS),
       control('topic', 'AI topic', TOPICS),
     ],
     cacheTtl: 30 * 60 * 1000,

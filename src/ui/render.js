@@ -99,13 +99,29 @@ export const renderFilters = (workbench, filters) => `
   <button class="reset" type="button" data-command="reset-filters">Reset filters</button>
 `;
 
-export const renderEmptyState = (filters) => `
+export const renderEmptyState = (filters, { clearTopic = false } = {}) => `
   <section class="empty-state">
     <strong>No items match these filters.</strong>
     <span>${escapeHtml(Object.entries(filters).map(([key, value]) => `${key}: ${value}`).join(' · '))}</span>
-    <button class="mini-button" type="button" data-command="reset-filters">Reset filters</button>
+    ${clearTopic
+      ? '<button class="mini-button" type="button" data-filter="topic" data-value="all">Clear AI topic</button>'
+      : '<button class="mini-button" type="button" data-command="reset-filters">Reset filters</button>'}
   </section>
 `;
+
+export const renderSourceUnavailable = ({ url }) => {
+  const sourceUrl = validateSourceUrl(url, 'github');
+  return `
+    <section class="empty-state source-unavailable">
+      <strong>GitHub Trending is unavailable</strong>
+      <span>Scout Lab could not load the selected Trending page.</span>
+      <div class="empty-actions">
+        <button class="mini-button" type="button" data-command="refresh">Retry</button>
+        ${sourceUrl ? `<a class="mini-button quiet" data-open-link href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Open GitHub Trending</a>` : ''}
+      </div>
+    </section>
+  `;
+};
 
 export const updateSearchResults = (root, {
   gridHtml,

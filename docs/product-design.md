@@ -69,7 +69,7 @@ Examples:
 - evaluation tools
 - multimodal projects
 
-The workbench is exclusively a GitHub Trending view with daily, weekly, and monthly ranges, language, and AI topic controls. GitHub Search is an internal resilience fallback, not a user-selectable mode. Cards show repo name, description, language, total stars, forks, and period stars only when GitHub's public Trending page provides that metric.
+The workbench is exclusively a GitHub Trending view with daily, weekly, and monthly ranges, spoken language, programming language, and AI topic controls. Cards show repo name, description, language, total stars, forks, and period stars from GitHub's public Trending page. Code never substitutes GitHub Search or another ranking source.
 
 ### Models
 
@@ -269,8 +269,9 @@ Expected behavior:
 
 - source fails but cached data exists: show cached data with a small stale marker
 - source fails and no cache exists: show source-specific empty/error state
+- GitHub Trending fails: show no repository cards, plus Retry and the exact GitHub Trending link
 - one source fails: other tabs continue working
-- parsing changes upstream: show raw link fallback where possible
+- parsing changes upstream: show an honest source error and direct source link
 
 ## Filters
 
@@ -278,6 +279,7 @@ Initial filters should stay simple:
 
 - section
 - timeframe for GitHub where supported: today, this week, this month
+- spoken language for GitHub: Any, English, Chinese, Japanese, Korean, Spanish, French, German, Portuguese, Russian
 - topic filter: all, agents, LLMs, RAG, evaluation, multimodal
 - research noise filter: on by default
 
@@ -302,7 +304,7 @@ The first usable version should include:
 - Datasets tab with Hugging Face dataset feed
 - Research tab with arXiv filtered feed
 - Learn tab with curated links
-- cache and fallback states
+- cache and source-error states
 - local build instructions
 
 Papers can be included in MVP if the source is easy to fetch cleanly; otherwise add it immediately after.

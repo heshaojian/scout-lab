@@ -33,7 +33,7 @@ npm run check
 npm test
 npm run test:coverage
 npm run test:live
-python3 -m http.server 5179
+npm run dev
 ```
 
 Open `http://127.0.0.1:5179/newtab.html` to preview the page, or load the repository root as an unpacked Chrome extension.
@@ -44,7 +44,7 @@ The complete automated test map, browser acceptance cases, coverage gate, and ma
 
 - new-tab override
 - daily AI signal view
-- GitHub code feed
+- exact GitHub Trending code feed with spoken-language filtering
 - Hugging Face model and dataset feeds
 - arXiv paper feed for `cs.AI` and `cs.LG`
 - curated learning links

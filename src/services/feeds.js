@@ -6,12 +6,12 @@ import {
   buildGithubRequest,
   buildModelsUrl,
   matchesTopic,
+  resolveGithubRequestUrl,
   stableSerialize,
 } from './query.js';
 import {
   normalizeCommunityPaper,
   normalizeDataset,
-  normalizeGithubRepository,
   normalizeModel,
   parseArxivFeed,
   parseGithubTrending,
@@ -21,15 +21,9 @@ import { getCache, getStaleCache, setCache } from './storage.js';
 
 const REQUEST_TIMEOUT = 10_000;
 const pendingRequests = new Map();
+export const GITHUB_TRENDING_SOURCE_REVISION = 'github-trending-v2';
 
 const fallbackCards = {
-  code: [{
-    id: 'fallback:code:agents', source: 'github', section: 'code', type: 'Code',
-    title: 'Explore AI agent repositories', url: 'https://github.com/topics/agents',
-    summary: 'Browse public repositories around agents, tool use, orchestration, and automation.',
-    tags: ['agents', 'tools', 'github'], metricLabel: 'Source', metricValue: 'GitHub',
-    metrics: [], links: [], secondary: { left: 'GitHub topic', right: 'Live feed unavailable' }, details: {},
-  }],
   models: [{
     id: 'fallback:hf:models', source: 'huggingface', section: 'models', type: 'Model',
     title: 'Hugging Face models', url: 'https://huggingface.co/models',
@@ -77,15 +71,6 @@ const ensureTrendingCards = (cards) => {
   throw new Error('GitHub Trending markup did not contain repository cards');
 };
 
-const normalizeGithubSearch = (data, mode) => {
-  if (!data || !Array.isArray(data.items)) {
-    throw new Error('GitHub Search returned an unexpected response');
-  }
-  const cards = data.items.map((item) => normalizeGithubRepository(item, mode));
-  if (!cards.length) throw new Error('GitHub Search returned no repositories');
-  return cards;
-};
-
 const deduplicate = (key, task) => {
   if (pendingRequests.has(key)) return pendingRequests.get(key);
   const request = task().finally(() => pendingRequests.delete(key));
@@ -95,26 +80,19 @@ const deduplicate = (key, task) => {
 
 const fetchCode = async (filters) => {
   const request = buildGithubRequest(filters);
-  const headers = { Accept: 'application/vnd.github+json' };
-
-  try {
-    const html = await fetchText(request.url, { headers: { Accept: 'text/html' } });
-    const cards = ensureTrendingCards(
-      parseGithubTrending(html, filters.time).filter((card) => matchesTopic(card, filters.topic)),
-    );
-    return { cards, status: { label: 'GitHub Trending', stale: false } };
-  } catch (error) {
-    const data = await fetchJson(request.fallbackUrl, { headers });
-    const cards = normalizeGithubSearch(data, 'rising');
-    return {
-      cards,
-      status: {
-        label: 'GitHub search fallback',
-        stale: true,
-        message: `Trending format changed or was unavailable; showing GitHub search fallback. ${error.message}`,
-      },
-    };
-  }
+  const html = await fetchText(resolveGithubRequestUrl(request), { headers: { Accept: 'text/html' } });
+  const sourceCards = ensureTrendingCards(parseGithubTrending(html, filters.time));
+  const cards = sourceCards.filter((card) => matchesTopic(card, filters.topic));
+  return {
+    cards,
+    status: {
+      label: 'GitHub Trending',
+      stale: false,
+      unavailable: false,
+      sourceRevision: GITHUB_TRENDING_SOURCE_REVISION,
+      sourceUrl: request.url,
+    },
+  };
 };
 
 const fetchModels = async (filters) => {
@@ -228,11 +206,15 @@ const fetchToday = async (filters, options) => {
     .map(([lane, count]) => `${count} ${lane}`)
     .join(', ');
 
+  const unavailable = results.some((result) => result.status.unavailable);
+  const stale = results.some((result) => result.status.stale);
+
   return {
     cards: composition.cards,
     status: {
-      label: results.some((result) => result.status.stale) ? 'Mixed live and fallback sources' : 'All sources live',
-      stale: results.some((result) => result.status.stale),
+      label: unavailable ? 'Some sources unavailable' : stale ? 'Mixed live and fallback sources' : 'All sources live',
+      stale,
+      unavailable,
       ...(missing ? { message: `Today could not fill: ${missing}.` } : {}),
       sources: Object.fromEntries(['code', 'models', 'datasets', 'communityPapers', 'arxiv', 'learn']
         .map((id, index) => [id, results[index].status])),
@@ -254,6 +236,7 @@ export const fetchSection = async (section, filters, options = {}) => {
   const query = {
     section,
     filters,
+    ...(['code', 'today'].includes(section) ? { sourceRevision: GITHUB_TRENDING_SOURCE_REVISION } : {}),
     ...(section === 'today' ? { todayMix: normalizedOptions.todayMix, hiddenIds } : {}),
   };
   const key = stableSerialize(query);
@@ -273,6 +256,21 @@ export const fetchSection = async (section, filters, options = {}) => {
       setCache(query, result.cards, getWorkbench(section).cacheTtl, { status: result.status });
       return { ...result, cached: false };
     } catch (error) {
+      if (section === 'code') {
+        return {
+          cards: [],
+          status: {
+            label: 'GitHub Trending is unavailable',
+            message: 'GitHub Trending could not be loaded.',
+            stale: false,
+            unavailable: true,
+            sourceRevision: GITHUB_TRENDING_SOURCE_REVISION,
+            sourceUrl: buildGithubRequest(filters).url,
+          },
+          cached: false,
+          error: error.message,
+        };
+      }
       const stale = getStaleCache(query);
       if (stale?.cards?.length) {
         return {

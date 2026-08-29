@@ -4,7 +4,7 @@ const requiredFiles = [
   'manifest.json',
   'newtab.html',
   'playwright.config.js',
-  'scripts/live-source-auth.mjs',
+  'scripts/dev-server.mjs',
   'src/app.js',
   'src/settings.js',
   'src/theme-init.js',
@@ -59,12 +59,16 @@ if (manifest.chrome_url_overrides?.newtab !== 'newtab.html') {
   fail('manifest.json must override the new tab with newtab.html');
 }
 
-for (const permission of ['https://github.com/*', 'https://api.github.com/*', 'https://huggingface.co/*', 'https://export.arxiv.org/*']) {
+for (const permission of ['https://github.com/*', 'https://huggingface.co/*', 'https://export.arxiv.org/*']) {
   if (!manifest.host_permissions?.includes(permission)) fail(`Missing host permission: ${permission}`);
 }
 
-for (const origin of ['https://github.com', 'https://api.github.com', 'https://huggingface.co', 'https://export.arxiv.org']) {
+for (const origin of ['https://github.com', 'https://huggingface.co', 'https://export.arxiv.org']) {
   if (!manifest.content_security_policy?.extension_pages?.includes(origin)) fail(`Missing connect-src origin: ${origin}`);
+}
+
+if (manifest.host_permissions?.includes('https://api.github.com/*')) {
+  fail('GitHub API permission must not be present when Code uses only GitHub Trending');
 }
 
 const html = await readFile('newtab.html', 'utf8');

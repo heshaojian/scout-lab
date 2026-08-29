@@ -1,12 +1,3 @@
-const GITHUB_TOPIC_QUERY = {
-  all: 'topic:artificial-intelligence',
-  agents: 'topic:agents',
-  llms: 'topic:llm',
-  rag: 'topic:rag',
-  evaluation: 'topic:evaluation',
-  multimodal: 'topic:multimodal',
-};
-
 export const TOPIC_TERMS = {
   all: [],
   agents: ['agent', 'tool-use', 'workflow'],
@@ -73,40 +64,30 @@ const isoWeek = (input) => {
   return `${date.getUTCFullYear()}-W${pad(week)}`;
 };
 
-const githubLanguage = (value) => ({
-  typescript: 'TypeScript',
-  javascript: 'JavaScript',
-  python: 'Python',
-  'jupyter-notebook': 'Jupyter Notebook',
-  rust: 'Rust',
-  go: 'Go',
-  'c++': 'C++',
-  java: 'Java',
-}[value] || '');
-
-const githubSearchUrl = (filters, now) => {
-  const query = [GITHUB_TOPIC_QUERY[filters.topic] || GITHUB_TOPIC_QUERY.all, 'archived:false'];
-  const language = githubLanguage(filters.language);
-  if (language) query.push(`language:${language}`);
-  query.push(`created:>=${dateKey(periodStart(filters.time, now))}`);
-
-  const params = new URLSearchParams({
-    q: query.join(' '),
-    sort: 'stars',
-    order: 'desc',
-    per_page: '24',
-  });
-  return `https://api.github.com/search/repositories?${params}`;
-};
-
-export const buildGithubRequest = (filters, now = new Date()) => {
-  const language = filters.language === 'all' ? '' : encodeURIComponent(filters.language);
+export const buildGithubRequest = (filters) => {
+  const language = filters.language === 'all' ? '' : filters.language;
   const since = { day: 'daily', week: 'weekly', month: 'monthly' }[filters.time] || 'weekly';
+  const params = new URLSearchParams({ since });
+  if (filters.spokenLanguage && filters.spokenLanguage !== 'all') {
+    params.set('spoken_language_code', filters.spokenLanguage);
+  }
+  const path = language ? `/trending/${encodeURIComponent(language)}` : '/trending';
+  const previewParams = new URLSearchParams({ since });
+  if (language) previewParams.set('language', language);
+  if (filters.spokenLanguage && filters.spokenLanguage !== 'all') {
+    previewParams.set('spoken_language_code', filters.spokenLanguage);
+  }
   return {
     kind: 'trending',
-    url: `https://github.com/trending/${language}?since=${since}`,
-    fallbackUrl: githubSearchUrl(filters, now),
+    url: `https://github.com${path}?${params}`,
+    previewUrl: `/__scout/github-trending?${previewParams}`,
   };
+};
+
+export const resolveGithubRequestUrl = (request, location = globalThis.location) => {
+  const loopback = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
+  const isPreview = ['http:', 'https:'].includes(location?.protocol) && loopback.has(location?.hostname);
+  return isPreview ? request.previewUrl : request.url;
 };
 
 const appendExpand = (params, fields) => fields.forEach((field) => params.append('expand[]', field));

@@ -30,7 +30,9 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 
 - [ ] Automated Code smoke tests pass: `npm run test:e2e`.
 - [ ] Today honors its configured source counts and labels unavailable slots clearly.
-- [ ] Code exposes no mode switch; time range, language, topic, and search controls change the visible query meaning.
+- [ ] Code exposes no mode switch; time range, spoken language, programming language, topic, and search controls change the visible query meaning.
+- [ ] English and Chinese spoken-language choices match the corresponding GitHub Trending pages.
+- [ ] In the unpacked Chrome extension, Code loads GitHub Trending directly without the local preview server or a CORS/CSP error.
 - [ ] Code cards show repository identity, description, language, total stars, period stars, and destination link.
 - [ ] Models task, library, sort, access, topic, and search controls work and metrics are labeled correctly.
 - [ ] Datasets task, size, sort, access, topic, and search controls work and metrics are labeled correctly.
@@ -66,7 +68,8 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 - [ ] Connect archive folder requires an explicit user gesture.
 - [ ] Save today writes readable Markdown with source-specific fields to the selected folder.
 - [ ] Cached content renders before a successful refresh when available.
-- [ ] Empty, stale, network-error, and parser-fallback states are understandable and preserve usable cached content.
+- [ ] A Code network or parser failure shows no repository cards, plus Retry and the exact GitHub Trending link.
+- [ ] Legacy GitHub Search caches and snapshots never appear as Trending.
 - [ ] A partial Today source failure does not hide successful source results.
 - [ ] No Scout Lab console errors, failed local assets, or new extension permission warnings appear.
 

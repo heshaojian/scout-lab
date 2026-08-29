@@ -1,5 +1,7 @@
 # Code Results Resilience
 
+> **Superseded (2026-08-29):** [GitHub Trending Source Parity](./2026-08-29-github-trending-source-parity-design.md) removes the Search and repository-data fallbacks defined below. This file remains as historical context only.
+
 ## Problem
 
 The Code workbench can render an empty grid with its default filters. In a normal localhost preview, GitHub Trending HTML is blocked by browser cross-origin policy. Scout Lab then uses GitHub Search, but the current query combines a recent creation window with a hard minimum-star threshold. A valid GitHub response with zero items is treated as success, so the final safe fallback never runs.

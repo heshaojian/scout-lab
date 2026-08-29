@@ -7,7 +7,7 @@ import {
   parseBackup,
   summarizeBackup,
 } from './services/backup.js?v=0.3.0';
-import { fetchSection } from './services/feeds.js?v=0.3.0';
+import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=0.3.0';
 import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=0.3.0';
 import {
   applyDurableData,
@@ -36,6 +36,7 @@ import {
   renderCard,
   renderEmptyState,
   renderFilters,
+  renderSourceUnavailable,
   updateSearchResults,
 } from './ui/render.js?v=0.3.1';
 import { renderSettingsDrawer } from './ui/settings.js?v=0.3.0';
@@ -158,7 +159,13 @@ const cardsHtml = (filters, cards) => {
       commentingId: state.commentingId,
     })).join('');
   }
-  return state.loading ? loadingCardsHtml() : renderEmptyState(filters);
+  if (state.loading) return loadingCardsHtml();
+  if (state.selectedSection === 'code' && state.status.unavailable) {
+    return renderSourceUnavailable({ url: state.status.sourceUrl });
+  }
+  return renderEmptyState(filters, {
+    clearTopic: state.selectedSection === 'code' && filters.topic !== 'all',
+  });
 };
 
 const visibleCountLabel = (cards) => (
@@ -710,7 +717,12 @@ const boot = async () => {
   setState({ archive: await getArchiveStatus() });
 
   const snapshot = getSnapshot(todayKey())?.sections?.[state.selectedSection];
-  if (snapshot?.cards?.length) {
+  const trustedSnapshot = state.selectedSection === 'code'
+    ? snapshot?.status?.sourceRevision === GITHUB_TRENDING_SOURCE_REVISION
+    : state.selectedSection === 'today'
+      ? snapshot?.status?.sources?.code?.sourceRevision === GITHUB_TRENDING_SOURCE_REVISION
+      : true;
+  if (trustedSnapshot && snapshot?.cards?.length) {
     setState({ cards: snapshot.cards, loading: false, status: { ...snapshot.status, label: snapshot.status?.label || 'Saved daily snapshot' } });
     render();
   }

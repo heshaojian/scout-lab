@@ -6,7 +6,6 @@ import {
   normalizeCommunityPaper,
   compactNumber,
   normalizeDataset,
-  normalizeGithubRepository,
   normalizeModel,
   parseArxivFeed,
   parseGithubTrending,
@@ -37,31 +36,6 @@ describe('source normalizers', () => {
       expect.objectContaining({ id: 'total-stars', value: 12345 }),
       expect.objectContaining({ id: 'forks', value: 789 }),
     ]));
-  });
-
-  it('normalizes official GitHub search without inventing period stars', () => {
-    const card = normalizeGithubRepository({
-      full_name: 'openai/evals',
-      html_url: 'https://github.com/openai/evals',
-      description: 'Evaluation framework',
-      language: 'Python',
-      topics: ['evaluation', 'llm'],
-      stargazers_count: 18000,
-      forks_count: 2700,
-      owner: { login: 'openai' },
-      created_at: '2023-01-01T00:00:00Z',
-      pushed_at: '2026-08-27T00:00:00Z',
-    }, 'rising');
-
-    expect(card.metricLabel).toBe('Total stars');
-    expect(card.metrics.some((metric) => metric.id === 'period-stars')).toBe(false);
-    expect(card.secondary).toEqual(expect.objectContaining({ left: 'Python' }));
-
-    const active = normalizeGithubRepository({
-      full_name: 'owner/active', html_url: 'https://github.com/owner/active', topics: [],
-      stargazers_count: 0, forks_count: 0, owner: { login: 'owner' }, pushed_at: '2026-08-28T00:00:00Z',
-    }, 'active');
-    expect(active.secondary.right).toContain('Pushed Aug 28');
   });
 
   it('normalizes model and dataset source metadata', () => {

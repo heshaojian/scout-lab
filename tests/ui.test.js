@@ -4,6 +4,7 @@ import {
   renderCard,
   renderEmptyState,
   renderFilters,
+  renderSourceUnavailable,
   updateSearchResults,
 } from '../src/ui/render.js';
 import { WORKBENCHES } from '../src/workbenches.js';
@@ -79,8 +80,13 @@ describe('shared workbench renderer', () => {
     const html = renderFilters(WORKBENCHES.code, WORKBENCHES.code.defaults);
     document.body.innerHTML = html;
 
-    expect(document.querySelectorAll('.segment, .control')).toHaveLength(3);
+    expect(document.querySelectorAll('.segment, .control')).toHaveLength(4);
     expect(document.querySelector('[aria-label="Mode"]')).toBeNull();
+    const spokenLanguage = document.querySelector('[aria-label="Spoken language"]');
+    expect(spokenLanguage).toBeTruthy();
+    expect([...spokenLanguage.options].map(({ value }) => value)).toEqual([
+      'all', 'en', 'zh', 'ja', 'ko', 'es', 'fr', 'de', 'pt', 'ru',
+    ]);
     expect(document.querySelector('[data-command="reset-filters"]')).toBeTruthy();
     expect(document.querySelector('[data-command="save-filter-default"]')).toBeTruthy();
   });
@@ -117,5 +123,16 @@ describe('shared workbench renderer', () => {
     document.body.innerHTML = renderEmptyState({ language: 'python', topic: 'agents' });
     expect(document.body.textContent).toContain('language: python');
     expect(document.querySelector('[data-command="reset-filters"]')).toBeTruthy();
+  });
+
+  it('renders an honest GitHub Trending source failure', () => {
+    document.body.innerHTML = renderSourceUnavailable({
+      url: 'https://github.com/trending/python?since=weekly&spoken_language_code=zh',
+    });
+
+    expect(document.querySelector('.source-unavailable')).toBeTruthy();
+    expect(document.body.textContent).toContain('GitHub Trending is unavailable');
+    expect(document.querySelector('[data-command="refresh"]')?.textContent).toContain('Retry');
+    expect(document.querySelector('a')?.href).toBe('https://github.com/trending/python?since=weekly&spoken_language_code=zh');
   });
 });

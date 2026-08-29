@@ -1,17 +1,8 @@
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 
-const githubRepository = {
-  full_name: 'openai/evals',
-  html_url: 'https://github.com/openai/evals',
-  description: 'Evaluation framework',
-  language: 'Python',
-  topics: ['evaluation'],
-  stargazers_count: 18_000,
-  forks_count: 2_700,
-  owner: { login: 'openai' },
-  created_at: '2026-08-20T00:00:00Z',
-  pushed_at: '2026-08-28T00:00:00Z',
-};
+const trendingHtml = await readFile(resolve(process.cwd(), 'tests', 'fixtures', 'github-trending.html'), 'utf8');
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
@@ -21,62 +12,121 @@ test.beforeEach(async ({ page }) => {
       preferences: { startupSection: 'code' },
     }));
   });
-  await page.route(/^https:\/\/github\.com\/trending\//, (route) => route.abort('failed'));
 });
 
-test('Code stays useful when Trending is blocked and Search is empty', async ({ page }) => {
-  await page.route(/^https:\/\/api\.github\.com\/search\/repositories\?/, (route) => route.fulfill({
+test('Code renders the exact Trending order and four source filters', async ({ page }) => {
+  let apiCalls = 0;
+  await page.route('**/__scout/github-trending**', (route) => route.fulfill({
     status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ total_count: 0, items: [] }),
+    contentType: 'text/html',
+    body: trendingHtml,
   }));
+  await page.route('https://api.github.com/**', (route) => {
+    apiCalls += 1;
+    return route.abort('blockedbyclient');
+  });
 
   await page.goto('/newtab.html');
 
-  await expect(page.getByRole('heading', { name: 'Code' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Code', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Mode' })).toHaveCount(0);
-  await expect(page.locator('.grid .card')).toHaveCount(1);
-  await expect(page.locator('.empty-state')).toHaveCount(0);
-  await expect(page.locator('.feed-status')).toContainText('no repositories');
-  await expect(page.getByRole('heading', { name: 'Explore AI agent repositories' })).toBeVisible();
-  await expect(page.locator('.card a.open')).toHaveAttribute('href', /^https:\/\/github\.com\//);
+  await expect(page.getByLabel('Time range')).toBeVisible();
+  await expect(page.getByLabel('Spoken language')).toBeVisible();
+  await expect(page.getByLabel('Language', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('AI topic')).toBeVisible();
+  await expect(page.locator('.grid .card h3')).toHaveText([
+    'example-labs/agent-kit',
+    'signal-org/eval-workbench',
+  ]);
+  await expect(page.locator('.grid .card .metric')).toHaveText(['+373', '+120']);
+  await expect(page.locator('.feed-status')).toContainText('GitHub Trending');
+  expect(apiCalls).toBe(0);
 });
 
-test('Code renders a valid Search repository after Trending is blocked', async ({ page }) => {
-  await page.route(/^https:\/\/api\.github\.com\/search\/repositories\?/, (route) => route.fulfill({
-    status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ total_count: 1, items: [githubRepository] }),
+test('English and Chinese map to GitHub spoken_language_code', async ({ page }) => {
+  const spokenLanguages = [];
+  await page.route('**/__scout/github-trending**', (route) => {
+    spokenLanguages.push(new URL(route.request().url()).searchParams.get('spoken_language_code'));
+    return route.fulfill({ status: 200, contentType: 'text/html', body: trendingHtml });
+  });
+
+  await page.goto('/newtab.html');
+  await page.getByLabel('Spoken language').selectOption('en');
+  await page.getByLabel('Spoken language').selectOption('zh');
+
+  await expect(page.getByLabel('Spoken language')).toHaveValue('zh');
+  expect(spokenLanguages).toEqual([null, 'en', 'zh']);
+});
+
+test('Code shows an honest unavailable state and never requests Search', async ({ page }) => {
+  let apiCalls = 0;
+  await page.route('**/__scout/github-trending**', (route) => route.fulfill({
+    status: 502,
+    contentType: 'text/plain',
+    body: 'Upstream unavailable',
   }));
+  await page.route('https://api.github.com/**', (route) => {
+    apiCalls += 1;
+    return route.abort('blockedbyclient');
+  });
 
   await page.goto('/newtab.html');
 
-  const card = page.locator('.grid .card');
-  await expect(card).toHaveCount(1);
-  await expect(card.getByRole('heading', { name: 'openai/evals' })).toBeVisible();
-  await expect(card.locator('.metric')).toContainText('18k stars');
-  await expect(card.locator('a.open')).toHaveAttribute('href', 'https://github.com/openai/evals');
+  await expect(page.locator('.grid .card')).toHaveCount(0);
+  await expect(page.locator('.source-unavailable')).toBeVisible();
+  await expect(page.getByText('GitHub Trending is unavailable', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open GitHub Trending' })).toHaveAttribute(
+    'href',
+    'https://github.com/trending?since=weekly',
+  );
+  expect(apiCalls).toBe(0);
 });
 
-test('Code ignores a legacy cached empty result', async ({ page }) => {
+test('Code ignores a legacy Search-backed cache entry', async ({ page }) => {
   await page.addInitScript(() => {
-    const query = '{"filters":{"language":"all","mode":"trending","time":"week","topic":"all"},"section":"code"}';
+    const query = '{"filters":{"language":"all","time":"week","topic":"all"},"section":"code"}';
     localStorage.setItem(`scout-lab:cache:v4:${query}`, JSON.stringify({
-      cards: [],
-      status: { label: 'Old empty result', stale: true },
+      cards: [{
+        id: 'github:old/search-result',
+        source: 'github',
+        section: 'code',
+        type: 'Code',
+        title: 'old/search-result',
+        url: 'https://github.com/old/search-result',
+      }],
+      status: { label: 'GitHub search fallback', stale: true },
       expiresAt: Date.now() + 60_000,
       savedAt: new Date().toISOString(),
     }));
   });
-  await page.route(/^https:\/\/api\.github\.com\/search\/repositories\?/, (route) => route.fulfill({
+  await page.route('**/__scout/github-trending**', (route) => route.fulfill({
     status: 200,
-    contentType: 'application/json',
-    body: JSON.stringify({ total_count: 1, items: [githubRepository] }),
+    contentType: 'text/html',
+    body: trendingHtml,
   }));
 
   await page.goto('/newtab.html');
 
-  await expect(page.locator('.grid .card')).toHaveCount(1);
-  await expect(page.getByRole('heading', { name: 'openai/evals' })).toBeVisible();
-  await expect(page.locator('.feed-status')).not.toContainText('Old empty result');
+  await expect(page.getByRole('heading', { name: 'old/search-result' })).toHaveCount(0);
+  await expect(page.locator('.grid .card h3')).toHaveText([
+    'example-labs/agent-kit',
+    'signal-org/eval-workbench',
+  ]);
+});
+
+test('Code filters and cards remain usable on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/__scout/github-trending**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'text/html',
+    body: trendingHtml,
+  }));
+
+  await page.goto('/newtab.html');
+
+  await expect(page.getByLabel('Spoken language')).toBeVisible();
+  await expect(page.getByLabel('Language', { exact: true })).toBeVisible();
+  await expect(page.locator('.grid .card')).toHaveCount(2);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

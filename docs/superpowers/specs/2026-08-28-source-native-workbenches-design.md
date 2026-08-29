@@ -1,5 +1,7 @@
 # Scout Lab Filtered Grid Workbenches
 
+> **Code source update (2026-08-29):** GitHub Search and repository-data fallbacks in this document are superseded by [GitHub Trending Source Parity](./2026-08-29-github-trending-source-parity-design.md). Code now uses only exact GitHub Trending data.
+
 **Status:** Implemented and verified
 **Date:** 2026-08-28  
 **Product:** Scout Lab Chrome new-tab extension

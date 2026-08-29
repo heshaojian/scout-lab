@@ -694,6 +694,19 @@ a:focus-visible {
   font-size: 15px;
 }
 
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.empty-actions a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .note-strip {
   margin-top: 18px;
   padding: 13px;

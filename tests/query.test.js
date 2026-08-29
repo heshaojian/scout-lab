@@ -8,6 +8,7 @@ import {
   buildGithubRequest,
   buildModelsUrl,
   matchesTopic,
+  resolveGithubRequestUrl,
   stableSerialize,
   validateSourceUrl,
 } from '../src/services/query.js';
@@ -22,7 +23,7 @@ describe('workbench query builders', () => {
     first.code.language = 'python';
 
     expect(second.code.language).toBe('all');
-    expect(second.code).toEqual({ time: 'week', language: 'all', topic: 'all' });
+    expect(second.code).toEqual({ time: 'week', spokenLanguage: 'all', language: 'all', topic: 'all' });
     expect(Object.keys(second)).toEqual(['today', 'code', 'models', 'datasets', 'papers', 'learn']);
   });
 
@@ -32,7 +33,12 @@ describe('workbench query builders', () => {
       time: 'month',
       language: 'python',
       topic: 'agents',
-    })).toEqual({ time: 'month', language: 'python', topic: 'agents' });
+    })).toEqual({ time: 'month', spokenLanguage: 'all', language: 'python', topic: 'agents' });
+
+    expect(normalizeWorkbenchFilters('code', {
+      spokenLanguage: 'unsupported',
+      time: 'day',
+    })).toEqual({ time: 'day', spokenLanguage: 'all', language: 'all', topic: 'all' });
   });
 
   it('serializes query state with stable key ordering', () => {
@@ -41,24 +47,50 @@ describe('workbench query builders', () => {
     expect(stableSerialize({ values: [{ z: 1, a: 2 }] })).toBe('{"values":[{"a":2,"z":1}]}');
   });
 
-  it('always builds GitHub Trending with a matching Search fallback', () => {
-    const trending = buildGithubRequest({
-      mode: 'active',
+  it('builds exact GitHub Trending URLs for Any, English, and Chinese', () => {
+    const english = buildGithubRequest({
       time: 'week',
+      spokenLanguage: 'en',
       language: 'python',
       topic: 'agents',
     }, now);
+    const chinese = buildGithubRequest({
+      time: 'month',
+      spokenLanguage: 'zh',
+      language: 'all',
+      topic: 'all',
+    }, now);
+    const any = buildGithubRequest({
+      time: 'day',
+      spokenLanguage: 'all',
+      language: 'all',
+      topic: 'all',
+    }, now);
 
-    expect(trending.kind).toBe('trending');
-    expect(trending.url).toBe('https://github.com/trending/python?since=weekly');
-    const fallback = new URL(trending.fallbackUrl);
-    const fallbackQuery = decodeURIComponent(fallback.searchParams.get('q'));
-    expect(fallbackQuery).toContain('topic:agents');
-    expect(fallbackQuery).toContain('created:>=2026-08-21');
-    expect(fallbackQuery).toContain('language:Python');
-    expect(fallbackQuery).not.toContain('pushed:>=');
-    expect(fallbackQuery).not.toContain('stars:>');
-    expect(fallback.searchParams.get('sort')).toBe('stars');
+    expect(english).toEqual(expect.objectContaining({
+      kind: 'trending',
+      url: 'https://github.com/trending/python?since=weekly&spoken_language_code=en',
+    }));
+    expect(chinese.url).toBe('https://github.com/trending?since=monthly&spoken_language_code=zh');
+    expect(any.url).toBe('https://github.com/trending?since=daily');
+    expect(english).not.toHaveProperty('fallbackUrl');
+
+    const preview = new URL(english.previewUrl, 'http://127.0.0.1:5179');
+    expect(preview.pathname).toBe('/__scout/github-trending');
+    expect(preview.searchParams.get('since')).toBe('weekly');
+    expect(preview.searchParams.get('language')).toBe('python');
+    expect(preview.searchParams.get('spoken_language_code')).toBe('en');
+  });
+
+  it('uses the local proxy only for loopback HTTP previews', () => {
+    const request = buildGithubRequest({
+      time: 'week', spokenLanguage: 'zh', language: 'all', topic: 'all',
+    }, now);
+
+    expect(resolveGithubRequestUrl(request, { protocol: 'http:', hostname: '127.0.0.1' })).toBe(request.previewUrl);
+    expect(resolveGithubRequestUrl(request, { protocol: 'https:', hostname: 'localhost' })).toBe(request.previewUrl);
+    expect(resolveGithubRequestUrl(request, { protocol: 'chrome-extension:', hostname: 'extension-id' })).toBe(request.url);
+    expect(resolveGithubRequestUrl(request, { protocol: 'https:', hostname: 'example.com' })).toBe(request.url);
   });
 
   it('maps Hugging Face model controls to supported parameters', () => {

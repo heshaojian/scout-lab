@@ -6,8 +6,9 @@ import {
   buildModelsUrl,
 } from '../src/services/query.js';
 import { learningLinks } from '../src/services/learnSources.js';
+import { parseGithubTrending } from '../src/services/normalizers.js';
 import { createDefaultFilters } from '../src/workbenches.js';
-import { buildGithubHeaders } from './live-source-auth.mjs';
+import { JSDOM } from 'jsdom';
 
 const TIMEOUT = 15_000;
 const checks = [];
@@ -30,25 +31,50 @@ const record = async (name, task) => {
 };
 
 const defaults = createDefaultFilters();
+globalThis.DOMParser = new JSDOM('').window.DOMParser;
 
-const trending = await record('GitHub Trending contract', async () => {
-  const response = await fetchChecked(buildGithubRequest(defaults.code).url);
+const trendingContract = (name, filters) => record(name, async () => {
+  const response = await fetchChecked(buildGithubRequest(filters).url);
   const html = await response.text();
-  const repositoryPaths = [...html.matchAll(/<h2[\s\S]*?<a[^>]+href="(\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)"/g)]
-    .map((match) => match[1]);
-  const periodLabels = (html.match(/stars this week/g) || []).length;
-  if (!repositoryPaths.length || !periodLabels) throw new Error('No parseable repositories or weekly star labels');
-  return { entries: repositoryPaths.length, periodLabels, links: repositoryPaths.map((path) => `https://github.com${path}`) };
+  const periodLabel = { day: 'today', week: 'this week', month: 'this month' }[filters.time];
+  const document = new JSDOM(html).window.document;
+  const articles = [...document.querySelectorAll('article.Box-row')];
+  const repositoryPaths = articles.map((article) => [...article.querySelectorAll('h2 a')]
+    .map((link) => link.getAttribute('href') || '')
+    .find((path) => /^\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/?$/.test(path))
+    ?.replace(/^\//, '').replace(/\/$/, ''))
+    .filter(Boolean);
+  const periodStars = articles.map((article) => [...article.querySelectorAll('span')]
+    .map((node) => node.textContent || '')
+    .find((text) => new RegExp(`stars?\\s+${periodLabel}`).test(text)))
+    .filter(Boolean)
+    .map((text) => Number(text.replace(/[^0-9]/g, '')));
+  const cards = parseGithubTrending(html, filters.time);
+  if (!repositoryPaths.length || !periodStars.length) throw new Error('No parseable repositories or period-star labels');
+  if (JSON.stringify(cards.map(({ title }) => title)) !== JSON.stringify(repositoryPaths)) {
+    throw new Error('Parser repository order differs from GitHub HTML');
+  }
+  if (JSON.stringify(cards.map((card) => card.details.periodStars)) !== JSON.stringify(periodStars)) {
+    throw new Error('Parser period stars differ from GitHub HTML');
+  }
+  return {
+    entries: cards.length,
+    periodLabels: periodStars.length,
+    first: cards[0].title,
+    links: cards.map((card) => card.url),
+  };
 });
 
-const github = await record('GitHub search contract', async () => {
-  const request = buildGithubRequest({ ...defaults.code, time: 'month', language: 'python', topic: 'agents' });
-  const response = await fetchChecked(request.fallbackUrl, {
-    headers: buildGithubHeaders(process.env.GITHUB_TOKEN),
-  });
-  const data = await response.json();
-  if (!data.items?.length || !Number.isFinite(data.items[0].stargazers_count)) throw new Error('Missing repository star data');
-  return { entries: data.items.length, links: data.items.slice(0, 8).map((item) => item.html_url) };
+const trending = await trendingContract('GitHub Trending contract', defaults.code);
+const trendingEnglish = await trendingContract('GitHub Trending English contract', {
+  ...defaults.code,
+  time: 'day',
+  spokenLanguage: 'en',
+});
+const trendingChinese = await trendingContract('GitHub Trending Chinese contract', {
+  ...defaults.code,
+  time: 'month',
+  spokenLanguage: 'zh',
 });
 
 const models = await record('Hugging Face models contract', async () => {
@@ -89,7 +115,7 @@ const arxiv = await record('arXiv Atom contract', async () => {
   return { entries: ids.length, links: ids.map((id) => `https://arxiv.org/abs/${id}`) };
 });
 
-const linkGroups = [trending, github, models, datasets, papers, arxiv].filter(Boolean);
+const linkGroups = [trending, trendingEnglish, trendingChinese, models, datasets, papers, arxiv].filter(Boolean);
 const links = [...new Set([
   ...linkGroups.flatMap((group) => group.links),
   ...learningLinks.map((item) => item.url),

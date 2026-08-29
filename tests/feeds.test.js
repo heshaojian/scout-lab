@@ -34,99 +34,91 @@ describe('feed integration', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('falls back to official GitHub search without period stars when Trending parsing fails', async () => {
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce(response('<html><body>changed</body></html>', { type: 'text/html' }))
-      .mockResolvedValueOnce(response({
-        items: [{
-          full_name: 'openai/evals',
-          html_url: 'https://github.com/openai/evals',
-          description: 'Evaluation framework',
-          language: 'Python',
-          topics: ['evaluation'],
-          stargazers_count: 18000,
-          forks_count: 2700,
-          owner: { login: 'openai' },
-          created_at: '2023-01-01T00:00:00Z',
-          pushed_at: '2026-08-27T00:00:00Z',
-        }],
-      }));
+  it('returns no repository cards and never calls Search when Trending parsing fails', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      response('<html><body>changed</body></html>', { type: 'text/html' }),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await fetchSection('code', createDefaultFilters().code, { force: true });
 
-    expect(result.cards[0].metricLabel).toBe('Total stars');
-    expect(result.cards[0].metrics.some((metric) => metric.id === 'period-stars')).toBe(false);
-    expect(result.status).toMatchObject({ stale: true, label: 'GitHub search fallback' });
-  });
-
-  it('returns a trusted GitHub discovery card when Trending and Search are empty', async () => {
-    const fetchMock = vi.fn()
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-      .mockResolvedValueOnce(response({ total_count: 0, items: [] }));
-    vi.stubGlobal('fetch', fetchMock);
-
-    const result = await fetchSection('code', createDefaultFilters().code, { force: true });
-
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(result.cards).toHaveLength(1);
-    expect(result.cards[0]).toMatchObject({
-      id: 'fallback:code:agents',
-      source: 'github',
-      url: 'https://github.com/topics/agents',
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(`${fetchMock.mock.calls[0][0]}`).toContain('github.com/trending');
+    expect(result.cards).toEqual([]);
+    expect(result.status).toMatchObject({
+      label: 'GitHub Trending is unavailable',
+      unavailable: true,
+      stale: false,
     });
-    expect(result.status).toMatchObject({ label: 'Code fallback', stale: true });
-    expect(result.status.message).toContain('no repositories');
+    expect(result.status.sourceUrl).toBe('https://github.com/trending?since=weekly');
   });
 
-  it('returns a trusted GitHub discovery card for malformed Search data', async () => {
-    vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce(response('<html><body>changed</body></html>', { type: 'text/html' }))
-      .mockResolvedValueOnce(response({ unexpected: true })));
+  it('does not show stale Code data after a failed live request', async () => {
+    const filters = createDefaultFilters().code;
+    setCache(
+      { section: 'code', filters },
+      [{ id: 'github:old/search-result', title: 'old/search-result' }],
+      -1,
+      { status: { label: 'GitHub search fallback', stale: true } },
+    );
+    const fetchMock = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchSection('code', filters, { force: true });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.cards).toEqual([]);
+    expect(result.cached).toBe(false);
+    expect(result.status.unavailable).toBe(true);
+  });
+
+  it('preserves GitHub order when applying an AI-topic subset', async () => {
+    const html = trendingHtml.replace(
+      'A useful toolkit for building reliable AI agents.',
+      'A useful toolkit for building reliable databases.',
+    );
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(html, { type: 'text/html' })));
 
     const result = await fetchSection(
       'code',
-      createDefaultFilters().code,
+      { ...createDefaultFilters().code, topic: 'evaluation' },
       { force: true },
     );
 
     expect(result.cards).toHaveLength(1);
-    expect(result.cards[0].id).toBe('fallback:code:agents');
-    expect(result.status.message).toContain('unexpected response');
+    expect(result.cards[0].title).toBe('signal-org/eval-workbench');
+    expect(result.status.label).toBe('GitHub Trending');
   });
 
-  it('does not reuse a cached empty Code result', async () => {
+  it('keeps an empty AI-topic subset distinct from a source failure', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(trendingHtml, { type: 'text/html' })));
+
+    const result = await fetchSection(
+      'code',
+      { ...createDefaultFilters().code, topic: 'multimodal' },
+      { force: true },
+    );
+
+    expect(result.cards).toEqual([]);
+    expect(result.status).toMatchObject({ label: 'GitHub Trending', unavailable: false });
+  });
+
+  it('does not reuse a pre-parity Code cache entry', async () => {
     const filters = createDefaultFilters().code;
     setCache(
       { section: 'code', filters },
-      [],
+      [{ id: 'github:old/search-result', title: 'old/search-result' }],
       60_000,
-      { status: { label: 'Old empty result', stale: true } },
+      { status: { label: 'GitHub search fallback', stale: true } },
     );
-    const fetchMock = vi.fn()
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-      .mockResolvedValueOnce(response({
-        total_count: 1,
-        items: [{
-          full_name: 'openai/evals',
-          html_url: 'https://github.com/openai/evals',
-          description: 'Evaluation framework',
-          language: 'Python',
-          topics: ['evaluation'],
-          stargazers_count: 18_000,
-          forks_count: 2_700,
-          owner: { login: 'openai' },
-          created_at: '2026-08-20T00:00:00Z',
-          pushed_at: '2026-08-28T00:00:00Z',
-        }],
-      }));
+    const fetchMock = vi.fn().mockResolvedValue(response(trendingHtml, { type: 'text/html' }));
     vi.stubGlobal('fetch', fetchMock);
 
     const result = await fetchSection('code', filters);
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(result.cached).toBe(false);
-    expect(result.cards[0].title).toBe('openai/evals');
+    expect(result.cards[0].title).toBe('example-labs/agent-kit');
   });
 
   it('deduplicates simultaneous matching source requests', async () => {
