@@ -36,12 +36,17 @@ const setHandle = async (handle) => {
   });
 };
 
-const verifyPermission = async (handle, mode = 'readwrite') => {
+export const hasPermission = async (handle, mode = 'readwrite') => {
   if (!handle) return false;
 
-  const options = { mode };
-  if ((await handle.queryPermission(options)) === 'granted') return true;
-  if ((await handle.requestPermission(options)) === 'granted') return true;
+  return (await handle.queryPermission({ mode })) === 'granted';
+};
+
+export const verifyPermission = async (handle, mode = 'readwrite') => {
+  if (await hasPermission(handle, mode)) return true;
+  if (!handle) return false;
+
+  if ((await handle.requestPermission({ mode })) === 'granted') return true;
 
   return false;
 };
@@ -76,16 +81,13 @@ export const getArchiveStatus = async () => {
   const handle = await getHandle();
   if (!handle) return { connected: false, name: '' };
 
-  const connected = await verifyPermission(handle, 'readwrite');
+  const connected = await hasPermission(handle, 'readwrite');
   return { connected, name: handle.name };
 };
 
-export const writeDailyArchive = async (date, content) => {
-  const handle = await getHandle();
-
-  if (!handle) {
-    throw new Error('Choose an iCloud Drive folder before saving.');
-  }
+export const writeArchiveToHandle = async (handle, date, content) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Archive date must use YYYY-MM-DD.');
+  if (typeof content !== 'string') throw new Error('Archive content must be text.');
 
   const allowed = await verifyPermission(handle, 'readwrite');
   if (!allowed) {
@@ -103,3 +105,12 @@ export const writeDailyArchive = async (date, content) => {
   return `${handle.name}/${year}/${month}/${date}.md`;
 };
 
+export const writeDailyArchive = async (date, content) => {
+  const handle = await getHandle();
+
+  if (!handle) {
+    throw new Error('Choose an iCloud Drive folder before saving.');
+  }
+
+  return writeArchiveToHandle(handle, date, content);
+};

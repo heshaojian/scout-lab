@@ -1,0 +1,107 @@
+import { validateSourceUrl } from '../services/query.js';
+
+export const escapeHtml = (value = '') => `${value}`
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+
+const actionButton = (label, action, icon, active = false) => `
+  <button class="icon-button ${active ? 'active' : ''}" type="button" title="${label}" aria-label="${label}" data-action="${action}">${icon}</button>
+`;
+
+const progressControl = (card, progress) => {
+  const value = progress[card.id]?.status || card.details?.progress || 'not-started';
+  return `
+    <label class="progress-control">
+      <span class="sr-only">Progress for ${escapeHtml(card.title)}</span>
+      <select data-progress data-id="${escapeHtml(card.id)}" aria-label="Progress for ${escapeHtml(card.title)}">
+        <option value="not-started" ${value === 'not-started' ? 'selected' : ''}>Not started</option>
+        <option value="in-progress" ${value === 'in-progress' ? 'selected' : ''}>In progress</option>
+        <option value="done" ${value === 'done' ? 'selected' : ''}>Done</option>
+      </select>
+    </label>
+  `;
+};
+
+export const renderCard = (card, { user = {}, progress = {}, commentingId = null } = {}) => {
+  const itemState = user[card.id] || card.user || {};
+  const note = itemState.comment || '';
+  const safeUrl = validateSourceUrl(card.url, card.source);
+  const isCommenting = commentingId === card.id;
+  const secondaryLink = (card.links || []).find((link) => validateSourceUrl(link.url, card.source));
+
+  return `
+    <article class="card" data-id="${escapeHtml(card.id)}" data-type="${escapeHtml(card.type)}">
+      <div class="card-head">
+        <span class="badge ${escapeHtml(card.type.toLowerCase())}">${escapeHtml(card.type)}</span>
+        <span class="metric" title="${escapeHtml(card.metricLabel || '')}">${escapeHtml(card.metricValue || 'Not specified')}</span>
+      </div>
+      <h3>${escapeHtml(card.title)}</h3>
+      <p class="summary">${card.summaryLabel ? `<span class="summary-label">${escapeHtml(card.summaryLabel)}</span> ` : ''}${escapeHtml(card.summary)}</p>
+      <div class="tags">${(card.tags || []).slice(0, 4).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}</div>
+      ${isCommenting ? `
+        <div class="comment-editor">
+          <textarea data-comment-draft aria-label="Comment for ${escapeHtml(card.title)}">${escapeHtml(note)}</textarea>
+          <div>
+            <button class="mini-button" type="button" data-action="save-comment">Save note</button>
+            <button class="mini-button quiet" type="button" data-action="cancel-comment">Cancel</button>
+          </div>
+        </div>
+      ` : ''}
+      ${note && !isCommenting ? `<div class="comment-preview">${escapeHtml(note)}</div>` : ''}
+      <div class="secondary">
+        <span>${escapeHtml(card.secondary?.left || card.owner || 'Not specified')}</span>
+        ${card.type === 'Learn'
+          ? progressControl(card, progress)
+          : secondaryLink
+            ? `<a class="secondary-link" href="${escapeHtml(validateSourceUrl(secondaryLink.url, card.source))}" target="_blank" rel="noopener noreferrer">${escapeHtml(secondaryLink.label)}</a>`
+            : `<span>${escapeHtml(card.secondary?.right || 'Not specified')}</span>`}
+      </div>
+      <div class="card-footer">
+        <div class="card-actions">
+          ${actionButton('Favorite', 'favorite', itemState.favorite ? '&#9733;' : '&#9734;', itemState.favorite)}
+          ${actionButton('Hide', 'hide', '&minus;')}
+          ${actionButton('Comment', 'comment', '&#9998;', Boolean(note))}
+        </div>
+        ${safeUrl
+          ? `<a class="open" href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">Open <span aria-hidden="true">&rarr;</span></a>`
+          : '<span class="open disabled">Link unavailable</span>'}
+      </div>
+    </article>
+  `;
+};
+
+const renderSegment = (control, value) => `
+  <div class="segment" role="group" aria-label="${escapeHtml(control.label)}">
+    ${control.options.map((item) => `
+      <button type="button" data-filter="${escapeHtml(control.id)}" data-value="${escapeHtml(item.value)}" aria-pressed="${item.value === value}" class="${item.value === value ? 'selected' : ''}">${escapeHtml(item.label)}</button>
+    `).join('')}
+  </div>
+`;
+
+const renderSelect = (control, value) => `
+  <label class="control-wrap">
+    <span class="sr-only">${escapeHtml(control.label)}</span>
+    <select class="control" data-filter="${escapeHtml(control.id)}" aria-label="${escapeHtml(control.label)}">
+      ${control.options.map((item) => `<option value="${escapeHtml(item.value)}" ${item.value === value ? 'selected' : ''}>${escapeHtml(item.label)}</option>`).join('')}
+    </select>
+  </label>
+`;
+
+export const renderFilters = (workbench, filters) => `
+  ${workbench.controls.map((control) => (
+    control.type === 'segment' ? renderSegment(control, filters[control.id]) : renderSelect(control, filters[control.id])
+  )).join('')}
+  <span class="filter-spacer"></span>
+  <button class="reset" type="button" data-command="reset-filters">Reset filters</button>
+`;
+
+export const renderEmptyState = (filters) => `
+  <section class="empty-state">
+    <strong>No items match these filters.</strong>
+    <span>${escapeHtml(Object.entries(filters).map(([key, value]) => `${key}: ${value}`).join(' · '))}</span>
+    <button class="mini-button" type="button" data-command="reset-filters">Reset filters</button>
+  </section>
+`;

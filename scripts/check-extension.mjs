@@ -4,10 +4,15 @@ const requiredFiles = [
   'manifest.json',
   'newtab.html',
   'src/app.js',
+  'src/workbenches.js',
   'src/services/feeds.js',
+  'src/services/query.js',
+  'src/services/normalizers.js',
   'src/services/storage.js',
   'src/services/archive.js',
+  'src/services/archiveFormat.js',
   'src/services/learnSources.js',
+  'src/ui/render.js',
   'src/styles/app.css',
   'docs/product-design.md',
   'docs/ui-design.md',
@@ -40,6 +45,14 @@ if (manifest.name !== 'Scout Lab') {
 
 if (manifest.chrome_url_overrides?.newtab !== 'newtab.html') {
   fail('manifest.json must override the new tab with newtab.html');
+}
+
+for (const permission of ['https://github.com/*', 'https://api.github.com/*', 'https://huggingface.co/*', 'https://export.arxiv.org/*']) {
+  if (!manifest.host_permissions?.includes(permission)) fail(`Missing host permission: ${permission}`);
+}
+
+for (const origin of ['https://github.com', 'https://api.github.com', 'https://huggingface.co', 'https://export.arxiv.org']) {
+  if (!manifest.content_security_policy?.extension_pages?.includes(origin)) fail(`Missing connect-src origin: ${origin}`);
 }
 
 const html = await readFile('newtab.html', 'utf8');

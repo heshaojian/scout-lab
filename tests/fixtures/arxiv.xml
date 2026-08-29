@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <entry>
+    <id>https://arxiv.org/abs/2608.12345v1</id>
+    <updated>2026-08-27T18:00:00Z</updated>
+    <published>2026-08-27T18:00:00Z</published>
+    <title>Persistent Memory for Tool-Using Agents</title>
+    <summary>We study durable memory for agents that plan, use tools, and recover from errors.</summary>
+    <author><name>Ada Researcher</name></author>
+    <author><name>Lin Scientist</name></author>
+    <category term="cs.AI" />
+    <category term="cs.LG" />
+    <link href="https://arxiv.org/abs/2608.12345v1" rel="alternate" type="text/html" />
+    <link title="pdf" href="https://arxiv.org/pdf/2608.12345v1" rel="related" type="application/pdf" />
+  </entry>
+</feed>

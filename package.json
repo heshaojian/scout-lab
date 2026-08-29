@@ -1,11 +1,19 @@
 {
   "name": "scout-lab",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "license": "MIT",
   "scripts": {
     "dev": "python3 -m http.server 5179",
-    "check": "node scripts/check-extension.mjs"
+    "check": "node scripts/check-extension.mjs",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:live": "node scripts/check-live-sources.mjs"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
+    "jsdom": "^29.1.1",
+    "vitest": "^4.1.11"
   }
 }

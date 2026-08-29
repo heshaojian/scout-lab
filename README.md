@@ -13,7 +13,7 @@ Scout Lab is intentionally not a general search page, bookmark manager, or news 
 - skimming research without drowning in noise
 - finding one useful concept or tutorial to study next
 
-## Planned Feeds
+## Feeds
 
 - Code: GitHub AI repositories
 - Models: Hugging Face models
@@ -27,12 +27,15 @@ Scout Lab is a Manifest V3 extension with no build step.
 
 ```bash
 npm run check
+npm test
+npm run test:coverage
+npm run test:live
 python3 -m http.server 5179
 ```
 
 Open `http://127.0.0.1:5179/newtab.html` to preview the page, or load the repository root as an unpacked Chrome extension.
 
-## MVP Features
+## Features
 
 - new-tab override
 - daily AI signal view
@@ -41,10 +44,12 @@ Open `http://127.0.0.1:5179/newtab.html` to preview the page, or load the reposi
 - arXiv paper feed for `cs.AI` and `cs.LG`
 - curated learning links
 - topic lenses
+- source-specific rank, time, language, task, size, access, category, and progress filters
+- one consistent responsive card grid across every section
 - favorite, hide, and comment actions
 - local cache and daily snapshot
 - manual Markdown archive to a chosen iCloud Drive folder
 
-## Status
+## Architecture
 
-This repository starts fresh to avoid carrying over unrelated code, design, or licensing baggage from earlier experiments.
+Scout Lab has no build step. Source adapters normalize GitHub, Hugging Face, and arXiv data into a shared card contract. Query-aware local caches preserve fast startup, while favorites, hidden items, comments, learning progress, and daily snapshots remain on-device.
