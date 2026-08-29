@@ -50,4 +50,4 @@ Then complete the browser acceptance matrix for behavior that changed.
 
 ## Maintenance Rule
 
-Every behavior change must update or add the nearest automated test. Changes to controls, navigation, persistence, responsive layout, themes, source contracts, or user workflows must also update the browser acceptance matrix. Pull requests record both obligations explicitly in `.github/pull_request_template.md`, and CI prevents merging code whose deterministic checks or coverage gate fail.
+Every behavior change must update or add the nearest automated test. Changes to controls, navigation, persistence, responsive layout, themes, source contracts, or user workflows must also update the browser acceptance matrix. Pull requests record both obligations explicitly in `.github/pull_request_template.md`, and CI reports deterministic-check or coverage-gate failures immediately.
