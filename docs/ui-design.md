@@ -147,6 +147,8 @@ The UI should feel like a compact research bench:
 
 The design should stay focused on daily learning, not engagement loops.
 
+Comfortable density is optimized for sustained reading with wider cards, larger type, and low-glare surfaces. Detailed behavior and acceptance criteria live in [Long-Session Reading Comfort](./superpowers/specs/2026-08-29-long-session-reading-comfort-design.md).
+
 ## Friendly Settings
 
 Settings opens as a compact right-side drawer, becoming a full-width overlay on mobile. It includes system/light/dark theme, comfortable/compact density, startup and link-opening behavior, Today source composition, saved workbench defaults, and validated backup/restore. Preferences apply immediately and preserve the shared workbench grid.
