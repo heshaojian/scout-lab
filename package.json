@@ -9,9 +9,11 @@
     "check": "node scripts/check-extension.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
     "test:live": "node scripts/check-live-sources.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@vitest/coverage-v8": "^4.1.11",
     "jsdom": "^29.1.1",
     "vitest": "^4.1.11"

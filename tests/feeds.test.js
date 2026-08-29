@@ -60,6 +60,73 @@ describe('feed integration', () => {
     expect(result.status).toMatchObject({ stale: true, label: 'GitHub search fallback' });
   });
 
+  it('returns a trusted GitHub discovery card when Trending and Search are empty', async () => {
+    const fetchMock = vi.fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce(response({ total_count: 0, items: [] }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchSection('code', createDefaultFilters().code, { force: true });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.cards).toHaveLength(1);
+    expect(result.cards[0]).toMatchObject({
+      id: 'fallback:code:agents',
+      source: 'github',
+      url: 'https://github.com/topics/agents',
+    });
+    expect(result.status).toMatchObject({ label: 'Code fallback', stale: true });
+    expect(result.status.message).toContain('no repositories');
+  });
+
+  it('returns a trusted GitHub discovery card for malformed Search data', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ unexpected: true })));
+
+    const result = await fetchSection(
+      'code',
+      { ...createDefaultFilters().code, mode: 'rising' },
+      { force: true },
+    );
+
+    expect(result.cards).toHaveLength(1);
+    expect(result.cards[0].id).toBe('fallback:code:agents');
+    expect(result.status.message).toContain('unexpected response');
+  });
+
+  it('does not reuse a cached empty Code result', async () => {
+    const filters = createDefaultFilters().code;
+    setCache(
+      { section: 'code', filters },
+      [],
+      60_000,
+      { status: { label: 'Old empty result', stale: true } },
+    );
+    const fetchMock = vi.fn()
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce(response({
+        total_count: 1,
+        items: [{
+          full_name: 'openai/evals',
+          html_url: 'https://github.com/openai/evals',
+          description: 'Evaluation framework',
+          language: 'Python',
+          topics: ['evaluation'],
+          stargazers_count: 18_000,
+          forks_count: 2_700,
+          owner: { login: 'openai' },
+          created_at: '2026-08-20T00:00:00Z',
+          pushed_at: '2026-08-28T00:00:00Z',
+        }],
+      }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchSection('code', filters);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result.cached).toBe(false);
+    expect(result.cards[0].title).toBe('openai/evals');
+  });
+
   it('deduplicates simultaneous matching source requests', async () => {
     let release;
     const pending = new Promise((resolve) => { release = resolve; });

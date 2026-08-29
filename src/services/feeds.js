@@ -77,6 +77,15 @@ const ensureTrendingCards = (cards) => {
   throw new Error('GitHub Trending markup did not contain repository cards');
 };
 
+const normalizeGithubSearch = (data, mode) => {
+  if (!data || !Array.isArray(data.items)) {
+    throw new Error('GitHub Search returned an unexpected response');
+  }
+  const cards = data.items.map((item) => normalizeGithubRepository(item, mode));
+  if (!cards.length) throw new Error('GitHub Search returned no repositories');
+  return cards;
+};
+
 const deduplicate = (key, task) => {
   if (pendingRequests.has(key)) return pendingRequests.get(key);
   const request = task().finally(() => pendingRequests.delete(key));
@@ -97,7 +106,7 @@ const fetchCode = async (filters) => {
       return { cards, status: { label: 'GitHub Trending', stale: false } };
     } catch (error) {
       const data = await fetchJson(request.fallbackUrl, { headers });
-      const cards = (data.items || []).map((item) => normalizeGithubRepository(item, 'rising'));
+      const cards = normalizeGithubSearch(data, 'rising');
       return {
         cards,
         status: {
@@ -111,7 +120,7 @@ const fetchCode = async (filters) => {
 
   const data = await fetchJson(request.url, { headers });
   return {
-    cards: (data.items || []).map((item) => normalizeGithubRepository(item, filters.mode)),
+    cards: normalizeGithubSearch(data, filters.mode),
     status: { label: filters.mode === 'active' ? 'GitHub active search' : 'GitHub new repository search', stale: false },
   };
 };
@@ -160,6 +169,10 @@ const liveFetcher = (section, filters, options) => {
 };
 
 const visibleLane = (cards = [], userState = {}) => cards.filter((card) => !userState[card.id]?.hidden);
+
+const isUsableCache = (section, cached) => (
+  cached && (section !== 'code' || (Array.isArray(cached.cards) && cached.cards.length > 0))
+);
 
 const alternatePapers = (community, arxiv, count) => {
   const cards = [];
@@ -255,7 +268,9 @@ export const fetchSection = async (section, filters, options = {}) => {
 
   if (!normalizedOptions.force) {
     const cached = getCache(query);
-    if (cached) return { cards: cached.cards, status: cached.status, cached: true };
+    if (isUsableCache(section, cached)) {
+      return { cards: cached.cards, status: cached.status, cached: true };
+    }
   }
 
   return deduplicate(key, async () => {

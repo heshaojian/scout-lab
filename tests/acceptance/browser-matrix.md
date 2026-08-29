@@ -28,6 +28,7 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 
 ## Source Workbenches
 
+- [ ] Automated Code smoke tests pass: `npm run test:e2e`.
 - [ ] Today honors its configured source counts and labels unavailable slots clearly.
 - [ ] Code time range, language, sort, topic, and search controls change the visible query meaning.
 - [ ] Code cards show repository identity, description, language, total stars, period stars, and destination link.

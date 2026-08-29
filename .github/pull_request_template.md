@@ -10,4 +10,4 @@ Describe the user-visible change and why it is needed.
 - [ ] `npm run test:coverage` passes with the 80% coverage gate.
 - [ ] `npm run test:live` passes, or temporary upstream failures are documented with fixture tests still passing.
 - [ ] I completed the affected real-browser acceptance cases and checked the console.
-- [ ] I reviewed manifest permission changes and `npm audit --omit=dev --audit-level=high` has no high-severity findings.
+- [ ] I reviewed manifest permission changes and `npm audit --audit-level=high` has no high-severity findings.

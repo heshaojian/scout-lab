@@ -1,10 +1,10 @@
 const GITHUB_TOPIC_QUERY = {
-  all: 'topic:artificial-intelligence stars:>100',
-  agents: 'topic:agents stars:>25',
-  llms: 'topic:llm stars:>25',
-  rag: 'topic:rag stars:>10',
-  evaluation: 'topic:evaluation stars:>10',
-  multimodal: 'topic:multimodal stars:>10',
+  all: 'topic:artificial-intelligence',
+  agents: 'topic:agents',
+  llms: 'topic:llm',
+  rag: 'topic:rag',
+  evaluation: 'topic:evaluation',
+  multimodal: 'topic:multimodal',
 };
 
 export const TOPIC_TERMS = {

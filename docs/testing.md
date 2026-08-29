@@ -12,6 +12,7 @@ Tests are part of the repository and are release gates. Product behavior must no
 | Source requests, fallback behavior, and cache use | `tests/feeds.test.js` |
 | Curated learning resources | `tests/learnSources.test.js` |
 | Live-source GitHub authentication headers | `tests/liveSourceAuth.test.js` |
+| Real-browser Code result guarantee | `tests/e2e/code-results.spec.js` |
 | Foreground and background link opening | `tests/linkOpening.test.js` |
 | GitHub, Hugging Face, and arXiv normalization | `tests/normalizers.test.js` |
 | Query construction and cache keys | `tests/query.test.js` |
@@ -32,6 +33,8 @@ Browser acceptance is intentionally separate from deterministic unit and integra
 
 `quality.yml` runs on every push and pull request. It verifies the extension structure, executes the deterministic suite with coverage, enforces the configured 80% coverage thresholds, and rejects high-severity dependency vulnerabilities.
 
+The same workflow runs the Playwright browser regression suite against the real local page. Its Code smoke tests reproduce blocked GitHub Trending requests, empty Search responses, populated Search responses, card rendering, and destination validation without relying on live network availability.
+
 `live-sources.yml` runs daily and on demand. It performs bounded read-only checks against GitHub, Hugging Face, and arXiv. GitHub API requests use the workflow's built-in read token for an isolated rate limit; no personal token or repository secret is required. Keeping it separate prevents temporary source downtime or rate limiting from blocking deterministic pull-request validation.
 
 ## Local Release Gate
@@ -42,6 +45,7 @@ Run these commands before committing:
 npm ci
 npm run check
 npm run test:coverage
+npm run test:e2e
 npm run test:live
 npm audit --audit-level=high
 ```

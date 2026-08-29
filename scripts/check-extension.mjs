@@ -3,6 +3,7 @@ import { access, readFile } from 'node:fs/promises';
 const requiredFiles = [
   'manifest.json',
   'newtab.html',
+  'playwright.config.js',
   'scripts/live-source-auth.mjs',
   'src/app.js',
   'src/settings.js',
@@ -26,6 +27,7 @@ const requiredFiles = [
   'docs/testing.md',
   'docs/ui-design.md',
   'tests/acceptance/browser-matrix.md',
+  'tests/e2e/code-results.spec.js',
 ];
 
 const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'));

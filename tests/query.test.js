@@ -48,14 +48,20 @@ describe('workbench query builders', () => {
     expect(trending.kind).toBe('trending');
     expect(trending.url).toBe('https://github.com/trending/python?since=weekly');
     expect(rising.kind).toBe('search');
-    expect(decodeURIComponent(new URL(rising.url).searchParams.get('q'))).toContain('created:>=2026-08-21');
-    expect(decodeURIComponent(new URL(rising.url).searchParams.get('q'))).toContain('language:TypeScript');
+    const risingQuery = decodeURIComponent(new URL(rising.url).searchParams.get('q'));
+    expect(risingQuery).toContain('topic:rag');
+    expect(risingQuery).toContain('created:>=2026-08-21');
+    expect(risingQuery).toContain('language:TypeScript');
+    expect(risingQuery).not.toContain('stars:>');
     expect(new URL(rising.url).searchParams.get('sort')).toBe('stars');
 
     const active = new URL(buildGithubRequest({
       mode: 'active', time: 'day', language: 'all', topic: 'all',
     }, now).url);
-    expect(decodeURIComponent(active.searchParams.get('q'))).toContain('pushed:>=2026-08-27');
+    const activeQuery = decodeURIComponent(active.searchParams.get('q'));
+    expect(activeQuery).toContain('topic:artificial-intelligence');
+    expect(activeQuery).toContain('pushed:>=2026-08-27');
+    expect(activeQuery).not.toContain('stars:>');
     expect(active.searchParams.get('sort')).toBe('updated');
   });
 
