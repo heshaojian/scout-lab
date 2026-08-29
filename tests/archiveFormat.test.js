@@ -17,7 +17,7 @@ describe('daily archive formatter', () => {
       }],
       allCards: [{ id: 'github:openai/evals', type: 'Code', title: 'openai/evals', url: 'https://github.com/openai/evals', summary: 'Evaluation framework.' }],
       userState: { 'github:openai/evals': { favorite: true, comment: 'Run one eval.' } },
-      filters: { code: { mode: 'trending', time: 'week', language: 'python', topic: 'evaluation' } },
+      filters: { code: { time: 'week', language: 'python', topic: 'evaluation' } },
       learnProgress: { 'learn:hf-agents-course': { status: 'in-progress', updatedAt: '2026-08-28T12:00:00Z' } },
       sourceStatus: { code: { label: 'GitHub Trending', stale: false } },
     });

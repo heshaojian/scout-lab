@@ -79,8 +79,8 @@ describe('shared workbench renderer', () => {
     const html = renderFilters(WORKBENCHES.code, WORKBENCHES.code.defaults);
     document.body.innerHTML = html;
 
-    expect(document.querySelectorAll('.segment, .control')).toHaveLength(4);
-    expect(document.querySelector('[aria-label="Mode"]')).toBeTruthy();
+    expect(document.querySelectorAll('.segment, .control')).toHaveLength(3);
+    expect(document.querySelector('[aria-label="Mode"]')).toBeNull();
     expect(document.querySelector('[data-command="reset-filters"]')).toBeTruthy();
     expect(document.querySelector('[data-command="save-filter-default"]')).toBeTruthy();
   });

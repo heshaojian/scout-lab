@@ -97,32 +97,24 @@ const fetchCode = async (filters) => {
   const request = buildGithubRequest(filters);
   const headers = { Accept: 'application/vnd.github+json' };
 
-  if (request.kind === 'trending') {
-    try {
-      const html = await fetchText(request.url, { headers: { Accept: 'text/html' } });
-      const cards = ensureTrendingCards(
-        parseGithubTrending(html, filters.time).filter((card) => matchesTopic(card, filters.topic)),
-      );
-      return { cards, status: { label: 'GitHub Trending', stale: false } };
-    } catch (error) {
-      const data = await fetchJson(request.fallbackUrl, { headers });
-      const cards = normalizeGithubSearch(data, 'rising');
-      return {
-        cards,
-        status: {
-          label: 'GitHub search fallback',
-          stale: true,
-          message: `Trending format changed or was unavailable; showing GitHub search fallback. ${error.message}`,
-        },
-      };
-    }
+  try {
+    const html = await fetchText(request.url, { headers: { Accept: 'text/html' } });
+    const cards = ensureTrendingCards(
+      parseGithubTrending(html, filters.time).filter((card) => matchesTopic(card, filters.topic)),
+    );
+    return { cards, status: { label: 'GitHub Trending', stale: false } };
+  } catch (error) {
+    const data = await fetchJson(request.fallbackUrl, { headers });
+    const cards = normalizeGithubSearch(data, 'rising');
+    return {
+      cards,
+      status: {
+        label: 'GitHub search fallback',
+        stale: true,
+        message: `Trending format changed or was unavailable; showing GitHub search fallback. ${error.message}`,
+      },
+    };
   }
-
-  const data = await fetchJson(request.url, { headers });
-  return {
-    cards: normalizeGithubSearch(data, filters.mode),
-    status: { label: filters.mode === 'active' ? 'GitHub active search' : 'GitHub new repository search', stale: false },
-  };
 };
 
 const fetchModels = async (filters) => {

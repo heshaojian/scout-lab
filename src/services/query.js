@@ -84,15 +84,15 @@ const githubLanguage = (value) => ({
   java: 'Java',
 }[value] || '');
 
-const githubSearchUrl = (filters, now, mode = filters.mode) => {
+const githubSearchUrl = (filters, now) => {
   const query = [GITHUB_TOPIC_QUERY[filters.topic] || GITHUB_TOPIC_QUERY.all, 'archived:false'];
   const language = githubLanguage(filters.language);
   if (language) query.push(`language:${language}`);
-  query.push(`${mode === 'active' ? 'pushed' : 'created'}:>=${dateKey(periodStart(filters.time, now))}`);
+  query.push(`created:>=${dateKey(periodStart(filters.time, now))}`);
 
   const params = new URLSearchParams({
     q: query.join(' '),
-    sort: mode === 'active' ? 'updated' : 'stars',
+    sort: 'stars',
     order: 'desc',
     per_page: '24',
   });
@@ -100,17 +100,13 @@ const githubSearchUrl = (filters, now, mode = filters.mode) => {
 };
 
 export const buildGithubRequest = (filters, now = new Date()) => {
-  if (filters.mode === 'trending') {
-    const language = filters.language === 'all' ? '' : encodeURIComponent(filters.language);
-    const since = { day: 'daily', week: 'weekly', month: 'monthly' }[filters.time] || 'weekly';
-    return {
-      kind: 'trending',
-      url: `https://github.com/trending/${language}?since=${since}`,
-      fallbackUrl: githubSearchUrl({ ...filters, mode: 'rising' }, now, 'rising'),
-    };
-  }
-
-  return { kind: 'search', url: githubSearchUrl(filters, now) };
+  const language = filters.language === 'all' ? '' : encodeURIComponent(filters.language);
+  const since = { day: 'daily', week: 'weekly', month: 'monthly' }[filters.time] || 'weekly';
+  return {
+    kind: 'trending',
+    url: `https://github.com/trending/${language}?since=${since}`,
+    fallbackUrl: githubSearchUrl(filters, now),
+  };
 };
 
 const appendExpand = (params, fields) => fields.forEach((field) => params.append('expand[]', field));

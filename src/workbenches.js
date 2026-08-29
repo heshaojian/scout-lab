@@ -26,13 +26,8 @@ export const WORKBENCHES = {
     label: 'Code',
     title: 'Code',
     subtitle: 'GitHub repositories worth reading, running, or learning from.',
-    defaults: { mode: 'trending', time: 'week', language: 'all', topic: 'all' },
+    defaults: { time: 'week', language: 'all', topic: 'all' },
     controls: [
-      control('mode', 'Mode', [
-        option('trending', 'Trending'),
-        option('rising', 'New & rising'),
-        option('active', 'Active'),
-      ], 'segment'),
       control('time', 'Time range', [
         option('day', 'Today'),
         option('week', 'This week'),

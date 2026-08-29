@@ -80,11 +80,13 @@ describe('feed integration', () => {
   });
 
   it('returns a trusted GitHub discovery card for malformed Search data', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ unexpected: true })));
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(response('<html><body>changed</body></html>', { type: 'text/html' }))
+      .mockResolvedValueOnce(response({ unexpected: true })));
 
     const result = await fetchSection(
       'code',
-      { ...createDefaultFilters().code, mode: 'rising' },
+      createDefaultFilters().code,
       { force: true },
     );
 

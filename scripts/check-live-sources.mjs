@@ -42,8 +42,8 @@ const trending = await record('GitHub Trending contract', async () => {
 });
 
 const github = await record('GitHub search contract', async () => {
-  const request = buildGithubRequest({ ...defaults.code, mode: 'rising', time: 'month', language: 'python', topic: 'agents' });
-  const response = await fetchChecked(request.url, {
+  const request = buildGithubRequest({ ...defaults.code, time: 'month', language: 'python', topic: 'agents' });
+  const response = await fetchChecked(request.fallbackUrl, {
     headers: buildGithubHeaders(process.env.GITHUB_TOKEN),
   });
   const data = await response.json();

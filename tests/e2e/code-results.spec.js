@@ -34,6 +34,7 @@ test('Code stays useful when Trending is blocked and Search is empty', async ({ 
   await page.goto('/newtab.html');
 
   await expect(page.getByRole('heading', { name: 'Code' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Mode' })).toHaveCount(0);
   await expect(page.locator('.grid .card')).toHaveCount(1);
   await expect(page.locator('.empty-state')).toHaveCount(0);
   await expect(page.locator('.feed-status')).toContainText('no repositories');
@@ -57,7 +58,7 @@ test('Code renders a valid Search repository after Trending is blocked', async (
   await expect(card.locator('a.open')).toHaveAttribute('href', 'https://github.com/openai/evals');
 });
 
-test('Code replaces an existing cached empty result', async ({ page }) => {
+test('Code ignores a legacy cached empty result', async ({ page }) => {
   await page.addInitScript(() => {
     const query = '{"filters":{"language":"all","mode":"trending","time":"week","topic":"all"},"section":"code"}';
     localStorage.setItem(`scout-lab:cache:v4:${query}`, JSON.stringify({

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createDefaultFilters } from '../src/workbenches.js';
+import { createDefaultFilters, normalizeWorkbenchFilters } from '../src/workbenches.js';
 import {
   buildArxivUrl,
   buildCommunityPapersUrl,
@@ -22,7 +22,17 @@ describe('workbench query builders', () => {
     first.code.language = 'python';
 
     expect(second.code.language).toBe('all');
+    expect(second.code).toEqual({ time: 'week', language: 'all', topic: 'all' });
     expect(Object.keys(second)).toEqual(['today', 'code', 'models', 'datasets', 'papers', 'learn']);
+  });
+
+  it('drops legacy Code modes while preserving supported filters', () => {
+    expect(normalizeWorkbenchFilters('code', {
+      mode: 'active',
+      time: 'month',
+      language: 'python',
+      topic: 'agents',
+    })).toEqual({ time: 'month', language: 'python', topic: 'agents' });
   });
 
   it('serializes query state with stable key ordering', () => {
@@ -31,38 +41,24 @@ describe('workbench query builders', () => {
     expect(stableSerialize({ values: [{ z: 1, a: 2 }] })).toBe('{"values":[{"a":2,"z":1}]}');
   });
 
-  it('builds GitHub Trending and official search requests honestly', () => {
+  it('always builds GitHub Trending with a matching Search fallback', () => {
     const trending = buildGithubRequest({
-      mode: 'trending',
+      mode: 'active',
       time: 'week',
       language: 'python',
       topic: 'agents',
     }, now);
-    const rising = buildGithubRequest({
-      mode: 'rising',
-      time: 'week',
-      language: 'typescript',
-      topic: 'rag',
-    }, now);
 
     expect(trending.kind).toBe('trending');
     expect(trending.url).toBe('https://github.com/trending/python?since=weekly');
-    expect(rising.kind).toBe('search');
-    const risingQuery = decodeURIComponent(new URL(rising.url).searchParams.get('q'));
-    expect(risingQuery).toContain('topic:rag');
-    expect(risingQuery).toContain('created:>=2026-08-21');
-    expect(risingQuery).toContain('language:TypeScript');
-    expect(risingQuery).not.toContain('stars:>');
-    expect(new URL(rising.url).searchParams.get('sort')).toBe('stars');
-
-    const active = new URL(buildGithubRequest({
-      mode: 'active', time: 'day', language: 'all', topic: 'all',
-    }, now).url);
-    const activeQuery = decodeURIComponent(active.searchParams.get('q'));
-    expect(activeQuery).toContain('topic:artificial-intelligence');
-    expect(activeQuery).toContain('pushed:>=2026-08-27');
-    expect(activeQuery).not.toContain('stars:>');
-    expect(active.searchParams.get('sort')).toBe('updated');
+    const fallback = new URL(trending.fallbackUrl);
+    const fallbackQuery = decodeURIComponent(fallback.searchParams.get('q'));
+    expect(fallbackQuery).toContain('topic:agents');
+    expect(fallbackQuery).toContain('created:>=2026-08-21');
+    expect(fallbackQuery).toContain('language:Python');
+    expect(fallbackQuery).not.toContain('pushed:>=');
+    expect(fallbackQuery).not.toContain('stars:>');
+    expect(fallback.searchParams.get('sort')).toBe('stars');
   });
 
   it('maps Hugging Face model controls to supported parameters', () => {
