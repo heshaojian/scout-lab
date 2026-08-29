@@ -44,7 +44,7 @@ The default section. It mixes a small cross-source queue in the same grid and ca
 
 ### Code
 
-GitHub repositories in the shared grid. Controls: mode, time range, language, and AI topic.
+GitHub Trending repositories in the shared grid. Controls: time range, language, and AI topic. Trending is the only user-facing Code mode.
 
 ### Models
 

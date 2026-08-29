@@ -189,7 +189,7 @@ Use the shared content-card grid. Repository cards map these values into the sha
 - Period stars when available
 - Total stars
 - Forks
-- Last push or creation date when relevant to the active mode
+- Creation date when the Search fallback is active
 - Up to three AI topic tags
 - Shared item actions
 
@@ -197,12 +197,11 @@ Contributor avatars and developer ranking are excluded from the first implementa
 
 ### 7.3 Controls
 
-1. Mode: `Trending`, `New & rising`, `Active`
-2. Time: `Today`, `This week`, `This month`
-3. Language: `All`, `Python`, `TypeScript`, `JavaScript`, `Jupyter Notebook`, `Rust`, `Go`, `C++`, `Java`
-4. Topic: shared topic vocabulary
+1. Time: `Today`, `This week`, `This month`
+2. Language: `All`, `Python`, `TypeScript`, `JavaScript`, `Jupyter Notebook`, `Rust`, `Go`, `C++`, `Java`
+3. Topic: shared topic vocabulary
 
-Defaults: `Trending`, `This week`, `All languages`, `All topics`.
+Defaults: `This week`, `All languages`, `All topics`. Trending is the only user-facing Code mode.
 
 ### 7.4 Data strategy
 
@@ -219,11 +218,11 @@ Parse repository identity, description, language, total stars, forks, and period
 Trending is inherently a fragile HTML integration. Parser fixtures must cover representative GitHub markup. If parsing fails:
 
 1. Show a matching cached Trending result when available.
-2. Otherwise load `New & rising` from the official API.
+2. Otherwise load a matching recent-repository Search from the official API.
 3. Label the fallback `GitHub search fallback`.
 4. Never display a period-star value from the fallback.
 
-#### New & rising
+#### Search fallback
 
 Use GitHub repository search with:
 
@@ -233,15 +232,7 @@ Use GitHub repository search with:
 - `archived:false`
 - sort by total stars descending
 
-#### Active
-
-Use GitHub repository search with:
-
-- AI topic query
-- `pushed:>=` selected period start
-- selected `language:` qualifier
-- `archived:false`
-- sort by updated descending
+The Search fallback is never shown as a selectable mode. Existing saved `New & rising` or `Active` values migrate to Trending by dropping the legacy field.
 
 ### 7.5 Rate limits
 

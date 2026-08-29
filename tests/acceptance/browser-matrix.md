@@ -30,7 +30,7 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 
 - [ ] Automated Code smoke tests pass: `npm run test:e2e`.
 - [ ] Today honors its configured source counts and labels unavailable slots clearly.
-- [ ] Code time range, language, sort, topic, and search controls change the visible query meaning.
+- [ ] Code exposes no mode switch; time range, language, topic, and search controls change the visible query meaning.
 - [ ] Code cards show repository identity, description, language, total stars, period stars, and destination link.
 - [ ] Models task, library, sort, access, topic, and search controls work and metrics are labeled correctly.
 - [ ] Datasets task, size, sort, access, topic, and search controls work and metrics are labeled correctly.

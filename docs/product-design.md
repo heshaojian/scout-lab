@@ -69,7 +69,7 @@ Examples:
 - evaluation tools
 - multimodal projects
 
-The workbench supports Trending, New & rising, and Active modes with daily, weekly, and monthly ranges, language, and AI topic controls. Cards show repo name, description, language, total stars, forks, and period stars only when GitHub's public Trending page provides that metric.
+The workbench is exclusively a GitHub Trending view with daily, weekly, and monthly ranges, language, and AI topic controls. GitHub Search is an internal resilience fallback, not a user-selectable mode. Cards show repo name, description, language, total stars, forks, and period stars only when GitHub's public Trending page provides that metric.
 
 ### Models
 

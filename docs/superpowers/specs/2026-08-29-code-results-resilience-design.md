@@ -11,14 +11,14 @@ The automated suite tests the parser, a populated Search fallback, and source fa
 After a Code request completes, Scout Lab must return at least one safe, usable result:
 
 1. Parsed GitHub Trending repository cards.
-2. GitHub Search repository cards using the selected time, language, topic, and mode.
+2. GitHub Search repository cards using the selected time, language, and topic.
 3. A trusted GitHub discovery card when both live sources are unavailable or empty.
 
 The final card is explicitly labeled as a fallback. Scout Lab never invents repository metrics or presents fallback content as a matching live result.
 
 ## Query Behavior
 
-GitHub Search already sorts recent repositories by stars. Hard minimum-star qualifiers are removed from topic clauses because combining them with a one-day, one-week, or one-month creation window can eliminate every result. Topic, language, archive status, time range, mode, sort, order, and result limit remain intact.
+GitHub Search already sorts recent repositories by stars. Hard minimum-star qualifiers are removed from topic clauses because combining them with a one-day, one-week, or one-month creation window can eliminate every result. Topic, language, archive status, time range, sort, order, and result limit remain intact. Search is an internal fallback for Trending, not a user-selectable Code mode.
 
 The default fallback remains focused on repositories tagged `artificial-intelligence`. Topic-specific workbenches continue to use their corresponding GitHub topic.
 
@@ -29,7 +29,7 @@ The Code adapter validates both response shape and result count:
 - malformed Search data is a source failure;
 - a Trending fallback Search with no repository items is a source failure;
 - any Code source failure without usable cache returns the trusted GitHub discovery card;
-- restrictive non-Trending filters may also return the discovery card, with the status clearly explaining that no live repositories matched;
+- restrictive Trending filters may also return the discovery card, with the status clearly explaining that no live repositories matched;
 - stale cached repository cards remain preferred over the discovery card.
 
 This behavior stays in `src/services/feeds.js`; rendering continues to consume the shared card contract without source-specific exceptions.
