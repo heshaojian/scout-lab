@@ -153,6 +153,27 @@ describe('shared workbench renderer', () => {
     expect(task.querySelector('option[value="graph-ml"]')?.textContent).toBe('Graph Machine Learning');
   });
 
+  it('renders the complete Hugging Face dataset discovery controls', () => {
+    document.body.innerHTML = renderFilters(WORKBENCHES.datasets, WORKBENCHES.datasets.defaults);
+
+    expect([...document.querySelector('[aria-label="Sort"]').options].map(({ value }) => value)).toEqual([
+      'trending', 'likes', 'downloads', 'created', 'updated', 'most-rows', 'least-rows',
+      'largest-size', 'smallest-size',
+    ]);
+    expect([...document.querySelector('[aria-label="Modality"]').options].map(({ value }) => value)).toEqual([
+      'all', '3d', 'audio', 'document', 'geospatial', 'image', 'tabular', 'text', 'timeseries', 'video',
+    ]);
+    expect([...document.querySelector('[aria-label="Format"]').options].map(({ value }) => value)).toEqual([
+      'all', 'json', 'csv', 'parquet', 'optimized-parquet', 'imagefolder', 'audiofolder',
+      'webdataset', 'text', 'arrow',
+    ]);
+    expect([...document.querySelector('[aria-label="Type"]').options].map(({ value }) => value)).toEqual([
+      'all', 'benchmark', 'traces',
+    ]);
+    expect([...document.querySelector('[aria-label="Rows"]').options].map(({ textContent }) => textContent)[0])
+      .toBe('Any rows');
+  });
+
   it('renders validated related-model links inside a collapsed family list', () => {
     document.body.innerHTML = renderCard({
       ...baseCard,

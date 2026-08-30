@@ -11,6 +11,9 @@ const readableDescription = (value = '', limit = 420) => {
 export const compactNumber = (value) => {
   const number = Number(value);
   if (!Number.isFinite(number)) return 'Not specified';
+  if (Math.abs(number) >= 1_000_000_000_000_000) return number.toExponential(1).replace('+', '');
+  if (number >= 1_000_000_000_000) return `${(number / 1_000_000_000_000).toFixed(1).replace('.0', '')}t`;
+  if (number >= 1_000_000_000) return `${(number / 1_000_000_000).toFixed(1).replace('.0', '')}b`;
   if (number >= 1_000_000) return `${(number / 1_000_000).toFixed(1).replace('.0', '')}m`;
   if (number >= 1_000) return `${(number / 1_000).toFixed(1).replace('.0', '')}k`;
   return `${number}`;
@@ -88,6 +91,7 @@ export const parseGithubTrending = (html, time = 'week') => {
 };
 
 const tagValue = (tags, prefix) => tags.find((tag) => tag.startsWith(prefix))?.slice(prefix.length) || '';
+const tagValues = (tags, prefix) => tags.filter((tag) => tag.startsWith(prefix)).map((tag) => tag.slice(prefix.length));
 
 const MODEL_LIBRARIES = new Map([
   ['transformers', 'Transformers'],
@@ -232,16 +236,29 @@ export const normalizeDataset = (dataset, rank = 'trending') => {
   const downloads = Number(dataset.downloads) || 0;
   const likes = Number(dataset.likes) || 0;
   const trending = Number(dataset.trendingScore) || 0;
+  const rows = Number(dataset.datasetsServerInfo?.numRows ?? dataset.numRows) || 0;
+  const totalSize = Number(dataset.mainSize) || 0;
   const primary = {
     trending: [`${compactNumber(trending)} trending`, 'Trending score', trending, 'Hugging Face trending signal'],
     newest: [`Created ${formatDate(dataset.createdAt)}`, 'Created', dataset.createdAt, 'Dataset creation date'],
+    created: [`Created ${formatDate(dataset.createdAt)}`, 'Created', dataset.createdAt, 'Dataset creation date'],
+    updated: [`Updated ${formatDate(dataset.lastModified)}`, 'Updated', dataset.lastModified, 'Dataset update date'],
     downloads: [`${compactNumber(downloads)} downloads`, 'Downloads', downloads, 'Cumulative Hugging Face downloads'],
     likes: [`${compactNumber(likes)} likes`, 'Likes', likes, 'Cumulative Hugging Face likes'],
-  }[rank];
+    'most-rows': [`${compactNumber(rows)} rows`, 'Rows', rows, 'Dataset row count'],
+    'least-rows': [`${compactNumber(rows)} rows`, 'Rows', rows, 'Dataset row count'],
+    'largest-size': [`${compactNumber(totalSize)} bytes`, 'Total size', totalSize, 'Dataset total size in bytes'],
+    'smallest-size': [`${compactNumber(totalSize)} bytes`, 'Total size', totalSize, 'Dataset total size in bytes'],
+  }[rank] || [`${compactNumber(trending)} trending`, 'Trending score', trending, 'Hugging Face trending signal'];
   const task = tagValue(tags, 'task_categories:') || tagValue(tags, 'task_ids:') || 'Task not specified';
   const size = tagValue(tags, 'size_categories:') || 'Not specified';
   const language = tagValue(tags, 'language:') || 'Not specified';
   const license = tagValue(tags, 'license:') || 'Not specified';
+  const modalities = dataset.datasetsServerInfo?.modalities || tagValues(tags, 'modality:');
+  const formats = dataset.datasetsServerInfo?.formats || tagValues(tags, 'format:').filter((value) => value !== 'agent-traces');
+  const type = dataset.isBenchmark || tags.includes('benchmark:official')
+    ? 'Benchmark'
+    : dataset.isTraces || tags.includes('format:agent-traces') ? 'Traces' : 'Standard';
   const card = baseCard({
     id: `hf-dataset:${dataset.id}`,
     source: 'huggingface',
@@ -250,7 +267,7 @@ export const normalizeDataset = (dataset, rank = 'trending') => {
     title: dataset.id,
     url: `https://huggingface.co/datasets/${dataset.id}`,
     summary: readableDescription(dataset.description) || `${task.replaceAll('-', ' ')} dataset on Hugging Face.`,
-    tags: [task, size, language, license],
+    tags: [...modalities, ...formats, ...(type === 'Standard' ? [] : [type]), task, size, language, license],
     owner: dataset.id?.split('/')[0],
     publishedAt: dataset.lastModified || dataset.createdAt,
   });
@@ -263,10 +280,28 @@ export const normalizeDataset = (dataset, rank = 'trending') => {
       metric('trending', 'Trending score', trending, 'Hugging Face trending signal'),
       metric('downloads', 'Downloads', downloads, 'Cumulative Hugging Face downloads'),
       metric('likes', 'Likes', likes, 'Cumulative Hugging Face likes'),
+      metric('rows', 'Rows', rows, 'Dataset row count'),
+      metric('total-size', 'Total size', totalSize, 'Dataset total size in bytes'),
     ],
     secondary: { left: task.replaceAll('-', ' '), right: `${size} · ${compactNumber(likes)} likes` },
-    details: { task, size, language, license, createdAt: dataset.createdAt, lastModified: dataset.lastModified },
+    details: {
+      task, size, language, license, rows, totalSize, modalities: [...modalities],
+      formats: [...formats], type, createdAt: dataset.createdAt, lastModified: dataset.lastModified,
+    },
   };
+};
+
+export const parseHuggingFaceDatasetsPage = (html) => {
+  const document = new DOMParser().parseFromString(html, 'text/html');
+  const hydrator = document.querySelector('[data-target="DatasetList"][data-props]');
+  if (!hydrator) throw new Error('Hugging Face DatasetList state was not found');
+  try {
+    const values = JSON.parse(hydrator.getAttribute('data-props')).initialValues;
+    if (!Array.isArray(values?.datasets)) throw new Error('datasets missing');
+    return values.datasets.map((dataset) => ({ ...dataset, id: dataset.id || dataset._id }));
+  } catch {
+    throw new Error('Hugging Face DatasetList state is invalid');
+  }
 };
 
 export const normalizeCommunityPaper = (entry) => {

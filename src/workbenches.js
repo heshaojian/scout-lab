@@ -132,6 +132,20 @@ export const DATASET_TASK_OPTIONS = [
   option('graph-ml', 'Graph Machine Learning', 'Other'),
 ];
 
+export const DATASET_MODALITY_OPTIONS = [
+  option('all', 'All modalities'), option('3d', '3D'), option('audio', 'Audio'),
+  option('document', 'Document'), option('geospatial', 'Geospatial'), option('image', 'Image'),
+  option('tabular', 'Tabular'), option('text', 'Text'), option('timeseries', 'Time-series'),
+  option('video', 'Video'),
+];
+
+export const DATASET_FORMAT_OPTIONS = [
+  option('all', 'All formats'), option('json', 'JSON'), option('csv', 'CSV'),
+  option('parquet', 'Parquet'), option('optimized-parquet', 'Optimized Parquet'),
+  option('imagefolder', 'ImageFolder'), option('audiofolder', 'AudioFolder'),
+  option('webdataset', 'WebDataset'), option('text', 'Text'), option('arrow', 'Arrow'),
+];
+
 export const SPOKEN_LANGUAGE_OPTIONS = [
   option('all', 'Any spoken language'),
   option('en', 'English'),
@@ -267,18 +281,23 @@ export const WORKBENCHES = {
     subtitle: 'See what people are training and evaluating against.',
     defaults: {
       rank: 'trending', task: 'all', size: 'any', language: 'all', license: 'all',
-      access: 'all', benchmark: 'all', topic: 'all',
+      modality: 'all', format: 'all', type: 'all', access: 'all', topic: 'all',
     },
     controls: [
-      control('rank', 'Rank', [
+      control('rank', 'Sort', [
         option('trending', 'Trending'),
-        option('newest', 'Newest'),
-        option('downloads', 'Downloads'),
-        option('likes', 'Likes'),
+        option('likes', 'Most likes'),
+        option('downloads', 'Most downloads'),
+        option('created', 'Recently created'),
+        option('updated', 'Recently updated'),
+        option('most-rows', 'Most rows'),
+        option('least-rows', 'Least rows'),
+        option('largest-size', 'Largest total size'),
+        option('smallest-size', 'Smallest total size'),
       ]),
       control('task', 'Task', DATASET_TASK_OPTIONS),
-      control('size', 'Dataset size', [
-        option('any', 'Any size'),
+      control('size', 'Rows', [
+        option('any', 'Any rows'),
         option('under-1k', '<1K'),
         option('1k-10k', '1K-10K'),
         option('10k-100k', '10K-100K'),
@@ -291,6 +310,11 @@ export const WORKBENCHES = {
         option('100b-1t', '100B-1T'),
         option('1t-plus', '>1T'),
       ]),
+      control('modality', 'Modality', DATASET_MODALITY_OPTIONS),
+      control('format', 'Format', DATASET_FORMAT_OPTIONS, 'select', 'advanced'),
+      control('type', 'Type', [
+        option('all', 'All types'), option('benchmark', 'Benchmark'), option('traces', 'Traces'),
+      ], 'select', 'advanced'),
       control('language', 'Language', [
         option('all', 'All languages'), option('en', 'English'), option('zh', 'Chinese'),
         option('ja', 'Japanese'), option('ko', 'Korean'), option('es', 'Spanish'),
@@ -303,7 +327,6 @@ export const WORKBENCHES = {
         option('cc-by-4.0', 'CC BY 4.0'), option('cc0-1.0', 'CC0 1.0'), option('odc-by', 'ODC-By'),
       ], 'select', 'advanced'),
       control('access', 'Access', [option('all', 'All access'), option('open', 'Open'), option('gated', 'Gated')], 'select', 'advanced'),
-      control('benchmark', 'Benchmark', [option('all', 'All datasets'), option('official', 'Official benchmarks')], 'select', 'advanced'),
       control('topic', 'AI topic', TOPICS, 'select', 'advanced'),
     ],
     cacheTtl: 60 * 60 * 1000,

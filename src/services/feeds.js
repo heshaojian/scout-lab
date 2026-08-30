@@ -2,12 +2,13 @@ import { getWorkbench } from '../workbenches.js';
 import {
   buildArxivRequest,
   buildCommunityPapersUrl,
-  buildDatasetsUrl,
+  buildDatasetsRequest,
   buildGithubRequest,
   buildModelsUrl,
   matchesTopic,
   resolveGithubRequestUrl,
   resolveArxivRequestUrl,
+  resolveDatasetsRequestUrl,
   stableSerialize,
 } from './query.js';
 import {
@@ -18,6 +19,7 @@ import {
   groupModelCards,
   parseArxivFeed,
   parseGithubTrending,
+  parseHuggingFaceDatasetsPage,
 } from './normalizers.js';
 import { getLearningCards } from './learnSources.js';
 import { getCache, getStaleCache, setCache } from './storage.js';
@@ -108,7 +110,11 @@ const fetchModels = async (filters) => {
 };
 
 const fetchDatasets = async (filters) => {
-  const data = await fetchJson(buildDatasetsUrl(filters));
+  const request = buildDatasetsRequest(filters);
+  const requestUrl = resolveDatasetsRequestUrl(request);
+  const data = request.kind === 'page'
+    ? parseHuggingFaceDatasetsPage(await fetchText(requestUrl, { headers: { Accept: 'text/html' } }))
+    : await fetchJson(requestUrl);
   if (!Array.isArray(data)) throw new Error('Hugging Face datasets returned an unexpected response');
   const cards = data.map((item) => normalizeDataset(item, filters.rank))
     .filter((card) => matchesTopic(card, filters.topic)).slice(0, 24);

@@ -52,7 +52,7 @@ Hugging Face models in the shared grid. Controls: rank, task, parameter size, an
 
 ### Datasets
 
-Hugging Face datasets in the shared grid. Exact source task and size values are grouped for scanning. Language, license, access, benchmark, and AI topic are independent advanced filters.
+Hugging Face datasets in the shared grid. Sort, exact grouped task, rows, and modality are the primary controls. Format, type, language, license, access, and AI topic are independent advanced filters. The cards expose source-provided rows, modality, format, and dataset type without changing the shared card anatomy.
 
 ### Papers
 
@@ -169,3 +169,5 @@ Detailed settings behavior and acceptance criteria live in [Friendly Settings](.
 Detailed behavior and complete acceptance criteria live in [Filtered Grid Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
 
 The source contracts for the final three discovery tabs live in [Datasets, Papers, and Learn Reliability](./superpowers/specs/2026-08-29-datasets-papers-learn-reliability-design.md).
+
+The complete Hugging Face dataset facet and hybrid sort contract lives in [Hugging Face Dataset Facets](./superpowers/specs/2026-08-29-hugging-face-dataset-facets-design.md).

@@ -2,11 +2,12 @@ import {
   buildArxivUrl,
   buildCommunityPapersUrl,
   buildDatasetsUrl,
+  buildDatasetsRequest,
   buildGithubRequest,
   buildModelsUrl,
 } from '../src/services/query.js';
 import { learningLinks } from '../src/services/learnSources.js';
-import { parseGithubTrending } from '../src/services/normalizers.js';
+import { parseGithubTrending, parseHuggingFaceDatasetsPage } from '../src/services/normalizers.js';
 import { createDefaultFilters } from '../src/workbenches.js';
 import { JSDOM } from 'jsdom';
 
@@ -93,6 +94,28 @@ const datasets = await record('Hugging Face datasets contract', async () => {
     throw new Error('Missing trending or download metrics');
   }
   return { entries: data.length, links: data.map((item) => `https://huggingface.co/datasets/${item.id}`) };
+});
+
+await record('Hugging Face dataset sort contract', async () => {
+  const sorts = [
+    'trending', 'likes', 'downloads', 'created', 'updated', 'most-rows', 'least-rows',
+    'largest-size', 'smallest-size',
+  ];
+  const results = [];
+  for (const rank of sorts) {
+    const request = buildDatasetsRequest({ ...defaults.datasets, rank });
+    const response = await fetchChecked(request.url, {
+      headers: { Accept: request.kind === 'page' ? 'text/html' : 'application/json' },
+    });
+    const data = request.kind === 'page'
+      ? parseHuggingFaceDatasetsPage(await response.text())
+      : await response.json();
+    if (!Array.isArray(data) || !data.length || !(data[0].id || data[0]._id)) {
+      throw new Error(`${rank} returned no datasets`);
+    }
+    results.push({ rank, kind: request.kind, first: data[0].id || data[0]._id });
+  }
+  return { sorts: results.length, pageBacked: results.filter(({ kind }) => kind === 'page').length };
 });
 
 const papers = await record('Hugging Face Daily Papers contract', async () => {

@@ -3,17 +3,39 @@ import { readFile, stat } from 'node:fs/promises';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { CODE_LANGUAGE_OPTIONS, SPOKEN_LANGUAGE_OPTIONS } from '../src/workbenches.js';
+import {
+  CODE_LANGUAGE_OPTIONS, DATASET_FORMAT_OPTIONS, DATASET_MODALITY_OPTIONS,
+  DATASET_TASK_OPTIONS, SPOKEN_LANGUAGE_OPTIONS, WORKBENCHES,
+} from '../src/workbenches.js';
+import { DATASET_SIZE } from '../src/services/query.js';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TRENDING_PATH = '/__scout/github-trending';
 const ARXIV_PATH = '/__scout/arxiv';
+const DATASETS_PATH = '/__scout/hf-datasets';
 const ALLOWED_PARAMETERS = new Set(['since', 'language', 'spoken_language_code']);
 const ALLOWED_PERIODS = new Set(['daily', 'weekly', 'monthly']);
 const ALLOWED_LANGUAGES = new Set(CODE_LANGUAGE_OPTIONS.map(({ value }) => value).filter((value) => value !== 'all'));
 const ALLOWED_SPOKEN_LANGUAGES = new Set(SPOKEN_LANGUAGE_OPTIONS.map(({ value }) => value).filter((value) => value !== 'all'));
 const ALLOWED_ARXIV_PARAMETERS = new Set(['search_query', 'start', 'max_results', 'sortBy', 'sortOrder']);
 const ALLOWED_ARXIV_SORTS = new Set(['submittedDate', 'relevance']);
+const ALLOWED_DATASET_PARAMETERS = new Set([
+  'sort', 'task_categories', 'size_categories', 'modality', 'format', 'language',
+  'license', 'gated', 'benchmark',
+]);
+const DATASET_PAGE_SORTS = new Set(['most_rows', 'least_rows']);
+const prefixed = (options, prefix) => new Set(options.filter(({ value }) => !['all', 'any'].includes(value))
+  .map(({ value }) => `${prefix}:${value}`));
+const DATASET_PARAMETER_VALUES = {
+  task_categories: prefixed(DATASET_TASK_OPTIONS, 'task_categories'),
+  size_categories: new Set(Object.values(DATASET_SIZE).map((value) => `size_categories:${value}`)),
+  modality: prefixed(DATASET_MODALITY_OPTIONS, 'modality'),
+  format: new Set([...prefixed(DATASET_FORMAT_OPTIONS, 'format'), 'format:agent-traces']),
+  language: prefixed(WORKBENCHES.datasets.controls.find(({ id }) => id === 'language').options, 'language'),
+  license: prefixed(WORKBENCHES.datasets.controls.find(({ id }) => id === 'license').options, 'license'),
+  gated: new Set(['true', 'false']),
+  benchmark: new Set(['benchmark:official']),
+};
 const MIME_TYPES = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.html', 'text/html; charset=utf-8'],
@@ -69,6 +91,23 @@ export const buildArxivUpstreamUrl = (params) => {
   const upstream = new URL('https://export.arxiv.org/api/query');
   ['search_query', 'start', 'max_results', 'sortBy', 'sortOrder']
     .forEach((key) => upstream.searchParams.set(key, singleParameter(params, key)));
+  return upstream.toString();
+};
+
+export const buildDatasetsPageUpstreamUrl = (params) => {
+  for (const key of params.keys()) {
+    if (!ALLOWED_DATASET_PARAMETERS.has(key)) throw new Error(`Unsupported parameter: ${key}`);
+  }
+  const sort = singleParameter(params, 'sort');
+  if (!DATASET_PAGE_SORTS.has(sort)) throw new Error('Invalid dataset row sort');
+  const upstream = new URL('https://huggingface.co/datasets');
+  upstream.searchParams.set('sort', sort);
+  for (const [key, allowed] of Object.entries(DATASET_PARAMETER_VALUES)) {
+    const value = singleParameter(params, key);
+    if (!value) continue;
+    if (!allowed.has(value)) throw new Error(`Invalid dataset ${key}`);
+    upstream.searchParams.set(key, value);
+  }
   return upstream.toString();
 };
 
@@ -152,6 +191,37 @@ const proxyArxiv = async (request, response, url, fetchImpl) => {
   }
 };
 
+const proxyDatasetsPage = async (request, response, url, fetchImpl) => {
+  if (request.method !== 'GET') {
+    send(response, 405, 'Method not allowed');
+    return;
+  }
+  let upstreamUrl;
+  try {
+    upstreamUrl = buildDatasetsPageUpstreamUrl(url.searchParams);
+  } catch {
+    send(response, 400, 'Invalid Hugging Face datasets request');
+    return;
+  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const upstream = await fetchImpl(upstreamUrl, {
+      headers: { Accept: 'text/html', 'User-Agent': 'Scout-Lab-Local-Preview' },
+      redirect: 'follow', signal: controller.signal,
+    });
+    if (!upstream.ok) {
+      send(response, 502, 'Hugging Face datasets unavailable');
+      return;
+    }
+    send(response, 200, await upstream.text(), 'text/html; charset=utf-8');
+  } catch {
+    send(response, 502, 'Hugging Face datasets unavailable');
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 const staticPath = (root, pathname) => {
   const decoded = decodeURIComponent(pathname === '/' ? '/newtab.html' : pathname);
   const candidate = resolve(root, `.${decoded}`);
@@ -168,6 +238,10 @@ export const createDevServer = ({ root = ROOT, fetchImpl = globalThis.fetch } = 
   }
   if (url.pathname === ARXIV_PATH) {
     await proxyArxiv(request, response, url, fetchImpl);
+    return;
+  }
+  if (url.pathname === DATASETS_PATH) {
+    await proxyDatasetsPage(request, response, url, fetchImpl);
     return;
   }
   if (!['GET', 'HEAD'].includes(request.method || 'GET')) {

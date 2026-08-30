@@ -11,6 +11,7 @@ import {
   filterModelsByUpdated,
   parseArxivFeed,
   parseGithubTrending,
+  parseHuggingFaceDatasetsPage,
 } from '../src/services/normalizers.js';
 
 const fixture = (name) => readFile(resolve(process.cwd(), 'tests', 'fixtures', name), 'utf8');
@@ -19,6 +20,8 @@ describe('source normalizers', () => {
   it('formats small, large, and missing source metrics', () => {
     expect(compactNumber(99)).toBe('99');
     expect(compactNumber(1_200_000)).toBe('1.2m');
+    expect(compactNumber(22_090_170_000)).toBe('22.1b');
+    expect(compactNumber(9_223_372_036_854_775_000)).toBe('9.2e18');
     expect(compactNumber(undefined)).toBe('Not specified');
   });
 
@@ -90,6 +93,27 @@ describe('source normalizers', () => {
     expect(readable.summary).not.toContain('&nbsp;');
     expect(readable.summary).not.toContain('<strong>');
     expect(readable.summary.length).toBeLessThanOrEqual(421);
+  });
+
+  it('parses structured Hugging Face dataset page metadata', async () => {
+    const datasets = parseHuggingFaceDatasetsPage(await fixture('huggingface-datasets.html'));
+    const card = normalizeDataset(datasets[0], 'most-rows');
+
+    expect(datasets).toHaveLength(1);
+    expect(card.metricValue).toBe('22.1m rows');
+    expect(card.tags).toEqual(expect.arrayContaining(['image', 'text', 'parquet', 'Benchmark']));
+    expect(card.details).toMatchObject({
+      rows: 22090170,
+      modalities: ['image', 'text'],
+      formats: ['parquet'],
+      type: 'Benchmark',
+    });
+  });
+
+  it('rejects missing or malformed Hugging Face dataset page state', () => {
+    expect(() => parseHuggingFaceDatasetsPage('<main>missing</main>')).toThrow(/DatasetList/);
+    expect(() => parseHuggingFaceDatasetsPage('<div data-target="DatasetList" data-props="not json"></div>'))
+      .toThrow(/invalid/i);
   });
 
   it('groups variants beneath a present base model without mutating source cards', () => {

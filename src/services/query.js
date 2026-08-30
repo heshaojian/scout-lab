@@ -25,7 +25,7 @@ const MODEL_SIZE = {
   '30b-plus': 'min:30B',
 };
 
-const DATASET_SIZE = {
+export const DATASET_SIZE = {
   'under-1k': 'n<1K',
   '1k-10k': '1K<n<10K',
   '10k-100k': '10K<n<100K',
@@ -38,6 +38,19 @@ const DATASET_SIZE = {
   '100b-1t': '100B<n<1T',
   '1t-plus': 'n>1T',
 };
+
+const DATASET_SORT = {
+  trending: { field: 'trendingScore', direction: '-1' },
+  likes: { field: 'likes', direction: '-1' },
+  downloads: { field: 'downloads', direction: '-1' },
+  newest: { field: 'createdAt', direction: '-1' },
+  created: { field: 'createdAt', direction: '-1' },
+  updated: { field: 'lastModified', direction: '-1' },
+  'largest-size': { field: 'mainSize', direction: '-1' },
+  'smallest-size': { field: 'mainSize', direction: '1' },
+};
+
+const DATASET_PAGE_SORT = { 'most-rows': 'most_rows', 'least-rows': 'least_rows' };
 
 const SOURCE_HOSTS = {
   github: new Set(['github.com']),
@@ -125,22 +138,62 @@ export const buildModelsUrl = (filters) => {
   return `https://huggingface.co/api/models?${params}`;
 };
 
-export const buildDatasetsUrl = (filters) => {
-  const sort = MODEL_SORT[filters.rank] || MODEL_SORT.trending;
+const appendDatasetApiFilters = (params, filters) => {
+  if (filters.task !== 'all') params.append('filter', `task_categories:${filters.task}`);
+  if (DATASET_SIZE[filters.size]) params.append('filter', `size_categories:${DATASET_SIZE[filters.size]}`);
+  if (filters.modality && filters.modality !== 'all') params.append('filter', `modality:${filters.modality}`);
+  if (filters.format && filters.format !== 'all') params.append('filter', `format:${filters.format}`);
+  if (filters.language && filters.language !== 'all') params.append('filter', `language:${filters.language}`);
+  if (filters.license && filters.license !== 'all') params.append('filter', `license:${filters.license}`);
+  if (filters.access && filters.access !== 'all') params.set('gated', `${filters.access === 'gated'}`);
+  if (filters.type === 'benchmark' || filters.benchmark === 'official') params.append('filter', 'benchmark:official');
+  if (filters.type === 'traces') params.append('filter', 'format:agent-traces');
+};
+
+const buildDatasetsApiUrl = (filters) => {
+  const sort = DATASET_SORT[filters.rank] || DATASET_SORT.trending;
   const params = new URLSearchParams({
     sort: sort.field,
     direction: sort.direction,
     limit: '48',
   });
-  if (filters.task !== 'all') params.append('filter', `task_categories:${filters.task}`);
-  if (DATASET_SIZE[filters.size]) params.append('filter', `size_categories:${DATASET_SIZE[filters.size]}`);
-  if (filters.language && filters.language !== 'all') params.append('filter', `language:${filters.language}`);
-  if (filters.license && filters.license !== 'all') params.append('filter', `license:${filters.license}`);
-  if (filters.access && filters.access !== 'all') params.set('gated', `${filters.access === 'gated'}`);
-  if (filters.benchmark === 'official') params.append('filter', 'benchmark:official');
-  appendExpand(params, ['downloads', 'likes', 'tags', 'trendingScore', 'createdAt', 'lastModified', 'description']);
+  appendDatasetApiFilters(params, filters);
+  appendExpand(params, [
+    'downloads', 'likes', 'tags', 'trendingScore', 'createdAt', 'lastModified',
+    'description', 'mainSize',
+  ]);
   return `https://huggingface.co/api/datasets?${params}`;
 };
+
+const buildDatasetsPageParams = (filters) => {
+  const params = new URLSearchParams({ sort: DATASET_PAGE_SORT[filters.rank] });
+  if (filters.task !== 'all') params.set('task_categories', `task_categories:${filters.task}`);
+  if (DATASET_SIZE[filters.size]) params.set('size_categories', `size_categories:${DATASET_SIZE[filters.size]}`);
+  if (filters.modality !== 'all') params.set('modality', `modality:${filters.modality}`);
+  if (filters.format !== 'all') params.set('format', `format:${filters.format}`);
+  if (filters.language !== 'all') params.set('language', `language:${filters.language}`);
+  if (filters.license !== 'all') params.set('license', `license:${filters.license}`);
+  if (filters.access !== 'all') params.set('gated', `${filters.access === 'gated'}`);
+  if (filters.type === 'benchmark') params.set('benchmark', 'benchmark:official');
+  if (filters.type === 'traces') params.set('format', 'format:agent-traces');
+  return params;
+};
+
+export const buildDatasetsRequest = (filters) => {
+  if (!DATASET_PAGE_SORT[filters.rank]) return { kind: 'api', url: buildDatasetsApiUrl(filters) };
+  const params = buildDatasetsPageParams(filters);
+  return {
+    kind: 'page',
+    url: `https://huggingface.co/datasets?${params}`,
+    previewUrl: `/__scout/hf-datasets?${params}`,
+  };
+};
+
+export const buildDatasetsUrl = (filters) => buildDatasetsRequest(filters).url;
+
+export const resolveDatasetsRequestUrl = (request, location = globalThis.location) => (
+  request.kind === 'page' && isLoopbackPreview(location) ? request.previewUrl : request.url
+);
 
 export const buildCommunityPapersUrl = (filters, now = new Date()) => {
   const params = new URLSearchParams({

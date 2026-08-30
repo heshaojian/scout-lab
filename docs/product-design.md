@@ -89,7 +89,7 @@ Purpose: learn what problems people are training and evaluating against.
 
 Datasets are important because they reveal demand, task framing, and evaluation culture. This section should not be treated as secondary to models.
 
-The workbench uses the shared content-card grid and supports rank, task, size, language, license, and official-benchmark filters.
+The workbench uses the shared content-card grid. Sort, grouped task, row count, and modality stay visible; format, type, language, license, access, and AI topic sit under More filters. The sort menu follows Hugging Face: Trending, Most likes, Most downloads, Recently created, Recently updated, Most rows, Least rows, Largest total size, and Smallest total size. Cards surface row count, modalities, formats, and Benchmark or Traces type when Hugging Face supplies them.
 
 ### Papers
 

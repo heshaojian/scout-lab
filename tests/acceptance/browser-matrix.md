@@ -41,8 +41,9 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 - [ ] Models More filters supports library or format, license, access, compatible app, and updated date without viewport overflow.
 - [ ] Quantizations, fine-tunes, adapters, and merges are grouped beneath the base model, and every variant link opens the matching Hugging Face page.
 - [ ] Model cards show task, parameter count, library or format, license, access, inference status, updated date, downloads, likes, and trending score when supplied by Hugging Face.
-- [ ] Datasets exposes exact grouped Hugging Face task values and exact source size buckets.
-- [ ] Dataset language, license, access, benchmark, topic, and search filters work independently and in combination.
+- [ ] Datasets exposes all nine Hugging Face sorts, exact grouped tasks, exact row buckets, and all nine modalities.
+- [ ] Dataset format, type, language, license, access, topic, and search filters work independently and in combination.
+- [ ] Most rows and Least rows preserve Hugging Face page ordering and show source-provided row metadata.
 - [ ] Dataset descriptions decode source HTML entities and remain readable within the card clamp.
 - [ ] Community Papers Trending and Recent both remain inside the selected day/week/month cohort.
 - [ ] Papers source mode, category, time, sort, topic, and search controls work.

@@ -6,11 +6,13 @@ import {
   buildArxivRequest,
   buildCommunityPapersUrl,
   buildDatasetsUrl,
+  buildDatasetsRequest,
   buildGithubRequest,
   buildModelsUrl,
   matchesTopic,
   resolveGithubRequestUrl,
   resolveArxivRequestUrl,
+  resolveDatasetsRequestUrl,
   stableSerialize,
   validateSourceUrl,
 } from '../src/services/query.js';
@@ -164,19 +166,66 @@ describe('workbench query builders', () => {
       language: 'zh',
       license: 'apache-2.0',
       access: 'open',
-      benchmark: 'official',
+      modality: 'image',
+      format: 'parquet',
+      type: 'benchmark',
     }));
 
     expect(url.searchParams.get('sort')).toBe('downloads');
     expect(url.searchParams.getAll('filter')).toEqual([
       'task_categories:text-retrieval',
       'size_categories:10K<n<100K',
+      'modality:image',
+      'format:parquet',
       'language:zh',
       'license:apache-2.0',
       'benchmark:official',
     ]);
     expect(url.searchParams.get('gated')).toBe('false');
     expect(url.searchParams.get('limit')).toBe('48');
+  });
+
+  it('maps every Hugging Face dataset sort to its source-backed request', () => {
+    const base = {
+      task: 'all', size: 'any', modality: 'all', format: 'all', type: 'all',
+      language: 'all', license: 'all', access: 'all', topic: 'all',
+    };
+    const expected = [
+      ['trending', 'api', 'trendingScore', '-1'],
+      ['likes', 'api', 'likes', '-1'],
+      ['downloads', 'api', 'downloads', '-1'],
+      ['created', 'api', 'createdAt', '-1'],
+      ['updated', 'api', 'lastModified', '-1'],
+      ['most-rows', 'page', 'most_rows', null],
+      ['least-rows', 'page', 'least_rows', null],
+      ['largest-size', 'api', 'mainSize', '-1'],
+      ['smallest-size', 'api', 'mainSize', '1'],
+    ];
+
+    expect(expected.map(([rank]) => {
+      const request = buildDatasetsRequest({ ...base, rank });
+      const url = new URL(request.url);
+      return [request.kind, url.searchParams.get('sort'), url.searchParams.get('direction')];
+    })).toEqual(expected.map(([, kind, sort, direction]) => [kind, sort, direction]));
+  });
+
+  it('builds and resolves the fixed Hugging Face page request for row sorts', () => {
+    const request = buildDatasetsRequest({
+      rank: 'most-rows', task: 'text-retrieval', size: '10k-100k', modality: 'image',
+      format: 'parquet', type: 'traces', language: 'zh', license: 'apache-2.0',
+      access: 'open', topic: 'all',
+    });
+    const source = new URL(request.url);
+    expect(source.origin + source.pathname).toBe('https://huggingface.co/datasets');
+    expect(source.searchParams.get('sort')).toBe('most_rows');
+    expect(source.searchParams.get('task_categories')).toBe('task_categories:text-retrieval');
+    expect(source.searchParams.get('size_categories')).toBe('size_categories:10K<n<100K');
+    expect(source.searchParams.get('modality')).toBe('modality:image');
+    expect(source.searchParams.get('format')).toBe('format:agent-traces');
+    expect(resolveDatasetsRequestUrl(request, { protocol: 'http:', hostname: 'localhost' }))
+      .toBe(request.previewUrl);
+    expect(resolveDatasetsRequestUrl(request, { protocol: 'chrome-extension:', hostname: 'id' }))
+      .toBe(request.url);
   });
 
   it('keeps all 52 source-visible dataset tasks grouped and unique', () => {

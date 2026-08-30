@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { buildArxivUpstreamUrl, buildTrendingUpstreamUrl, createDevServer } from '../scripts/dev-server.mjs';
+import {
+  buildArxivUpstreamUrl, buildDatasetsPageUpstreamUrl, buildTrendingUpstreamUrl, createDevServer,
+} from '../scripts/dev-server.mjs';
 
 const withServer = async (fetchImpl, task) => {
   const server = createDevServer({ fetchImpl });
@@ -90,6 +92,32 @@ describe('local arXiv proxy validation', () => {
       expect((await fetch(`${origin}/__scout/arxiv?${valid}`, { method: 'POST' })).status).toBe(405);
     });
     expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0][1].headers).not.toHaveProperty('Authorization');
+  });
+});
+
+describe('local Hugging Face datasets page proxy validation', () => {
+  it('builds only allowlisted row-sort and facet requests', () => {
+    const upstream = new URL(buildDatasetsPageUpstreamUrl(new URLSearchParams({
+      sort: 'most_rows', modality: 'modality:image', format: 'format:parquet',
+      task_categories: 'task_categories:text-retrieval',
+    })));
+    expect(upstream.origin + upstream.pathname).toBe('https://huggingface.co/datasets');
+    expect(upstream.searchParams.get('sort')).toBe('most_rows');
+    expect(() => buildDatasetsPageUpstreamUrl(new URLSearchParams({ sort: 'trending' }))).toThrow(/sort/i);
+    expect(() => buildDatasetsPageUpstreamUrl(new URLSearchParams({ sort: 'most_rows', target: 'https://example.com' })))
+      .toThrow(/unsupported/i);
+  });
+
+  it('proxies GET with safe headers and rejects mutation methods', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response('<div data-target="DatasetList"></div>', { status: 200 }));
+    await withServer(fetchImpl, async (origin) => {
+      const url = `${origin}/__scout/hf-datasets?sort=least_rows&modality=modality%3Atext`;
+      expect((await fetch(url)).status).toBe(200);
+      expect((await fetch(url, { method: 'POST' })).status).toBe(405);
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0][0]).toContain('https://huggingface.co/datasets?');
     expect(fetchImpl.mock.calls[0][1].headers).not.toHaveProperty('Authorization');
   });
 });
