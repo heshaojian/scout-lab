@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <g id="beacon-circle">
+    <circle cx="64" cy="64" r="56" fill="#17232d"/>
+    <circle cx="64" cy="64" r="12" fill="#ffb51b"/>
+    <path
+      d="M45 43a29 29 0 0 0 0 42M83 43a29 29 0 0 1 0 42"
+      fill="none"
+      stroke="#16c784"
+      stroke-width="10"
+      stroke-linecap="round"
+    />
+  </g>
+</svg>

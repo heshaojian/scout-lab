@@ -12,13 +12,13 @@ const pngSize = async (path) => {
   return { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
 };
 
-describe('Chrome Web Store 1.0.0 release contract', () => {
+describe('Chrome Web Store 1.0.1 release contract', () => {
   it('declares the release version and packaged icons', async () => {
     const manifest = await readJson('manifest.json');
     const pkg = await readJson('package.json');
 
-    expect(manifest.version).toBe('1.0.0');
-    expect(pkg.version).toBe('1.0.0');
+    expect(manifest.version).toBe('1.0.1');
+    expect(pkg.version).toBe('1.0.1');
     expect(manifest.icons).toEqual({
       16: 'assets/icons/icon-16.png',
       32: 'assets/icons/icon-32.png',
@@ -29,6 +29,17 @@ describe('Chrome Web Store 1.0.0 release contract', () => {
     for (const size of [16, 32, 48, 128]) {
       await expect(pngSize(`assets/icons/icon-${size}.png`)).resolves.toEqual({ width: size, height: size });
     }
+  });
+
+  it('uses the approved Beacon Circle vector master', async () => {
+    const icon = await readText('store/assets/scout-lab-icon-master.svg');
+
+    expect(icon).toContain('id="beacon-circle"');
+    expect(icon).toContain('#17232d');
+    expect(icon).toContain('#16c784');
+    expect(icon).toContain('#ffb51b');
+    expect(icon).toContain('stroke-linecap="round"');
+    expect(icon).not.toMatch(/#1697f6|gradient|shadow|compass/i);
   });
 
   it('ships exact-dimension store graphics', async () => {
@@ -62,7 +73,7 @@ describe('Chrome Web Store 1.0.0 release contract', () => {
     const readme = await readText('README.md');
 
     expect(pkg.scripts.package).toBe('node scripts/package-extension.mjs');
-    await expect(readText('scripts/package-extension.mjs')).resolves.toContain('scout-lab-1.0.0.zip');
+    await expect(readText('scripts/package-extension.mjs')).resolves.toContain('scout-lab-1.0.1.zip');
     expect(readme).not.toMatch(/curated learning|learning progress|progress filters/i);
   });
 });
