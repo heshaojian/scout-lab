@@ -82,6 +82,14 @@ describe('source normalizers', () => {
       .toBe('27B parameters');
     expect(normalizeDataset({ id: 'owner/new-data', tags: [], lastModified: '2026-08-28T00:00:00Z' }, 'newest').details)
       .toMatchObject({ size: 'Not specified', language: 'Not specified', license: 'Not specified' });
+    const readable = normalizeDataset({
+      id: 'owner/readable', createdAt: '2026-08-20T00:00:00Z', tags: [],
+      description: 'A&nbsp;dataset <strong>for careful reading</strong>. '.repeat(30),
+    }, 'newest');
+    expect(readable.metricValue).toBe('Created Aug 20');
+    expect(readable.summary).not.toContain('&nbsp;');
+    expect(readable.summary).not.toContain('<strong>');
+    expect(readable.summary.length).toBeLessThanOrEqual(421);
   });
 
   it('groups variants beneath a present base model without mutating source cards', () => {
@@ -137,6 +145,8 @@ describe('source normalizers', () => {
         ai_keywords: ['reasoning', 'agents'],
         upvotes: 761,
         publishedAt: '2026-08-10T00:00:00Z',
+        submittedOnDailyAt: '2026-08-28T00:00:00Z',
+        githubRepo: 'https://github.com/example/latent-reasoning',
       },
       numComments: 5,
     });
@@ -145,6 +155,11 @@ describe('source normalizers', () => {
     expect(card.summaryLabel).toBe('HF summary');
     expect(card.metricValue).toBe('761 upvotes');
     expect(card.secondary.right).toBe('5 comments');
+    expect(card.secondary.left).toBe('Featured Aug 28');
+    expect(card.links).toEqual([
+      { id: 'pdf', label: 'PDF', url: 'https://arxiv.org/pdf/2608.09888', source: 'arxiv' },
+      { id: 'code', label: 'Code', url: 'https://github.com/example/latent-reasoning', source: 'github' },
+    ]);
 
     const plain = normalizeCommunityPaper({
       id: '2608.00001', title: 'Plain summary', summary: 'Human summary.', authors: [], upvotes: 0,

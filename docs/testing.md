@@ -10,10 +10,11 @@ Tests are part of the repository and are release gates. Product behavior must no
 | Markdown archive output and escaping | `tests/archiveFormat.test.js` |
 | Backup validation, export, and atomic import | `tests/backup.test.js` |
 | Source requests, failure behavior, and cache use | `tests/feeds.test.js` |
-| Local GitHub Trending proxy validation | `tests/devServer.test.js` |
+| Local GitHub Trending and arXiv proxy validation | `tests/devServer.test.js` |
 | Curated learning resources | `tests/learnSources.test.js` |
 | Real-browser Code parity and failure states | `tests/e2e/code-results.spec.js` |
 | Real-browser Models sorting, filters, grouping, links, actions, and mobile layout | `tests/e2e/models-workbench.spec.js` |
+| Real-browser Datasets, Papers, and Learn source and interaction flows | `tests/e2e/discovery-workbenches.spec.js` |
 | Reading typography, density, themes, and responsive grid | `tests/e2e/reading-comfort.spec.js` |
 | Foreground and background link opening | `tests/linkOpening.test.js` |
 | GitHub, Hugging Face, and arXiv normalization | `tests/normalizers.test.js` |

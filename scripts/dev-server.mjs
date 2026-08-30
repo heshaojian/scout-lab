@@ -7,10 +7,13 @@ import { CODE_LANGUAGE_OPTIONS, SPOKEN_LANGUAGE_OPTIONS } from '../src/workbench
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const TRENDING_PATH = '/__scout/github-trending';
+const ARXIV_PATH = '/__scout/arxiv';
 const ALLOWED_PARAMETERS = new Set(['since', 'language', 'spoken_language_code']);
 const ALLOWED_PERIODS = new Set(['daily', 'weekly', 'monthly']);
 const ALLOWED_LANGUAGES = new Set(CODE_LANGUAGE_OPTIONS.map(({ value }) => value).filter((value) => value !== 'all'));
 const ALLOWED_SPOKEN_LANGUAGES = new Set(SPOKEN_LANGUAGE_OPTIONS.map(({ value }) => value).filter((value) => value !== 'all'));
+const ALLOWED_ARXIV_PARAMETERS = new Set(['search_query', 'start', 'max_results', 'sortBy', 'sortOrder']);
+const ALLOWED_ARXIV_SORTS = new Set(['submittedDate', 'relevance']);
 const MIME_TYPES = new Map([
   ['.css', 'text/css; charset=utf-8'],
   ['.html', 'text/html; charset=utf-8'],
@@ -44,6 +47,28 @@ export const buildTrendingUpstreamUrl = (params) => {
     : 'https://github.com/trending');
   upstream.searchParams.set('since', since);
   if (spokenLanguage) upstream.searchParams.set('spoken_language_code', spokenLanguage);
+  return upstream.toString();
+};
+
+export const buildArxivUpstreamUrl = (params) => {
+  for (const key of params.keys()) {
+    if (!ALLOWED_ARXIV_PARAMETERS.has(key)) throw new Error(`Unsupported parameter: ${key}`);
+  }
+
+  const query = singleParameter(params, 'search_query');
+  const start = singleParameter(params, 'start');
+  const maxResults = singleParameter(params, 'max_results');
+  const sortBy = singleParameter(params, 'sortBy');
+  const sortOrder = singleParameter(params, 'sortOrder');
+  if (!query || query.length > 1_000 || /[\r\n]/.test(query)) throw new Error('Invalid arXiv query');
+  if (start !== '0') throw new Error('Invalid arXiv start');
+  if (!/^\d+$/.test(maxResults) || Number(maxResults) < 1 || Number(maxResults) > 100) throw new Error('Invalid arXiv result limit');
+  if (!ALLOWED_ARXIV_SORTS.has(sortBy)) throw new Error('Invalid arXiv sort');
+  if (sortOrder !== 'descending') throw new Error('Invalid arXiv sort order');
+
+  const upstream = new URL('https://export.arxiv.org/api/query');
+  ['search_query', 'start', 'max_results', 'sortBy', 'sortOrder']
+    .forEach((key) => upstream.searchParams.set(key, singleParameter(params, key)));
   return upstream.toString();
 };
 
@@ -93,6 +118,40 @@ const proxyTrending = async (request, response, url, fetchImpl) => {
   }
 };
 
+const proxyArxiv = async (request, response, url, fetchImpl) => {
+  if (request.method !== 'GET') {
+    send(response, 405, 'Method not allowed');
+    return;
+  }
+
+  let upstreamUrl;
+  try {
+    upstreamUrl = buildArxivUpstreamUrl(url.searchParams);
+  } catch {
+    send(response, 400, 'Invalid arXiv request');
+    return;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const upstream = await fetchImpl(upstreamUrl, {
+      headers: { Accept: 'application/atom+xml', 'User-Agent': 'Scout-Lab-Local-Preview' },
+      redirect: 'follow',
+      signal: controller.signal,
+    });
+    if (!upstream.ok) {
+      send(response, 502, 'arXiv unavailable');
+      return;
+    }
+    send(response, 200, await upstream.text(), 'application/atom+xml; charset=utf-8');
+  } catch {
+    send(response, 502, 'arXiv unavailable');
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 const staticPath = (root, pathname) => {
   const decoded = decodeURIComponent(pathname === '/' ? '/newtab.html' : pathname);
   const candidate = resolve(root, `.${decoded}`);
@@ -105,6 +164,10 @@ export const createDevServer = ({ root = ROOT, fetchImpl = globalThis.fetch } = 
   const url = new URL(request.url || '/', 'http://127.0.0.1');
   if (url.pathname === TRENDING_PATH) {
     await proxyTrending(request, response, url, fetchImpl);
+    return;
+  }
+  if (url.pathname === ARXIV_PATH) {
+    await proxyArxiv(request, response, url, fetchImpl);
     return;
   }
   if (!['GET', 'HEAD'].includes(request.method || 'GET')) {

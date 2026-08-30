@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { createDefaultFilters, normalizeWorkbenchFilters } from '../src/workbenches.js';
+import { createDefaultFilters, DATASET_TASK_OPTIONS, normalizeWorkbenchFilters } from '../src/workbenches.js';
 import {
   buildArxivUrl,
+  buildArxivRequest,
   buildCommunityPapersUrl,
   buildDatasetsUrl,
   buildGithubRequest,
   buildModelsUrl,
   matchesTopic,
   resolveGithubRequestUrl,
+  resolveArxivRequestUrl,
   stableSerialize,
   validateSourceUrl,
 } from '../src/services/query.js';
@@ -154,25 +156,41 @@ describe('workbench query builders', () => {
     expect(minimal.searchParams.get('apps')).toBeNull();
   });
 
-  it('maps dataset rank, task, size, and extra filters', () => {
+  it('maps exact dataset task and size values with independent advanced filters', () => {
     const url = new URL(buildDatasetsUrl({
       rank: 'downloads',
-      task: 'retrieval',
-      size: '10k-1m',
-      extra: 'official',
+      task: 'text-retrieval',
+      size: '10k-100k',
+      language: 'zh',
+      license: 'apache-2.0',
+      access: 'open',
+      benchmark: 'official',
     }));
 
     expect(url.searchParams.get('sort')).toBe('downloads');
     expect(url.searchParams.getAll('filter')).toEqual([
-      'task_categories:retrieval',
-      'size_categories:10K<n<1M',
+      'task_categories:text-retrieval',
+      'size_categories:10K<n<100K',
+      'language:zh',
+      'license:apache-2.0',
       'benchmark:official',
     ]);
+    expect(url.searchParams.get('gated')).toBe('false');
+    expect(url.searchParams.get('limit')).toBe('48');
+  });
 
-    const language = new URL(buildDatasetsUrl({ rank: 'newest', task: 'all', size: 'under-10k', extra: 'language-en' }));
-    const license = new URL(buildDatasetsUrl({ rank: 'likes', task: 'all', size: 'any', extra: 'license-apache-2.0' }));
-    expect(language.searchParams.getAll('filter')).toEqual(['size_categories:n<10K', 'language:en']);
-    expect(license.searchParams.get('filter')).toBe('license:apache-2.0');
+  it('keeps all 52 source-visible dataset tasks grouped and unique', () => {
+    const tasks = DATASET_TASK_OPTIONS.filter(({ value }) => value !== 'all');
+    expect(tasks).toHaveLength(52);
+    expect(new Set(tasks.map(({ value }) => value)).size).toBe(52);
+    expect(new Set(tasks.map(({ group }) => group))).toEqual(new Set([
+      'Multimodal', 'Natural Language Processing', 'Audio', 'Computer Vision',
+      'Reinforcement Learning', 'Tabular', 'Other',
+    ]));
+    expect(tasks.map(({ value }) => value)).toEqual(expect.arrayContaining([
+      'text-retrieval', 'image-classification', 'automatic-speech-recognition',
+      'robotics', 'tabular-to-text', 'graph-ml',
+    ]));
   });
 
   it('builds community and raw paper time ranges', () => {
@@ -185,7 +203,7 @@ describe('workbench query builders', () => {
     }, now)).searchParams.get('search_query');
 
     expect(community.searchParams.get('week')).toBe('2026-W35');
-    expect(community.searchParams.get('sort')).toBe('trending');
+    expect(community.searchParams.has('sort')).toBe(false);
     expect(arxiv).toContain('cat:cs.LG');
     expect(arxiv).toContain('submittedDate:[202607290000 TO 202608282359]');
     expect(arxiv).toContain('all:evaluation');
@@ -193,8 +211,15 @@ describe('workbench query builders', () => {
     const daily = new URL(buildCommunityPapersUrl({ time: 'day', sort: 'recent' }, now));
     const monthly = new URL(buildCommunityPapersUrl({ time: 'month', sort: 'trending' }, now));
     expect(daily.searchParams.get('date')).toBe('2026-08-28');
-    expect(daily.searchParams.get('sort')).toBe('publishedAt');
+    expect(daily.searchParams.has('sort')).toBe(false);
     expect(monthly.searchParams.get('month')).toBe('2026-08');
+  });
+
+  it('uses the local arXiv proxy only for loopback previews', () => {
+    const request = buildArxivRequest({ time: 'week', topic: 'cs.AI', sort: 'newest' }, now);
+    expect(request.url).toBe(buildArxivUrl({ time: 'week', topic: 'cs.AI', sort: 'newest' }, now));
+    expect(resolveArxivRequestUrl(request, { protocol: 'http:', hostname: '127.0.0.1' })).toBe(request.previewUrl);
+    expect(resolveArxivRequestUrl(request, { protocol: 'chrome-extension:', hostname: 'id' })).toBe(request.url);
   });
 
   it('matches source cards using the selected topic vocabulary', () => {

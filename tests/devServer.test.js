@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { buildTrendingUpstreamUrl, createDevServer } from '../scripts/dev-server.mjs';
+import { buildArxivUpstreamUrl, buildTrendingUpstreamUrl, createDevServer } from '../scripts/dev-server.mjs';
 
 const withServer = async (fetchImpl, task) => {
   const server = createDevServer({ fetchImpl });
@@ -65,5 +65,31 @@ describe('local GitHub Trending proxy validation', () => {
     });
 
     expect(fetchImpl).not.toHaveBeenCalled();
+  });
+});
+
+describe('local arXiv proxy validation', () => {
+  const valid = new URLSearchParams({
+    search_query: 'cat:cs.AI AND submittedDate:[202608210000 TO 202608282359]',
+    start: '0', max_results: '24', sortBy: 'submittedDate', sortOrder: 'descending',
+  });
+
+  it('builds only the fixed arXiv API target', () => {
+    expect(buildArxivUpstreamUrl(valid)).toContain('https://export.arxiv.org/api/query?');
+    expect(() => buildArxivUpstreamUrl(new URLSearchParams({ ...Object.fromEntries(valid), target: 'https://example.com' })))
+      .toThrow(/unsupported/i);
+  });
+
+  it('proxies validated Atom XML and rejects mutation methods', async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(new Response('<feed xmlns="http://www.w3.org/2005/Atom"></feed>', { status: 200 }));
+    await withServer(fetchImpl, async (origin) => {
+      const response = await fetch(`${origin}/__scout/arxiv?${valid}`);
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain('application/atom+xml');
+      expect(await response.text()).toContain('<feed');
+      expect((await fetch(`${origin}/__scout/arxiv?${valid}`, { method: 'POST' })).status).toBe(405);
+    });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl.mock.calls[0][1].headers).not.toHaveProperty('Authorization');
   });
 });

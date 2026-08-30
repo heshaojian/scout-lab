@@ -1,12 +1,13 @@
 import { getWorkbench } from '../workbenches.js';
 import {
-  buildArxivUrl,
+  buildArxivRequest,
   buildCommunityPapersUrl,
   buildDatasetsUrl,
   buildGithubRequest,
   buildModelsUrl,
   matchesTopic,
   resolveGithubRequestUrl,
+  resolveArxivRequestUrl,
   stableSerialize,
 } from './query.js';
 import {
@@ -109,13 +110,15 @@ const fetchModels = async (filters) => {
 const fetchDatasets = async (filters) => {
   const data = await fetchJson(buildDatasetsUrl(filters));
   if (!Array.isArray(data)) throw new Error('Hugging Face datasets returned an unexpected response');
-  const cards = data.map((item) => normalizeDataset(item, filters.rank)).filter((card) => matchesTopic(card, filters.topic));
+  const cards = data.map((item) => normalizeDataset(item, filters.rank))
+    .filter((card) => matchesTopic(card, filters.topic)).slice(0, 24);
   return { cards, status: { label: 'Hugging Face datasets', stale: false } };
 };
 
 const fetchPapers = async (filters) => {
   if (filters.source === 'arxiv') {
-    const xml = await fetchText(buildArxivUrl(filters), { headers: { Accept: 'application/atom+xml' } });
+    const request = buildArxivRequest(filters);
+    const xml = await fetchText(resolveArxivRequestUrl(request), { headers: { Accept: 'application/atom+xml' } });
     return {
       cards: parseArxivFeed(xml),
       status: { label: 'Raw arXiv', stale: false },
@@ -124,7 +127,12 @@ const fetchPapers = async (filters) => {
 
   const data = await fetchJson(buildCommunityPapersUrl(filters));
   if (!Array.isArray(data)) throw new Error('Hugging Face Daily Papers returned an unexpected response');
-  const cards = data.map(normalizeCommunityPaper).filter((card) => matchesTopic(card, filters.topic));
+  const cards = data.map(normalizeCommunityPaper)
+    .filter((card) => matchesTopic(card, filters.topic))
+    .sort((left, right) => filters.sort === 'recent'
+      ? new Date(right.details.featuredAt).getTime() - new Date(left.details.featuredAt).getTime()
+      : right.details.upvotes - left.details.upvotes)
+    .slice(0, 24);
   return { cards, status: { label: 'Hugging Face Daily Papers', stale: false } };
 };
 

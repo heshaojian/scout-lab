@@ -72,13 +72,19 @@ export const getLearningCards = (filters = {}, progress = {}) => learningLinks
       metricLabel: 'Progress',
       metricValue: label(status),
       metrics: [{ id: 'progress', label: 'Progress', value: status, meaning: 'Local learning progress' }],
+      openLabel: { 'not-started': 'Start', 'in-progress': 'Resume', done: 'Review' }[status],
       links: [],
+      facts: [
+        { label: 'Level', value: item.level },
+        { label: 'Effort', value: item.effort },
+      ],
       secondary: { left: label(item.format), right: `${item.level} · ${item.effort}` },
       details: { format: item.format, level: item.level, effort: item.effort, progress: status },
     };
   })
   .filter((card) => filters.focus === 'all' || card.tags.includes(filters.focus))
   .filter((card) => filters.format === 'all' || card.details.format === filters.format)
+  .filter((card) => !filters.level || filters.level === 'all' || card.details.level.toLowerCase() === filters.level)
   .filter((card) => filters.progress === 'all' || card.details.progress === filters.progress)
   .sort((a, b) => {
     const order = { 'in-progress': 0, 'not-started': 1, done: 2 };

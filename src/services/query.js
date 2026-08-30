@@ -26,10 +26,17 @@ const MODEL_SIZE = {
 };
 
 const DATASET_SIZE = {
-  'under-10k': 'n<10K',
-  '10k-1m': '10K<n<1M',
-  '1m-100m': '1M<n<100M',
-  '100m-plus': 'n>100M',
+  'under-1k': 'n<1K',
+  '1k-10k': '1K<n<10K',
+  '10k-100k': '10K<n<100K',
+  '100k-1m': '100K<n<1M',
+  '1m-10m': '1M<n<10M',
+  '10m-100m': '10M<n<100M',
+  '100m-1b': '100M<n<1B',
+  '1b-10b': '1B<n<10B',
+  '10b-100b': '10B<n<100B',
+  '100b-1t': '100B<n<1T',
+  '1t-plus': 'n>1T',
 };
 
 const SOURCE_HOSTS = {
@@ -123,21 +130,21 @@ export const buildDatasetsUrl = (filters) => {
   const params = new URLSearchParams({
     sort: sort.field,
     direction: sort.direction,
-    limit: '24',
+    limit: '48',
   });
   if (filters.task !== 'all') params.append('filter', `task_categories:${filters.task}`);
   if (DATASET_SIZE[filters.size]) params.append('filter', `size_categories:${DATASET_SIZE[filters.size]}`);
-  if (filters.extra.startsWith('language-')) params.append('filter', `language:${filters.extra.replace('language-', '')}`);
-  if (filters.extra.startsWith('license-')) params.append('filter', filters.extra.replace('license-', 'license:'));
-  if (filters.extra === 'official') params.append('filter', 'benchmark:official');
+  if (filters.language && filters.language !== 'all') params.append('filter', `language:${filters.language}`);
+  if (filters.license && filters.license !== 'all') params.append('filter', `license:${filters.license}`);
+  if (filters.access && filters.access !== 'all') params.set('gated', `${filters.access === 'gated'}`);
+  if (filters.benchmark === 'official') params.append('filter', 'benchmark:official');
   appendExpand(params, ['downloads', 'likes', 'tags', 'trendingScore', 'createdAt', 'lastModified', 'description']);
   return `https://huggingface.co/api/datasets?${params}`;
 };
 
 export const buildCommunityPapersUrl = (filters, now = new Date()) => {
   const params = new URLSearchParams({
-    sort: filters.sort === 'recent' ? 'publishedAt' : 'trending',
-    limit: '24',
+    limit: '100',
   });
   if (filters.time === 'day') params.set('date', dateKey(now));
   if (filters.time === 'week') params.set('week', isoWeek(now));
@@ -150,7 +157,7 @@ const arxivCategory = (topic) => {
   return '(cat:cs.AI OR cat:cs.LG)';
 };
 
-export const buildArxivUrl = (filters, now = new Date()) => {
+export const buildArxivRequest = (filters, now = new Date()) => {
   const clauses = [arxivCategory(filters.category || filters.topic)];
   const topic = filters.topic;
   if (TOPIC_TERMS[topic]?.length) {
@@ -164,8 +171,22 @@ export const buildArxivUrl = (filters, now = new Date()) => {
     sortBy: filters.sort === 'relevance' ? 'relevance' : 'submittedDate',
     sortOrder: 'descending',
   });
-  return `https://export.arxiv.org/api/query?${params}`;
+  return {
+    url: `https://export.arxiv.org/api/query?${params}`,
+    previewUrl: `/__scout/arxiv?${params}`,
+  };
 };
+
+export const buildArxivUrl = (filters, now = new Date()) => buildArxivRequest(filters, now).url;
+
+const isLoopbackPreview = (location) => {
+  const loopback = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
+  return ['http:', 'https:'].includes(location?.protocol) && loopback.has(location?.hostname);
+};
+
+export const resolveArxivRequestUrl = (request, location = globalThis.location) => (
+  isLoopbackPreview(location) ? request.previewUrl : request.url
+);
 
 export const matchesTopic = (card, topic) => {
   const terms = TOPIC_TERMS[topic] || [];

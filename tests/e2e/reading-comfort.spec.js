@@ -173,12 +173,17 @@ test('all workbenches retain shared reading type and source-specific controls', 
     contentType: 'application/atom+xml',
     body: arxivXml,
   }));
+  await page.route('**/__scout/arxiv**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/atom+xml',
+    body: arxivXml,
+  }));
 
   await page.goto('/newtab.html');
 
   for (const section of ['Today', 'Models', 'Datasets', 'Papers', 'Learn']) {
     await page.getByRole('button', { name: new RegExp(`^${section}`) }).click();
-    await page.locator('.grid .card').first().waitFor({ state: 'visible' });
+    await page.locator('.grid .card:not(.skeleton-card)').first().waitFor({ state: 'visible' });
     const type = await cardTypography(page);
     expect(type.title).toBe(18);
     expect(type.summary).toBe(15);

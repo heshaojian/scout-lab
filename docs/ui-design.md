@@ -52,15 +52,15 @@ Hugging Face models in the shared grid. Controls: rank, task, parameter size, an
 
 ### Datasets
 
-Hugging Face datasets in the shared grid. Controls: rank, task, size, and additional language/license/benchmark filters.
+Hugging Face datasets in the shared grid. Exact source task and size values are grouped for scanning. Language, license, access, benchmark, and AI topic are independent advanced filters.
 
 ### Papers
 
-Hugging Face Daily Papers and arXiv in the shared grid. A source segment switches between Community and Raw arXiv, with time, topic/category, and source-valid sort controls.
+Hugging Face Daily Papers and arXiv in the shared grid. A source segment switches between Community and Raw arXiv, with time, topic/category, and source-valid sort controls. Community Trending ranks upvotes inside the chosen period; raw arXiv uses a fixed local-preview proxy and exposes validated PDF links.
 
 ### Learn
 
-A curated catalog in the shared grid. The first card is the current learning item, followed by courses, cookbooks, and exercises. Controls: focus, format, and progress.
+A curated catalog in the shared grid. In-progress resources appear first. Controls: focus, format, level, and progress; cards show effort and use Start, Resume, or Review according to saved progress.
 
 ## Shared Card Anatomy
 
@@ -167,3 +167,5 @@ Detailed settings behavior and acceptance criteria live in [Friendly Settings](.
 - iCloud export is manual-first: the user clicks "Save today".
 
 Detailed behavior and complete acceptance criteria live in [Filtered Grid Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
+
+The source contracts for the final three discovery tabs live in [Datasets, Papers, and Learn Reliability](./superpowers/specs/2026-08-29-datasets-papers-learn-reliability-design.md).

@@ -146,7 +146,7 @@ describe('feed integration', () => {
       if (value.includes('/api/models')) return response([{ id: 'owner/model', downloads: 10, likes: 2, trendingScore: 3, tags: [] }]);
       if (value.includes('/api/datasets')) return response([{ id: 'owner/dataset', downloads: 20, likes: 4, trendingScore: 5, tags: [] }]);
       if (value.includes('/api/daily_papers')) return response([{ paper: { id: '2608.10000', title: 'Paper', summary: 'Summary', upvotes: 6, authors: [] }, numComments: 1 }]);
-      if (value.includes('export.arxiv.org')) return response(arxivXml, { type: 'application/atom+xml' });
+      if (value.includes('export.arxiv.org') || value.includes('/__scout/arxiv')) return response(arxivXml, { type: 'application/atom+xml' });
       throw new Error(`Unexpected URL: ${value}`);
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -215,7 +215,7 @@ describe('feed integration', () => {
       if (value.includes('/api/models')) return response([{ id: 'owner/model', downloads: 10, likes: 2, trendingScore: 3, tags: [] }]);
       if (value.includes('/api/datasets')) return response([{ id: 'owner/dataset', downloads: 20, likes: 4, trendingScore: 5, tags: [] }]);
       if (value.includes('/api/daily_papers')) return response([{ paper: { id: '2608.10000', title: 'Paper', summary: 'Summary', upvotes: 6, authors: [] }, numComments: 1 }]);
-      if (value.includes('export.arxiv.org')) return response(arxivXml, { type: 'application/atom+xml' });
+      if (value.includes('export.arxiv.org') || value.includes('/__scout/arxiv')) return response(arxivXml, { type: 'application/atom+xml' });
       throw new Error(`Unexpected URL: ${value}`);
     });
     vi.stubGlobal('fetch', fetchMock);

@@ -30,7 +30,10 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
   const note = itemState.comment || '';
   const safeUrl = validateSourceUrl(card.url, card.source);
   const isCommenting = commentingId === card.id;
-  const secondaryLink = (card.links || []).find((link) => validateSourceUrl(link.url, card.source));
+  const secondaryLinks = (card.links || []).map((link) => ({
+    ...link,
+    url: validateSourceUrl(link.url, link.source || card.source),
+  })).filter(({ url }) => url).slice(0, 2);
   const relatedVariants = (card.relatedVariants || []).map((variant) => ({
     ...variant,
     url: validateSourceUrl(variant.url, 'huggingface'),
@@ -66,8 +69,8 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
         <span>${escapeHtml(card.secondary?.left || card.owner || 'Not specified')}</span>
         ${card.type === 'Learn'
           ? progressControl(card, progress)
-          : secondaryLink
-            ? `<a class="secondary-link" data-open-link href="${escapeHtml(validateSourceUrl(secondaryLink.url, card.source))}" target="_blank" rel="noopener noreferrer">${escapeHtml(secondaryLink.label)}</a>`
+          : secondaryLinks.length
+            ? `<span class="secondary-links">${secondaryLinks.map((link) => `<a class="secondary-link" data-open-link href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('')}</span>`
             : `<span>${escapeHtml(card.secondary?.right || 'Not specified')}</span>`}
       </div>
       <div class="card-footer">
@@ -77,7 +80,7 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
           ${actionButton('Comment', 'comment', '&#9998;', Boolean(note))}
         </div>
         ${safeUrl
-          ? `<a class="open" data-open-link href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">Open <span aria-hidden="true">&rarr;</span></a>`
+          ? `<a class="open" data-open-link href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(card.openLabel || 'Open')} <span aria-hidden="true">&rarr;</span></a>`
           : '<span class="open disabled">Link unavailable</span>'}
       </div>
     </article>

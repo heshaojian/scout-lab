@@ -2,6 +2,12 @@ import { validateSourceUrl } from './query.js';
 
 export const cleanText = (value = '') => `${value}`.replace(/\s+/g, ' ').trim();
 
+const readableDescription = (value = '', limit = 420) => {
+  const document = new DOMParser().parseFromString(`<body>${value}</body>`, 'text/html');
+  const text = cleanText(document.body?.textContent || value);
+  return text.length <= limit ? text : `${text.slice(0, limit - 1).trimEnd()}…`;
+};
+
 export const compactNumber = (value) => {
   const number = Number(value);
   if (!Number.isFinite(number)) return 'Not specified';
@@ -228,7 +234,7 @@ export const normalizeDataset = (dataset, rank = 'trending') => {
   const trending = Number(dataset.trendingScore) || 0;
   const primary = {
     trending: [`${compactNumber(trending)} trending`, 'Trending score', trending, 'Hugging Face trending signal'],
-    newest: [`Updated ${formatDate(dataset.lastModified || dataset.createdAt)}`, 'Updated', dataset.lastModified, 'Dataset update date'],
+    newest: [`Created ${formatDate(dataset.createdAt)}`, 'Created', dataset.createdAt, 'Dataset creation date'],
     downloads: [`${compactNumber(downloads)} downloads`, 'Downloads', downloads, 'Cumulative Hugging Face downloads'],
     likes: [`${compactNumber(likes)} likes`, 'Likes', likes, 'Cumulative Hugging Face likes'],
   }[rank];
@@ -243,7 +249,7 @@ export const normalizeDataset = (dataset, rank = 'trending') => {
     type: 'Dataset',
     title: dataset.id,
     url: `https://huggingface.co/datasets/${dataset.id}`,
-    summary: dataset.description || `${task.replaceAll('-', ' ')} dataset on Hugging Face.`,
+    summary: readableDescription(dataset.description) || `${task.replaceAll('-', ' ')} dataset on Hugging Face.`,
     tags: [task, size, language, license],
     owner: dataset.id?.split('/')[0],
     publishedAt: dataset.lastModified || dataset.createdAt,
@@ -271,6 +277,8 @@ export const normalizeCommunityPaper = (entry) => {
   const upvotes = Number(paper.upvotes ?? entry.upvotes) || 0;
   const comments = Number(entry.numComments ?? paper.numComments) || 0;
   const publishedAt = paper.publishedAt || entry.publishedAt;
+  const featuredAt = paper.submittedOnDailyAt || entry.submittedOnDailyAt || publishedAt;
+  const githubRepo = paper.githubRepo || entry.githubRepo || '';
   const card = baseCard({
     id: `hf-paper:${id}`,
     source: 'huggingface',
@@ -293,8 +301,19 @@ export const normalizeCommunityPaper = (entry) => {
       metric('upvotes', 'Community upvotes', upvotes, 'Hugging Face Daily Papers upvotes'),
       metric('comments', 'Comments', comments, 'Hugging Face Daily Papers comments'),
     ],
-    secondary: { left: `Published ${formatDate(publishedAt)}`, right: `${compactNumber(comments)} comments` },
-    details: { authors, organization: paper.organization?.name || entry.organization?.name || '' },
+    links: [
+      { id: 'pdf', label: 'PDF', url: `https://arxiv.org/pdf/${id}`, source: 'arxiv' },
+      githubRepo ? { id: 'code', label: 'Code', url: githubRepo, source: 'github' } : null,
+    ].filter(Boolean).filter(({ url, source }) => validateSourceUrl(url, source)),
+    secondary: { left: `Featured ${formatDate(featuredAt)}`, right: `${compactNumber(comments)} comments` },
+    details: {
+      authors,
+      organization: paper.organization?.name || entry.organization?.name || '',
+      featuredAt,
+      publishedAt,
+      upvotes,
+      comments,
+    },
   };
 };
 

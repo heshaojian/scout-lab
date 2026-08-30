@@ -24,16 +24,26 @@ describe('learning catalog', () => {
     }).id).toBe('learn:hf-agents-course');
   });
 
-  it('filters by focus, format, and progress and keeps in-progress first', () => {
+  it('filters by focus, format, level, and progress and keeps in-progress first', () => {
     const progress = {
       'learn:hf-context-course': { status: 'done' },
       'learn:hf-agents-course': { status: 'in-progress' },
     };
-    const cards = getLearningCards({ focus: 'agents', format: 'course', progress: 'in-progress' }, progress);
-    const all = getLearningCards({ focus: 'all', format: 'all', progress: 'all' }, progress);
+    const cards = getLearningCards({ focus: 'agents', format: 'course', level: 'intermediate', progress: 'in-progress' }, progress);
+    const foundational = getLearningCards({ focus: 'all', format: 'all', level: 'foundational', progress: 'all' }, progress);
+    const all = getLearningCards({ focus: 'all', format: 'all', level: 'all', progress: 'all' }, progress);
 
     expect(cards.map((card) => card.id)).toEqual(['learn:hf-agents-course']);
+    expect(foundational.map((card) => card.id)).toEqual(expect.arrayContaining([
+      'learn:hf-llm-course', 'learn:google-ml-crash-course',
+    ]));
     expect(all[0].id).toBe('learn:hf-agents-course');
     expect(all.at(-1).id).toBe('learn:hf-context-course');
+    expect(all[0]).toMatchObject({ openLabel: 'Resume' });
+    expect(all.at(-1)).toMatchObject({ openLabel: 'Review' });
+    expect(all.find(({ id }) => id === 'learn:hf-llm-course').facts).toEqual([
+      { label: 'Level', value: 'Foundational' },
+      { label: 'Effort', value: '12 chapters' },
+    ]);
   });
 });

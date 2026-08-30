@@ -614,6 +614,12 @@ a:focus-visible {
   font-weight: 800;
 }
 
+.secondary-links {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .progress-control select {
   max-width: 112px;
   height: 26px;
