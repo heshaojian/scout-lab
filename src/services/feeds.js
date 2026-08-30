@@ -21,7 +21,6 @@ import {
   parseGithubTrending,
   parseHuggingFaceDatasetsPage,
 } from './normalizers.js';
-import { getLearningCards } from './learnSources.js';
 import { getCache, getStaleCache, setCache } from './storage.js';
 
 const REQUEST_TIMEOUT = 10_000;
@@ -142,17 +141,11 @@ const fetchPapers = async (filters) => {
   return { cards, status: { label: 'Hugging Face Daily Papers', stale: false } };
 };
 
-const liveFetcher = (section, filters, options) => {
+const liveFetcher = (section, filters) => {
   if (section === 'code') return fetchCode(filters);
   if (section === 'models') return fetchModels(filters);
   if (section === 'datasets') return fetchDatasets(filters);
   if (section === 'papers') return fetchPapers(filters);
-  if (section === 'learn') {
-    return Promise.resolve({
-      cards: getLearningCards(filters, options.learnProgress),
-      status: { label: 'Curated learning catalog', stale: false },
-    });
-  }
   throw new Error(`Unknown workbench: ${section}`);
 };
 
@@ -181,13 +174,12 @@ export const composeTodayCards = (lanes, mix, userState = {}) => {
       visibleLane(lanes.arxiv, userState),
       mix.papers,
     ),
-    learn: visibleLane(lanes.learn, userState).slice(0, mix.learn),
   };
   const shortfalls = Object.fromEntries(Object.entries(selected)
     .filter(([lane, cards]) => cards.length < mix[lane])
     .map(([lane, cards]) => [lane, mix[lane] - cards.length]));
   return {
-    cards: ['code', 'models', 'datasets', 'papers', 'learn'].flatMap((lane) => selected[lane]),
+    cards: ['code', 'models', 'datasets', 'papers'].flatMap((lane) => selected[lane]),
     shortfalls,
   };
 };
@@ -200,25 +192,22 @@ const fetchToday = async (_filters, options) => {
     datasets: { ...getWorkbench('datasets').defaults, ...allFilters.datasets },
     community: { ...getWorkbench('papers').defaults, ...allFilters.papers, source: 'community' },
     arxiv: { ...getWorkbench('papers').defaults, ...allFilters.papers, source: 'arxiv', sort: 'newest' },
-    learn: { ...getWorkbench('learn').defaults, ...allFilters.learn },
   };
   const sharedOptions = { ...options, force: false };
-  const [code, models, datasets, community, arxiv, learn] = await Promise.all([
+  const [code, models, datasets, community, arxiv] = await Promise.all([
     fetchSection('code', sourceFilters.code, sharedOptions),
     fetchSection('models', sourceFilters.models, sharedOptions),
     fetchSection('datasets', sourceFilters.datasets, sharedOptions),
     fetchSection('papers', sourceFilters.community, sharedOptions),
     fetchSection('papers', sourceFilters.arxiv, sharedOptions),
-    fetchSection('learn', sourceFilters.learn, sharedOptions),
   ]);
-  const results = [code, models, datasets, community, arxiv, learn];
+  const results = [code, models, datasets, community, arxiv];
   const composition = composeTodayCards({
     code: code.cards,
     models: models.cards,
     datasets: datasets.cards,
     community: community.cards,
     arxiv: arxiv.cards,
-    learn: learn.cards,
   }, options.todayMix, options.userState);
   const missing = Object.entries(composition.shortfalls)
     .map(([lane, count]) => `${count} ${lane}`)
@@ -234,7 +223,7 @@ const fetchToday = async (_filters, options) => {
       stale,
       unavailable,
       ...(missing ? { message: `Today could not fill: ${missing}.` } : {}),
-      sources: Object.fromEntries(['code', 'models', 'datasets', 'communityPapers', 'arxiv', 'learn']
+      sources: Object.fromEntries(['code', 'models', 'datasets', 'communityPapers', 'arxiv']
         .map((id, index) => [id, results[index].status])),
     },
   };
@@ -243,8 +232,7 @@ const fetchToday = async (_filters, options) => {
 export const fetchSection = async (section, filters, options = {}) => {
   const normalizedOptions = {
     force: false,
-    learnProgress: {},
-    todayMix: { code: 2, models: 1, datasets: 1, papers: 2, learn: 1 },
+    todayMix: { code: 2, models: 1, datasets: 1, papers: 2 },
     userState: {},
     ...options,
   };

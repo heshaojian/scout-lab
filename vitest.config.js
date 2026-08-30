@@ -23,7 +23,7 @@ export default defineConfig({
         'src/services/backup.js',
         'src/services/archiveFormat.js',
         'src/services/archive.js',
-        'src/services/learnSources.js',
+        'src/services/dataReset.js',
       ],
       thresholds: {
         statements: 80,

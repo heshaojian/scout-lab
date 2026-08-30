@@ -1,7 +1,7 @@
 import { createDefaultFilters, normalizeWorkbenchFilters, SECTION_ORDER } from './workbenches.js';
 
 export const SETTINGS_VERSION = 3;
-export const TODAY_LANES = ['code', 'models', 'datasets', 'papers', 'learn'];
+export const TODAY_LANES = ['code', 'models', 'datasets', 'papers'];
 
 const THEMES = new Set(['system', 'light', 'dark']);
 const DENSITIES = new Set(['comfortable', 'compact']);
@@ -13,7 +13,6 @@ const DEFAULT_TODAY_MIX = Object.freeze({
   models: 1,
   datasets: 1,
   papers: 2,
-  learn: 1,
 });
 
 export const DEFAULT_PREFERENCES = Object.freeze({

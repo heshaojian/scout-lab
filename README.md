@@ -22,7 +22,6 @@ Scout Lab is intentionally not a general search page, bookmark manager, or news 
 - Models: Hugging Face models
 - Datasets: Hugging Face datasets
 - Papers: arXiv cs.AI and cs.LG
-- Learn: curated AI learning resources
 
 ## Local Development
 

@@ -28,7 +28,6 @@ const LANE_LABELS = {
   models: 'Models',
   datasets: 'Datasets',
   papers: 'Papers',
-  learn: 'Learn',
 };
 
 const segment = (setting, label, options, value) => `
@@ -62,7 +61,7 @@ const filterSummary = (section, filters) => {
 const importReviewHtml = (review) => review ? `
   <div class="import-review" data-import-review>
     <strong>${escapeHtml(review.fileName)}</strong>
-    <p>${review.summary.annotations} annotations, ${review.summary.progress} progress entries, ${review.summary.notes} notes, and ${review.summary.snapshots} snapshots.</p>
+    <p>${review.summary.annotations} annotations, ${review.summary.notes} notes, and ${review.summary.snapshots} snapshots.</p>
     <div class="settings-actions">
       <button type="button" class="settings-primary" data-command="confirm-import">Import backup</button>
       <button type="button" class="settings-secondary" data-command="cancel-import">Cancel</button>
@@ -73,7 +72,7 @@ const importReviewHtml = (review) => review ? `
 const resetReviewHtml = (confirmReset) => confirmReset ? `
   <div class="import-review" data-reset-review>
     <strong>Reset preferences?</strong>
-    <p>Appearance, startup, Today mix, and saved filter defaults return to factory values. Favorites, comments, notes, progress, snapshots, and the iCloud folder stay untouched.</p>
+    <p>Appearance, startup, Today mix, and saved filter defaults return to factory values. Favorites, comments, notes, snapshots, and the iCloud folder stay untouched.</p>
     <div class="settings-actions">
       <button type="button" class="settings-danger" data-command="confirm-reset-preferences">Reset preferences</button>
       <button type="button" class="settings-secondary" data-command="cancel-reset-preferences">Cancel</button>

@@ -27,7 +27,6 @@
   --model: #a96119;
   --dataset: #1b7b5c;
   --paper: #943558;
-  --learn: #66529f;
   --danger: #a13939;
   --rail-padding: 22px 16px;
   --main-padding: 24px 30px 40px;
@@ -79,7 +78,6 @@
   --model: #e5a564;
   --dataset: #5bc49f;
   --paper: #e286aa;
-  --learn: #b5a2ef;
   --danger: #f08d8d;
 }
 
@@ -526,7 +524,6 @@ a:focus-visible {
 .badge.model { color: var(--model); }
 .badge.dataset { color: var(--dataset); }
 .badge.paper { color: var(--paper); }
-.badge.learn { color: var(--learn); }
 
 .metric {
   max-width: 58%;

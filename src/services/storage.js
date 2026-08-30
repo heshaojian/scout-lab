@@ -58,16 +58,6 @@ export const setUserItemState = (itemId, patch, card, now = new Date()) => {
   return write('user-state', next);
 };
 
-export const getLearnProgress = () => read('learn-progress', {});
-
-export const setLearnProgress = (itemId, status) => {
-  const current = getLearnProgress();
-  return write('learn-progress', {
-    ...current,
-    [itemId]: { status, updatedAt: new Date().toISOString() },
-  });
-};
-
 export const getDailyNote = (dateKey) => read(`note:${dateKey}`, '');
 export const setDailyNote = (dateKey, note) => write(`note:${dateKey}`, note);
 export const getSnapshot = (dateKey) => read(`snapshot:${dateKey}`, null);
@@ -166,7 +156,6 @@ export const hydrateLibraryAnnotations = () => {
 export const getDurableData = () => ({
   settings: getSettings(),
   userState: getUserState(),
-  learnProgress: getLearnProgress(),
   dailyNotes: getAllDailyNotes(),
   snapshots: getAllSnapshots(),
 });
@@ -179,7 +168,6 @@ export const applyDurableData = (data) => {
   try {
     write('settings', normalizeSettings(data.settings));
     write('user-state', data.userState);
-    write('learn-progress', data.learnProgress);
     Object.keys(getAllDailyNotes()).forEach((date) => remove(`note:${date}`));
     Object.keys(getAllSnapshots()).forEach((date) => remove(`snapshot:${date}`));
     Object.entries(data.dailyNotes).forEach(([date, note]) => write(`note:${date}`, note));

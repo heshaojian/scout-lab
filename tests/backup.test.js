@@ -21,9 +21,6 @@ const localData = () => ({
       },
     },
   },
-  learnProgress: {
-    'learn:one': { status: 'in-progress', updatedAt: '2026-08-29T10:00:00.000Z' },
-  },
   dailyNotes: { '2026-08-28': 'Keep me' },
   snapshots: { '2026-08-28': { date: '2026-08-28', sections: {} } },
 });
@@ -38,12 +35,13 @@ describe('portable backup', () => {
 
     expect(backup).toMatchObject({
       format: BACKUP_FORMAT,
-      version: 1,
+      version: 2,
       exportedAt: '2026-08-29T12:00:00.000Z',
     });
     expect(backup.data.settings.version).toBe(3);
     expect(backup.data.cache).toBeUndefined();
     expect(backup.data.archiveHandle).toBeUndefined();
+    expect(backup.data.learnProgress).toBeUndefined();
   });
 
   it('parses a valid backup and rejects unsupported, oversized, or unsafe input', () => {
@@ -53,6 +51,7 @@ describe('portable backup', () => {
 
     expect(() => parseBackup('{bad')).toThrow(/valid JSON/i);
     expect(() => parseBackup(JSON.stringify({ format: BACKUP_FORMAT, version: 99, data: {} }))).toThrow(/version/i);
+    expect(() => parseBackup(JSON.stringify({ ...createBackup(localData()), version: 1 }))).toThrow(/version/i);
     expect(() => parseBackup('x'.repeat(MAX_BACKUP_BYTES + 1))).toThrow(/too large/i);
 
     const unsafe = createBackup({
@@ -83,9 +82,6 @@ describe('portable backup', () => {
         'github:one': { favorite: false, comment: 'Older', updatedAt: '2026-08-29T09:00:00.000Z' },
         'github:two': { favorite: true, updatedAt: '2026-08-29T11:00:00.000Z' },
       },
-      learnProgress: {
-        'learn:one': { status: 'done', updatedAt: '2026-08-29T11:00:00.000Z' },
-      },
       dailyNotes: { '2026-08-29': 'Imported' },
       snapshots: { '2026-08-29': { date: '2026-08-29', sections: {} } },
     };
@@ -96,7 +92,6 @@ describe('portable backup', () => {
     expect(merged.settings.preferences.theme).toBe('dark');
     expect(merged.userState['github:one'].comment).toBe('Local');
     expect(merged.userState['github:two'].favorite).toBe(true);
-    expect(merged.learnProgress['learn:one'].status).toBe('done');
     expect(merged.dailyNotes).toEqual({ '2026-08-28': 'Keep me', '2026-08-29': 'Imported' });
     expect(Object.keys(merged.snapshots)).toEqual(['2026-08-28', '2026-08-29']);
   });

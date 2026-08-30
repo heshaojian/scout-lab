@@ -18,7 +18,6 @@ describe('daily archive formatter', () => {
       allCards: [{ id: 'github:openai/evals', type: 'Code', title: 'openai/evals', url: 'https://github.com/openai/evals', summary: 'Evaluation framework.' }],
       userState: { 'github:openai/evals': { favorite: true, comment: 'Run one eval.' } },
       filters: { code: { time: 'week', language: 'python', topic: 'evaluation' } },
-      learnProgress: { 'learn:hf-agents-course': { status: 'in-progress', updatedAt: '2026-08-28T12:00:00Z' } },
       sourceStatus: { code: { label: 'GitHub Trending', stale: false } },
     });
 
@@ -27,7 +26,6 @@ describe('daily archive formatter', () => {
     expect(markdown).toContain('Total stars: 18000 (Cumulative GitHub stars)');
     expect(markdown).toContain('Run one eval.');
     expect(markdown).toContain('language: python');
-    expect(markdown).toContain('learn:hf-agents-course: in-progress');
     expect(markdown).toContain('GitHub Trending');
   });
 
@@ -38,7 +36,6 @@ describe('daily archive formatter', () => {
     expect(markdown).toContain('No favorites yet.');
     expect(markdown).toContain('No hidden items.');
     expect(markdown).toContain('No comments yet.');
-    expect(markdown).toContain('No learning progress changed today.');
     expect(markdown).toContain('No source status recorded.');
   });
 });

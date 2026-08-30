@@ -17,6 +17,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (sessionStorage.getItem('scout-library-test')) return;
     localStorage.clear();
+    localStorage.setItem('scout-lab:data-schema', '2');
     localStorage.setItem('scout-lab:settings', JSON.stringify({
       selectedSection: 'models',
       preferences: { startupSection: 'last-used', density: 'comfortable', theme: 'dark' },

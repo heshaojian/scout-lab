@@ -29,6 +29,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (sessionStorage.getItem('scout-lab:test-initialized')) return;
     localStorage.clear();
+    localStorage.setItem('scout-lab:data-schema', '2');
     localStorage.setItem('scout-lab:settings', JSON.stringify({
       selectedSection: 'datasets',
       preferences: { startupSection: 'last-used', density: 'comfortable', theme: 'dark' },
@@ -128,26 +129,16 @@ test('Papers keeps period semantics, switches to local arXiv, and opens direct r
   await popup.close();
 });
 
-test('Learn exposes level and effort and persists Start to Resume', async ({ page }) => {
+test('removed Learn workbench is absent from navigation, settings, and Library filters', async ({ page }) => {
   await page.route('https://huggingface.co/api/datasets**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
-  await page.route('https://huggingface.co/learn/llm-course/en/chapter1/1', (route) => route.fulfill({ status: 200, contentType: 'text/html', body: '<title>LLM Course</title>' }));
 
   await page.goto('/newtab.html');
-  await page.getByRole('button', { name: 'Learn' }).click();
-  await page.getByLabel('Level').selectOption('foundational');
-  const card = page.locator('.card[data-id="learn:hf-llm-course"]');
-  await expect(card).toContainText('Foundational');
-  await expect(card).toContainText('12 chapters');
-  await expect(card.getByRole('link', { name: /Start/ })).toBeVisible();
-
-  await card.getByLabel('Progress for Hugging Face LLM Course').selectOption('in-progress');
-  await expect(card.getByRole('link', { name: /Resume/ })).toBeVisible();
-  await page.reload();
-  await expect(page.locator('.card[data-id="learn:hf-llm-course"]').getByRole('link', { name: /Resume/ })).toBeVisible();
-
-  const popupPromise = page.waitForEvent('popup');
-  await page.locator('.card[data-id="learn:hf-llm-course"]').getByRole('link', { name: /Resume/ }).click();
-  const popup = await popupPromise;
-  await expect(popup).toHaveURL('https://huggingface.co/learn/llm-course/en/chapter1/1');
-  await popup.close();
+  await expect(page.getByRole('button', { name: 'Learn', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByRole('option', { name: 'Learn', exact: true })).toHaveCount(0);
+  await expect(page.getByText('Learn items', { exact: true })).toHaveCount(0);
+  await page.locator('.drawer-close').click();
+  await page.getByRole('button', { name: 'Library' }).click();
+  await expect(page.getByLabel('Content type').getByRole('option', { name: 'Learn', exact: true })).toHaveCount(0);
+  await expect(page.getByLabel('Source').getByRole('option', { name: 'Learning', exact: true })).toHaveCount(0);
 });

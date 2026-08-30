@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   getCache,
-  getLearnProgress,
   hydrateLibraryAnnotations,
   getDailyNote,
   getSnapshot,
@@ -15,7 +14,6 @@ import {
   restoreWorkbenchFilterDefaults,
   setCache,
   setFilterDefaults,
-  setLearnProgress,
   setDailyNote,
   setSnapshot,
   setUserItemState,
@@ -62,15 +60,13 @@ describe('query-aware storage', () => {
     expect(getWorkbenchFilters('code').language).toBe('python');
   });
 
-  it('resets preferences and filter defaults without deleting learning data', () => {
-    setLearnProgress('learn:one', 'done');
+  it('resets preferences and filter defaults without deleting annotations', () => {
     setUserItemState('github:one', { favorite: true });
     setFilterDefaults('code', { language: 'python' });
 
     resetPreferences();
 
     expect(getWorkbenchFilterDefaults('code').language).toBe('all');
-    expect(getLearnProgress()['learn:one'].status).toBe('done');
     expect(getUserState()['github:one'].favorite).toBe(true);
   });
 
@@ -96,14 +92,6 @@ describe('query-aware storage', () => {
 
     expect(getCache(first)).toBeNull();
     expect(getCache(second)?.cards).toEqual([{ id: 'two' }]);
-  });
-
-  it('stores learning progress separately from generic item state', () => {
-    setLearnProgress('learn:hf-agents-course', 'in-progress');
-
-    expect(getLearnProgress()).toEqual(expect.objectContaining({
-      'learn:hf-agents-course': expect.objectContaining({ status: 'in-progress' }),
-    }));
   });
 
   it('preserves daily notes, snapshots, and immutable item annotations', () => {

@@ -29,7 +29,7 @@ describe('workbench query builders', () => {
     expect(second.code.language).toBe('all');
     expect(second.code).toEqual({ time: 'week', spokenLanguage: 'all', language: 'all', topic: 'all' });
     expect(second.today).toEqual({});
-    expect(Object.keys(second)).toEqual(['today', 'code', 'models', 'datasets', 'papers', 'learn', 'library']);
+    expect(Object.keys(second)).toEqual(['today', 'code', 'models', 'datasets', 'papers', 'library']);
   });
 
   it('drops the removed legacy Today topic filter', () => {
@@ -289,7 +289,6 @@ describe('source URL validation', () => {
     expect(validateSourceUrl('https://github.com/openai/evals', 'github')).toBe('https://github.com/openai/evals');
     expect(validateSourceUrl('https://huggingface.co/openai/gpt-oss-20b', 'huggingface')).toBe('https://huggingface.co/openai/gpt-oss-20b');
     expect(validateSourceUrl('https://arxiv.org/abs/2608.12345', 'arxiv')).toBe('https://arxiv.org/abs/2608.12345');
-    expect(validateSourceUrl('https://developers.google.com/machine-learning/crash-course', 'learn')).toContain('developers.google.com');
   });
 
   it('rejects scripts, HTTP, credentials, and unexpected hosts', () => {

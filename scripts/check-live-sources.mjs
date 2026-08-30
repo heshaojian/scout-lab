@@ -6,7 +6,6 @@ import {
   buildGithubRequest,
   buildModelsUrl,
 } from '../src/services/query.js';
-import { learningLinks } from '../src/services/learnSources.js';
 import { parseGithubTrending, parseHuggingFaceDatasetsPage } from '../src/services/normalizers.js';
 import { createDefaultFilters } from '../src/workbenches.js';
 import { JSDOM } from 'jsdom';
@@ -139,10 +138,7 @@ const arxiv = await record('arXiv Atom contract', async () => {
 });
 
 const linkGroups = [trending, trendingEnglish, trendingChinese, models, datasets, papers, arxiv].filter(Boolean);
-const links = [...new Set([
-  ...linkGroups.flatMap((group) => group.links),
-  ...learningLinks.map((item) => item.url),
-])];
+const links = [...new Set(linkGroups.flatMap((group) => group.links))];
 
 const rateLimitedHosts = new Set();
 

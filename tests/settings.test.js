@@ -42,7 +42,7 @@ describe('settings schema', () => {
       density: 'tiny',
       startupSection: 'papers',
       openLinks: 'elsewhere',
-      todayMix: { code: 4, models: 0, datasets: 0, papers: 0, learn: 0 },
+      todayMix: { code: 4, models: 0, datasets: 0, papers: 0 },
     });
 
     expect(preferences).toEqual({
@@ -50,15 +50,15 @@ describe('settings schema', () => {
       density: 'comfortable',
       startupSection: 'papers',
       openLinks: 'foreground',
-      todayMix: { code: 4, models: 0, datasets: 0, papers: 0, learn: 0 },
+      todayMix: { code: 4, models: 0, datasets: 0, papers: 0 },
     });
   });
 
   it('validates Today lane ranges and combined totals', () => {
-    expect(isValidTodayMix({ code: 4, models: 4, datasets: 0, papers: 4, learn: 0 })).toBe(true);
-    expect(isValidTodayMix({ code: 0, models: 0, datasets: 0, papers: 0, learn: 0 })).toBe(false);
-    expect(isValidTodayMix({ code: 5, models: 0, datasets: 0, papers: 0, learn: 0 })).toBe(false);
-    expect(isValidTodayMix({ code: 4, models: 4, datasets: 4, papers: 1, learn: 0 })).toBe(false);
+    expect(isValidTodayMix({ code: 4, models: 4, datasets: 0, papers: 4 })).toBe(true);
+    expect(isValidTodayMix({ code: 0, models: 0, datasets: 0, papers: 0 })).toBe(false);
+    expect(isValidTodayMix({ code: 5, models: 0, datasets: 0, papers: 0 })).toBe(false);
+    expect(isValidTodayMix({ code: 4, models: 4, datasets: 4, papers: 1 })).toBe(false);
   });
 
   it('resolves Last used separately from fixed startup workbenches', () => {

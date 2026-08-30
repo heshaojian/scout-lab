@@ -48,7 +48,7 @@ describe('shared workbench renderer', () => {
     expect(document.querySelector('.nav .count').textContent).toBe('1');
   });
 
-  it.each(['Code', 'Model', 'Dataset', 'Paper', 'Learn'])('uses identical card anatomy for %s', (type) => {
+  it.each(['Code', 'Model', 'Dataset', 'Paper'])('uses identical card anatomy for %s', (type) => {
     const html = renderCard({ ...baseCard, type }, { user: {}, progress: {} });
     document.body.innerHTML = html;
     const card = document.querySelector('.card');
@@ -180,9 +180,9 @@ describe('shared workbench renderer', () => {
     expect([...document.querySelectorAll('[data-filter="view"]')].map(({ textContent }) => textContent.trim()))
       .toEqual(['All', 'Favorites', 'Notes']);
     expect([...document.querySelector('[aria-label="Content type"]').options].map(({ value }) => value))
-      .toEqual(['all', 'Code', 'Model', 'Dataset', 'Paper', 'Learn']);
+      .toEqual(['all', 'Code', 'Model', 'Dataset', 'Paper']);
     expect([...document.querySelector('[aria-label="Source"]').options].map(({ value }) => value))
-      .toEqual(['all', 'github', 'huggingface', 'arxiv', 'learn']);
+      .toEqual(['all', 'github', 'huggingface', 'arxiv']);
     expect([...document.querySelector('[aria-label="Sort"]').options].map(({ value }) => value))
       .toEqual(['updated', 'saved', 'title']);
   });
@@ -209,24 +209,22 @@ describe('shared workbench renderer', () => {
     expect(renderFilters(WORKBENCHES.today, WORKBENCHES.today.defaults)).toBe('');
   });
 
-  it('renders paper PDF links, comments, favorites, and learning progress in shared slots', () => {
-    const paper = renderCard({
+  it('renders paper PDF links, comments, favorites, and comment editing in shared slots', () => {
+    const paperCard = {
       ...baseCard,
       source: 'arxiv',
       type: 'Paper',
       url: 'https://arxiv.org/abs/2608.12345',
       links: [{ id: 'pdf', label: 'PDF', url: 'https://arxiv.org/pdf/2608.12345' }],
-    }, { user: { 'source:item': { favorite: true, comment: 'Read methods.' } } });
-    document.body.innerHTML = paper;
+    };
+    document.body.innerHTML = renderCard(paperCard, { user: { 'source:item': { favorite: true, comment: 'Read methods.' } } });
     expect(document.querySelector('.secondary-link')?.textContent).toBe('PDF');
     expect(document.querySelector('[data-action="favorite"]')?.classList.contains('active')).toBe(true);
     expect(document.querySelector('.comment-preview')?.textContent).toBe('Read methods.');
 
-    document.body.innerHTML = renderCard({ ...baseCard, type: 'Learn', source: 'learn', url: 'https://huggingface.co/learn' }, {
-      progress: { 'source:item': { status: 'done' } },
+    document.body.innerHTML = renderCard(paperCard, {
       commentingId: 'source:item',
     });
-    expect(document.querySelector('[data-progress]')?.value).toBe('done');
     expect(document.querySelector('[data-comment-draft]')).toBeTruthy();
   });
 

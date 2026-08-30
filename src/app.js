@@ -9,11 +9,11 @@ import {
 } from './services/backup.js?v=0.3.0';
 import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=0.3.0';
 import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=0.3.0';
+import { ensureCurrentDataSchema } from './services/dataReset.js?v=0.4.0';
 import {
   applyDurableData,
   getDurableData,
   getDailyNote,
-  getLearnProgress,
   getSettings,
   getSnapshot,
   getUserState,
@@ -24,7 +24,6 @@ import {
   restoreWorkbenchFilterDefaults,
   setDailyNote,
   setFilterDefaults,
-  setLearnProgress,
   setPreferences,
   setSettings,
   setSnapshot,
@@ -47,6 +46,12 @@ import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const app = document.querySelector('#app');
+try {
+  await ensureCurrentDataSchema();
+} catch (error) {
+  app.innerHTML = '<main class="fatal-state"><h1>Scout Lab could not reset its development data.</h1><p>Close other Scout Lab tabs and reload.</p></main>';
+  throw error;
+}
 const initialSettings = getSettings();
 const initialUserState = hydrateLibraryAnnotations();
 
@@ -70,7 +75,6 @@ let state = {
   settings: initialSettings,
   cards: [],
   userState: initialUserState,
-  learnProgress: getLearnProgress(),
   archive: { connected: false, name: '' },
   loading: true,
   status: { label: 'Loading sources', stale: false },
@@ -159,7 +163,6 @@ const cardsHtml = (filters, cards) => {
   if (cards.length) {
     return cards.slice(0, 24).map((card) => renderCard(card, {
       user: state.userState,
-      progress: state.learnProgress,
       commentingId: state.commentingId,
     })).join('');
   }
@@ -312,7 +315,6 @@ const load = async ({ force = false, clear = false } = {}) => {
   const result = await fetchSection(section, filters, {
     force,
     allFilters: state.filters,
-    learnProgress: state.learnProgress,
     todayMix: state.settings.preferences.todayMix,
     userState: state.userState,
   });
@@ -324,7 +326,6 @@ const load = async ({ force = false, clear = false } = {}) => {
     loading: false,
     status: result.status,
     userState: getUserState(),
-    learnProgress: getLearnProgress(),
   });
   render();
 };
@@ -373,7 +374,6 @@ const archiveData = () => {
     allCards: uniqueCards.length ? uniqueCards : state.cards,
     userState: state.userState,
     filters: state.filters,
-    learnProgress: state.learnProgress,
     sourceStatus: Object.fromEntries(Object.entries(sections).map(([section, entry]) => [section, entry.status || {}])),
   });
 };
@@ -460,7 +460,6 @@ const applyPendingImport = async () => {
       filters: nextSettings.filters,
       selectedSection: resolveStartupSection(nextSettings),
       userState: getUserState(),
-      learnProgress: getLearnProgress(),
       pendingImport: null,
       importReview: null,
       settingsError: '',
@@ -693,14 +692,6 @@ const onChange = async (event) => {
     return;
   }
 
-  if (event.target.matches('[data-progress]')) {
-    const id = event.target.dataset.id;
-    const progress = event.target.value;
-    if (!['not-started', 'in-progress', 'done'].includes(progress)) return;
-    setLearnProgress(id, progress);
-    setState({ learnProgress: getLearnProgress() });
-    await load({ force: true });
-  }
 };
 
 const onKeydown = (event) => {

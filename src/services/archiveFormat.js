@@ -25,14 +25,12 @@ export const buildDailyArchive = ({
   allCards = [],
   userState = {},
   filters = {},
-  learnProgress = {},
   sourceStatus = {},
 }) => {
   const byType = groupByType(todayCards);
   const favorites = allCards.filter((card) => userState[card.id]?.favorite);
   const hidden = allCards.filter((card) => userState[card.id]?.hidden);
   const comments = allCards.filter((card) => userState[card.id]?.comment);
-  const progressToday = Object.entries(learnProgress).filter(([, value]) => value.updatedAt?.startsWith(date));
 
   const output = [
     `# Scout Lab - ${date}`,
@@ -53,9 +51,6 @@ export const buildDailyArchive = ({
   output.push('', '## Comments', ...(comments.length
     ? comments.map((card) => `- ${line(card.title)}: ${line(userState[card.id].comment)}`)
     : ['No comments yet.']));
-  output.push('', '## Learning Progress', ...(progressToday.length
-    ? progressToday.map(([id, value]) => `- ${line(id)}: ${line(value.status)}`)
-    : ['No learning progress changed today.']));
   output.push('', '## Active Filters');
   Object.entries(filters).forEach(([section, values]) => {
     output.push(`### ${section}`);

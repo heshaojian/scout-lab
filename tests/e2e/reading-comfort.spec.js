@@ -39,6 +39,7 @@ const cardTypography = (page) => page.locator('.card').first().evaluate((card) =
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear();
+    localStorage.setItem('scout-lab:data-schema', '2');
     localStorage.setItem('scout-lab:settings', JSON.stringify({
       selectedSection: 'code',
       preferences: {
@@ -181,7 +182,7 @@ test('all workbenches retain shared reading type and source-specific controls', 
 
   await page.goto('/newtab.html');
 
-  for (const section of ['Today', 'Models', 'Datasets', 'Papers', 'Learn']) {
+  for (const section of ['Today', 'Models', 'Datasets', 'Papers']) {
     await page.getByRole('button', { name: new RegExp(`^${section}`) }).click();
     await page.locator('.grid .card:not(.skeleton-card)').first().waitFor({ state: 'visible' });
     const type = await cardTypography(page);
@@ -195,10 +196,6 @@ test('all workbenches retain shared reading type and source-specific controls', 
   await expect(page.locator('.feed-status')).toContainText('Raw arXiv');
   await expect(page.locator('.grid .card')).toHaveCount(1);
 
-  await page.getByRole('button', { name: /^Learn/ }).click();
-  const progress = page.locator('[data-progress]').first();
-  await progress.selectOption('in-progress');
-  await expect(progress).toHaveValue('in-progress');
 });
 
 test('Today is a fixed briefing without topic or filter chrome', async ({ page }) => {

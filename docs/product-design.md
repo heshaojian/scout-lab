@@ -2,9 +2,9 @@
 
 ## Summary
 
-Scout Lab is a focused AI learning new-tab extension.
+Scout Lab is a focused AI discovery new-tab extension.
 
-The product replaces a generic browser start page with a small daily research bench. It should help the user notice useful AI signals from GitHub, Hugging Face, arXiv, and curated learning sources, then choose one thing to inspect or learn.
+The product replaces a generic browser start page with a small daily research bench. It helps the user notice useful AI signals from GitHub, Hugging Face, and arXiv, then choose one thing to inspect or build from.
 
 ## Name
 
@@ -18,7 +18,7 @@ The name intentionally stays small and practical:
 
 Full extension title:
 
-**Scout Lab - AI Learning New Tab**
+**Scout Lab - AI Discovery New Tab**
 
 Tagline:
 
@@ -38,13 +38,13 @@ Primary user:
 
 - a builder or operator learning AI through real examples
 - someone who wants to follow open-source AI without reading every feed
-- someone who learns by moving between repos, models, datasets, papers, and tutorials
+- someone who learns by moving between repositories, models, datasets, and papers
 
 The design should optimize for repeated daily use rather than one-time exploration.
 
 ## Core Sections
 
-Scout Lab uses one shared shell and one consistent content-card grid across seven workbenches. The detailed behavior, data contracts, failure states, and acceptance criteria are defined in [Filtered Grid Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
+Scout Lab uses one shared shell and one consistent content-card grid across six workbenches. Earlier seven-workbench plans are superseded by [Remove Learn Workbench](./superpowers/specs/2026-08-29-remove-learn-workbench-design.md).
 
 ### Today
 
@@ -52,7 +52,7 @@ Sources: all configured sources
 
 Purpose: provide a concise daily briefing without inventing a cross-source popularity score.
 
-The briefing grid contains two code items, one model, one dataset, two papers, and the next learning item. Every item uses the same card structure as its source tab. Each source uses its own filter state. Today has no topic or filter bar; Search only narrows the already composed queue.
+The briefing grid contains two code items, one model, one dataset, and two papers. Every item uses the same card structure as its source tab. Each source uses its own filter state. Today has no topic or filter bar; Search only narrows the already composed queue.
 
 ### Code
 
@@ -113,21 +113,6 @@ The Community mode shows Hugging Face upvotes, comments, and source-provided sum
 
 Cards show title, authors, date, summary or abstract snippet, source-specific signals, and PDF/abstract links. arXiv cards never display a popularity metric.
 
-### Learn
-
-Sources: curated learning materials
-
-Purpose: provide one practical next learning step.
-
-Initial sources:
-
-- Hugging Face Learn
-- Hugging Face Cookbook
-- Google Machine Learning Crash Course
-- selected foundational AI/ML resources
-
-This section is a curated personal syllabus, not a scraped popularity feed. It tracks Not started, In progress, and Done states for maintained course, cookbook, and exercise links.
-
 ### Library
 
 Sources: saved cards from every Scout Lab workbench
@@ -143,7 +128,7 @@ The first screen is the product. There should be no marketing hero and no onboar
 Layout:
 
 - left rail with Scout Lab identity, section navigation, and archive status
-- sections: Today, Code, Models, Datasets, Papers, Learn, Library
+- sections: Today, Code, Models, Datasets, Papers, Library
 - workbench-specific filter bar with no more than four primary controls
 - one stable content-card grid with source-specific filters and metadata
 - shared daily note and archive status
@@ -157,8 +142,8 @@ All feeds should normalize into one card model:
 ```ts
 type FeedCard = {
   id: string;
-  source: "github" | "huggingface" | "arxiv" | "learn";
-  section: "code" | "models" | "datasets" | "papers" | "learn";
+  source: "github" | "huggingface" | "arxiv";
+  section: "code" | "models" | "datasets" | "papers";
   title: string;
   url: string;
   summary: string;
@@ -200,7 +185,7 @@ Suggested tone:
 
 - system-following appearance by default
 - original light and restrained dark themes
-- subtle source colors for GitHub, Hugging Face, arXiv, and Learn
+- subtle source colors for GitHub, Hugging Face, and arXiv
 - cards with stable height and predictable metadata placement
 
 ## Removed Legacy Scope
@@ -241,7 +226,6 @@ src/
     models.js
     datasets.js
     papers.js
-    learn.js
     library.js
   components/
     shell.js
@@ -252,7 +236,6 @@ src/
     github.js
     huggingface.js
     arxiv.js
-    learnSources.js
     storage.js
     archive.js
   styles/
@@ -314,11 +297,12 @@ The first usable version should include:
 - Models tab with Hugging Face model feed
 - Datasets tab with Hugging Face dataset feed
 - Research tab with arXiv filtered feed
-- Learn tab with curated links
 - cache and source-error states
 - local build instructions
 
 Papers can be included in MVP if the source is easy to fetch cleanly; otherwise add it immediately after.
+
+The former Learn workbench and its structured progress data were removed before release. Development schema version 2 performs a one-time reset of active Scout Lab browser data; existing external backup files are not modified, and version-1 imports are rejected.
 
 ## Verification
 

@@ -27,6 +27,7 @@ const models = [
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.clear();
+    localStorage.setItem('scout-lab:data-schema', '2');
     localStorage.setItem('scout-lab:settings', JSON.stringify({
       selectedSection: 'models',
       preferences: { startupSection: 'models', density: 'comfortable', theme: 'dark' },

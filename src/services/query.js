@@ -56,7 +56,6 @@ const SOURCE_HOSTS = {
   github: new Set(['github.com']),
   huggingface: new Set(['huggingface.co']),
   arxiv: new Set(['arxiv.org', 'export.arxiv.org']),
-  learn: new Set(['huggingface.co', 'developers.google.com']),
 };
 
 const stableValue = (value) => {

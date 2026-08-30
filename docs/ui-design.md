@@ -30,7 +30,6 @@ The approved filtered-grid layout uses:
 | Models             |                                                    |
 | Datasets           |                                                    |
 | Papers             |                                                    |
-| Learn              |                                                    |
 | Library            |                                                    |
 |                    |                                                    |
 | iCloud Connected   +----------------------------------------------------+
@@ -59,10 +58,6 @@ Hugging Face datasets in the shared grid. Sort, exact grouped task, rows, and mo
 ### Papers
 
 Hugging Face Daily Papers and arXiv in the shared grid. A source segment switches between Community and Raw arXiv, with time, topic/category, and source-valid sort controls. Community Trending ranks upvotes inside the chosen period; raw arXiv uses a fixed local-preview proxy and exposes validated PDF links.
-
-### Learn
-
-A curated catalog in the shared grid. In-progress resources appear first. Controls: focus, format, level, and progress; cards show effort and use Start, Resume, or Review according to saved progress.
 
 ### Library
 
@@ -139,7 +134,7 @@ The daily Markdown file should include:
 - favorites
 - hidden items
 - comments
-- learning note
+- daily note
 
 ## Visual Style
 
@@ -178,6 +173,6 @@ Detailed behavior and complete acceptance criteria live in [Filtered Grid Workbe
 
 The durable historical review contract lives in [Library-First Review](./superpowers/specs/2026-08-29-library-first-review-design.md).
 
-The source contracts for the final three discovery tabs live in [Datasets, Papers, and Learn Reliability](./superpowers/specs/2026-08-29-datasets-papers-learn-reliability-design.md).
+The historical source contracts for Datasets and Papers originated in [Datasets, Papers, and Learn Reliability](./superpowers/specs/2026-08-29-datasets-papers-learn-reliability-design.md); its Learn portion is superseded by [Remove Learn Workbench](./superpowers/specs/2026-08-29-remove-learn-workbench-design.md).
 
 The complete Hugging Face dataset facet and hybrid sort contract lives in [Hugging Face Dataset Facets](./superpowers/specs/2026-08-29-hugging-face-dataset-facets-design.md).

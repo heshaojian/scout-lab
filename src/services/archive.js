@@ -2,6 +2,13 @@ const DB_NAME = 'scout-lab';
 const STORE_NAME = 'handles';
 const HANDLE_KEY = 'icloud-directory';
 
+export const deleteArchiveDatabase = () => new Promise((resolve, reject) => {
+  const request = indexedDB.deleteDatabase(DB_NAME);
+  request.onerror = () => reject(request.error || new Error('Scout Lab data reset failed.'));
+  request.onblocked = () => reject(new Error('Close other Scout Lab tabs and reload to finish the data reset.'));
+  request.onsuccess = () => resolve();
+});
+
 const openDb = () => new Promise((resolve, reject) => {
   const request = indexedDB.open(DB_NAME, 1);
 

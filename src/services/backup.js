@@ -2,13 +2,13 @@ import { normalizeSettings } from '../settings.js';
 import { validateSourceUrl } from './query.js';
 
 export const BACKUP_FORMAT = 'scout-lab-backup';
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
 export const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
 
 const MAX_ENTRIES = 10_000;
 const MAX_NOTE_LENGTH = 50_000;
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
-const DURABLE_KEYS = ['settings', 'userState', 'learnProgress', 'dailyNotes', 'snapshots'];
+const DURABLE_KEYS = ['settings', 'userState', 'dailyNotes', 'snapshots'];
 
 const isObject = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -34,7 +34,7 @@ const validateSettings = (settings) => {
   assertObject(preferences, 'Settings preferences');
   if (!['system', 'light', 'dark'].includes(preferences.theme)) throw new Error('Settings contains an invalid theme.');
   if (!['comfortable', 'compact'].includes(preferences.density)) throw new Error('Settings contains an invalid density.');
-  if (!['last-used', 'today', 'code', 'models', 'datasets', 'papers', 'learn', 'library'].includes(preferences.startupSection)) {
+  if (!['last-used', 'today', 'code', 'models', 'datasets', 'papers', 'library'].includes(preferences.startupSection)) {
     throw new Error('Settings contains an invalid startup workbench.');
   }
   if (!['foreground', 'background'].includes(preferences.openLinks)) throw new Error('Settings contains an invalid link behavior.');
@@ -69,17 +69,6 @@ const validateUserState = (value) => {
       ...(libraryCard === undefined ? {} : { libraryCard }),
       updatedAt: entry.updatedAt,
     }];
-  }));
-};
-
-const validateProgress = (value) => {
-  assertMapSize(value, 'Learning progress');
-  return Object.fromEntries(Object.entries(value).map(([id, entry]) => {
-    if (!id || id.length > 500) throw new Error('Learning progress contains an invalid item ID.');
-    assertObject(entry, `Progress ${id}`);
-    if (!['not-started', 'in-progress', 'done'].includes(entry.status)) throw new Error(`Progress ${id} has an invalid status.`);
-    assertTimestamp(entry.updatedAt, `Progress ${id}`);
-    return [id, { status: entry.status, updatedAt: entry.updatedAt }];
   }));
 };
 
@@ -128,7 +117,6 @@ const normalizeData = (data) => {
   return {
     settings: validateSettings(data.settings),
     userState: validateUserState(data.userState),
-    learnProgress: validateProgress(data.learnProgress),
     dailyNotes: validateDailyNotes(data.dailyNotes),
     snapshots: validateSnapshots(data.snapshots),
   };
@@ -173,14 +161,12 @@ const newestEntries = (local = {}, imported = {}) => Object.fromEntries(
 export const mergeBackupData = (local, imported) => ({
   settings: normalizeSettings(imported.settings),
   userState: newestEntries(local.userState, imported.userState),
-  learnProgress: newestEntries(local.learnProgress, imported.learnProgress),
   dailyNotes: { ...local.dailyNotes, ...imported.dailyNotes },
   snapshots: { ...local.snapshots, ...imported.snapshots },
 });
 
 export const summarizeBackup = (backup) => ({
   annotations: Object.keys(backup.data.userState).length,
-  progress: Object.keys(backup.data.learnProgress).length,
   notes: Object.keys(backup.data.dailyNotes).length,
   snapshots: Object.keys(backup.data.snapshots).length,
 });

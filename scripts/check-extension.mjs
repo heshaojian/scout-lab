@@ -17,7 +17,7 @@ const requiredFiles = [
   'src/services/storage.js',
   'src/services/archive.js',
   'src/services/archiveFormat.js',
-  'src/services/learnSources.js',
+  'src/services/dataReset.js',
   'src/ui/render.js',
   'src/ui/settings.js',
   'src/styles/app.css',

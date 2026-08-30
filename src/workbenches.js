@@ -361,33 +361,6 @@ export const WORKBENCHES = {
     ],
     cacheTtl: 24 * 60 * 60 * 1000,
   },
-  learn: {
-    id: 'learn',
-    label: 'Learn',
-    title: 'Learn',
-    subtitle: 'A maintained syllabus with progress and a clear next step.',
-    defaults: { focus: 'all', format: 'all', level: 'all', progress: 'all' },
-    controls: [
-      control('focus', 'Focus area', [option('all', 'All focus areas'), option('fundamentals', 'Fundamentals'), ...TOPICS.slice(1)]),
-      control('format', 'Format', [
-        option('all', 'All formats'),
-        option('course', 'Course'),
-        option('cookbook', 'Cookbook'),
-        option('exercise', 'Exercise'),
-      ]),
-      control('level', 'Level', [
-        option('all', 'All levels'), option('foundational', 'Foundational'),
-        option('intermediate', 'Intermediate'), option('practical', 'Practical'),
-      ]),
-      control('progress', 'Progress', [
-        option('all', 'All progress'),
-        option('not-started', 'Not started'),
-        option('in-progress', 'In progress'),
-        option('done', 'Done'),
-      ]),
-    ],
-    cacheTtl: Infinity,
-  },
   library: {
     id: 'library',
     label: 'Library',
@@ -400,11 +373,11 @@ export const WORKBENCHES = {
       ], 'segment'),
       control('type', 'Content type', [
         option('all', 'All content'), option('Code', 'Code'), option('Model', 'Models'),
-        option('Dataset', 'Datasets'), option('Paper', 'Papers'), option('Learn', 'Learn'),
+        option('Dataset', 'Datasets'), option('Paper', 'Papers'),
       ]),
       control('source', 'Source', [
         option('all', 'All sources'), option('github', 'GitHub'), option('huggingface', 'Hugging Face'),
-        option('arxiv', 'arXiv'), option('learn', 'Learning'),
+        option('arxiv', 'arXiv'),
       ]),
       control('sort', 'Sort', [
         option('updated', 'Recently updated'), option('saved', 'Recently saved'), option('title', 'Title'),

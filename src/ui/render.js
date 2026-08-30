@@ -11,21 +11,7 @@ const actionButton = (label, action, icon, active = false) => `
   <button class="icon-button ${active ? 'active' : ''}" type="button" title="${label}" aria-label="${label}" data-action="${action}">${icon}</button>
 `;
 
-const progressControl = (card, progress) => {
-  const value = progress[card.id]?.status || card.details?.progress || 'not-started';
-  return `
-    <label class="progress-control">
-      <span class="sr-only">Progress for ${escapeHtml(card.title)}</span>
-      <select data-progress data-id="${escapeHtml(card.id)}" aria-label="Progress for ${escapeHtml(card.title)}">
-        <option value="not-started" ${value === 'not-started' ? 'selected' : ''}>Not started</option>
-        <option value="in-progress" ${value === 'in-progress' ? 'selected' : ''}>In progress</option>
-        <option value="done" ${value === 'done' ? 'selected' : ''}>Done</option>
-      </select>
-    </label>
-  `;
-};
-
-export const renderCard = (card, { user = {}, progress = {}, commentingId = null } = {}) => {
+export const renderCard = (card, { user = {}, commentingId = null } = {}) => {
   const itemState = user[card.id] || card.user || {};
   const note = itemState.comment || '';
   const safeUrl = validateSourceUrl(card.url, card.source);
@@ -67,11 +53,9 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
       ${note && !isCommenting ? `<div class="comment-preview">${escapeHtml(note)}</div>` : ''}
       <div class="secondary">
         <span>${escapeHtml(card.secondary?.left || card.owner || 'Not specified')}</span>
-        ${card.type === 'Learn'
-          ? progressControl(card, progress)
-          : secondaryLinks.length
-            ? `<span class="secondary-links">${secondaryLinks.map((link) => `<a class="secondary-link" data-open-link href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('')}</span>`
-            : `<span>${escapeHtml(card.secondary?.right || 'Not specified')}</span>`}
+        ${secondaryLinks.length
+          ? `<span class="secondary-links">${secondaryLinks.map((link) => `<a class="secondary-link" data-open-link href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(link.label)}</a>`).join('')}</span>`
+          : `<span>${escapeHtml(card.secondary?.right || 'Not specified')}</span>`}
       </div>
       <div class="card-footer">
         <div class="card-actions">

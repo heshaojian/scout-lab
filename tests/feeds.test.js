@@ -163,20 +163,6 @@ describe('feed integration', () => {
     expect(arxiv.cards[0]).toMatchObject({ type: 'Paper', source: 'arxiv' });
   });
 
-  it('serves the curated learning catalog without a network request', async () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal('fetch', fetchMock);
-    const filters = { ...createDefaultFilters().learn, focus: 'agents', format: 'course', progress: 'in-progress' };
-    const result = await fetchSection('learn', filters, {
-      force: true,
-      learnProgress: { 'learn:hf-agents-course': { status: 'in-progress' } },
-    });
-
-    expect(result.cards.map((card) => card.id)).toEqual(['learn:hf-agents-course']);
-    expect(result.status.label).toBe('Curated learning catalog');
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
-
   it('uses an expired matching cache when a source request fails', async () => {
     const filters = createDefaultFilters().models;
     const query = { section: 'models', filters };
@@ -208,7 +194,7 @@ describe('feed integration', () => {
     expect(result.status).toEqual({ label: 'Hugging Face datasets', stale: false });
   });
 
-  it('assembles Today from all six source lanes despite different response shapes', async () => {
+  it('assembles Today from the five live source requests despite different response shapes', async () => {
     const fetchMock = vi.fn(async (url) => {
       const value = `${url}`;
       if (value.includes('github.com/trending')) return response(trendingHtml, { type: 'text/html' });
@@ -224,11 +210,10 @@ describe('feed integration', () => {
     const result = await fetchSection('today', filters.today, {
       force: true,
       allFilters: filters,
-      learnProgress: {},
     });
 
-    expect(result.cards).toHaveLength(7);
-    expect(result.cards.map((card) => card.type)).toEqual(['Code', 'Code', 'Model', 'Dataset', 'Paper', 'Paper', 'Learn']);
+    expect(result.cards).toHaveLength(6);
+    expect(result.cards.map((card) => card.type)).toEqual(['Code', 'Code', 'Model', 'Dataset', 'Paper', 'Paper']);
     expect(result.status).toMatchObject({ label: 'All sources live', stale: false });
   });
 
@@ -247,7 +232,7 @@ describe('feed integration', () => {
     filters.code = { ...filters.code, topic: 'evaluation' };
 
     const result = await fetchSection('today', { topic: 'multimodal' }, {
-      force: true, allFilters: filters, learnProgress: {},
+      force: true, allFilters: filters,
     });
 
     expect(result.cards.map(({ title }) => title)).toEqual(expect.arrayContaining([
@@ -264,13 +249,11 @@ describe('feed integration', () => {
       datasets: [card('dataset:one', 'Dataset')],
       community: [card('paper:community-one', 'Paper'), card('paper:community-two', 'Paper')],
       arxiv: [card('paper:arxiv-one', 'Paper'), card('paper:arxiv-two', 'Paper')],
-      learn: [card('learn:one', 'Learn')],
     }, {
       code: 2,
       models: 0,
       datasets: 0,
       papers: 4,
-      learn: 1,
     }, {
       'code:one': { hidden: true },
     });
@@ -282,7 +265,6 @@ describe('feed integration', () => {
       'paper:arxiv-one',
       'paper:community-two',
       'paper:arxiv-two',
-      'learn:one',
     ]);
     expect(result.shortfalls).toEqual({});
   });
@@ -294,8 +276,7 @@ describe('feed integration', () => {
       datasets: [],
       community: [],
       arxiv: [],
-      learn: [],
-    }, { code: 2, models: 1, datasets: 0, papers: 0, learn: 0 }, {});
+    }, { code: 2, models: 1, datasets: 0, papers: 0 }, {});
 
     expect(result.cards.map(({ id }) => id)).toEqual(['code:one']);
     expect(result.shortfalls).toEqual({ code: 1, models: 1 });

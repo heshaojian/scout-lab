@@ -16,7 +16,7 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 
 ## Shell And Navigation
 
-- [ ] Today, Code, Models, Datasets, Papers, Learn, and Library tabs open the correct workbench.
+- [ ] Today, Code, Models, Datasets, Papers, and Library tabs open the correct workbench; Learn is absent.
 - [ ] Today shows Search and Refresh without Topic, Reset filters, or an empty filter bar.
 - [ ] The active tab, page title, source label, filters, and grid update together.
 - [ ] Search filters the current cards and clearing search restores them.
@@ -50,8 +50,6 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 - [ ] Papers source mode, category, time, sort, topic, and search controls work.
 - [ ] Papers switch correctly between community papers and raw arXiv entries.
 - [ ] Raw arXiv loads in the local preview without a CORS error, and PDF/Code links resolve to their displayed paper.
-- [ ] Learn focus, format, level, progress, and search controls work.
-- [ ] Learn progress changes persist and Resume opens the selected resource.
 
 ## Card Actions And Links
 
@@ -93,10 +91,11 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 - [ ] Density changes the grid and control spacing without clipping content.
 - [ ] Startup workbench opens on a fresh page and persists after reload.
 - [ ] Today composition steppers enforce their minimum, maximum, and total constraints.
-- [ ] Reset preferences restores product defaults while preserving favorites, hidden items, comments, progress, and snapshots.
+- [ ] Reset preferences restores product defaults while preserving favorites, hidden items, comments, and snapshots.
 - [ ] Export downloads valid JSON without caches or an iCloud directory handle.
 - [ ] Import rejects malformed, oversized, or unsupported files without partial writes.
-- [ ] Export then import round-trips supported preferences and learning data.
+- [ ] Export then import round-trips supported preferences, annotations, daily notes, and snapshots.
+- [ ] A version-1 backup is rejected without changing local data.
 
 ## Archive And Resilience
 
