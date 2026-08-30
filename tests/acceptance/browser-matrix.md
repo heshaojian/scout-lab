@@ -102,6 +102,10 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 
 - [ ] Connect archive folder requires an explicit user gesture.
 - [ ] Save today writes readable Markdown with source-specific fields to the selected folder.
+- [ ] A cold new-tab startup prepares Today, Code, Models, Datasets, and Papers without duplicate overlapping source requests.
+- [ ] Opening warmed tabs or another new tab within six hours reuses exact matching cache entries.
+- [ ] Expired entries and newly parameterized filter queries fetch fresh source data.
+- [ ] Manual Refresh bypasses the active query cache without invalidating unrelated cached queries.
 - [ ] Cached content renders before a successful refresh when available.
 - [ ] A Code network or parser failure shows no repository cards, plus Retry and the exact GitHub Trending link.
 - [ ] Legacy GitHub Search caches and snapshots never appear as Trending.

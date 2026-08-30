@@ -20,6 +20,37 @@ beforeEach(() => {
 });
 
 describe('feed integration', () => {
+  it('reuses an exact query for six hours and refreshes it after expiry', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-29T00:00:00Z'));
+    const fetchMock = vi.fn().mockResolvedValue(response(trendingHtml, { type: 'text/html' }));
+    vi.stubGlobal('fetch', fetchMock);
+    const filters = createDefaultFilters().code;
+
+    await fetchSection('code', filters);
+    vi.advanceTimersByTime((6 * 60 * 60 * 1000) - 1);
+    const cached = await fetchSection('code', filters);
+    vi.advanceTimersByTime(2);
+    const refreshed = await fetchSection('code', filters);
+
+    expect(cached.cached).toBe(true);
+    expect(refreshed.cached).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps differently parameterized queries in independent cache entries', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response(trendingHtml, { type: 'text/html' }));
+    vi.stubGlobal('fetch', fetchMock);
+    const defaults = createDefaultFilters().code;
+
+    await fetchSection('code', defaults);
+    await fetchSection('code', { ...defaults, language: 'python' });
+    const original = await fetchSection('code', defaults);
+
+    expect(original.cached).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it('loads parseable GitHub Trending cards with live source metadata', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response(trendingHtml, { type: 'text/html' }));
     vi.stubGlobal('fetch', fetchMock);

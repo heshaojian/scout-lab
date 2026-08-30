@@ -24,6 +24,7 @@ export default defineConfig({
         'src/services/archiveFormat.js',
         'src/services/archive.js',
         'src/services/dataReset.js',
+        'src/services/startup.js',
       ],
       thresholds: {
         statements: 80,

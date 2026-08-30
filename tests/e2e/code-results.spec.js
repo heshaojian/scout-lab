@@ -122,7 +122,7 @@ test('Code ignores a legacy Search-backed cache entry', async ({ page }) => {
   ]);
 });
 
-test('Code bypasses a current completed cache entry on startup', async ({ page }) => {
+test('Code reuses a current completed cache entry on startup', async ({ page }) => {
   let requests = 0;
   await page.addInitScript(() => {
     const query = '{"filters":{"language":"all","spokenLanguage":"all","time":"day"},"section":"code","sourceRevision":"github-trending-v3"}';
@@ -147,7 +147,36 @@ test('Code bypasses a current completed cache entry on startup', async ({ page }
 
   await page.goto('/newtab.html');
 
-  await expect(page.getByRole('heading', { name: 'cached/repository' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'cached/repository' })).toBeVisible();
+  expect(requests).toBe(0);
+});
+
+test('Code refreshes an expired current cache entry on startup', async ({ page }) => {
+  let requests = 0;
+  await page.addInitScript(() => {
+    const query = '{"filters":{"language":"all","spokenLanguage":"all","time":"day"},"section":"code","sourceRevision":"github-trending-v3"}';
+    localStorage.setItem(`scout-lab:cache:v4:${query}`, JSON.stringify({
+      cards: [{
+        id: 'github:expired/repository',
+        source: 'github',
+        section: 'code',
+        type: 'Code',
+        title: 'expired/repository',
+        url: 'https://github.com/expired/repository',
+      }],
+      status: { label: 'GitHub Trending', sourceRevision: 'github-trending-v3' },
+      expiresAt: Date.now() - 1,
+      savedAt: new Date(Date.now() - (7 * 60 * 60 * 1000)).toISOString(),
+    }));
+  });
+  await page.route('**/__scout/github-trending**', (route) => {
+    requests += 1;
+    return route.fulfill({ status: 200, contentType: 'text/html', body: trendingHtml });
+  });
+
+  await page.goto('/newtab.html');
+
+  await expect(page.getByRole('heading', { name: 'expired/repository' })).toHaveCount(0);
   await expect(page.locator('.grid .card h3')).toHaveText([
     'example-labs/agent-kit',
     'signal-org/eval-workbench',

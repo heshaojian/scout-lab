@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { createDefaultFilters, DATASET_TASK_OPTIONS, normalizeWorkbenchFilters } from '../src/workbenches.js';
+import {
+  createDefaultFilters,
+  DATASET_TASK_OPTIONS,
+  normalizeWorkbenchFilters,
+  REMOTE_CACHE_TTL,
+  WORKBENCHES,
+} from '../src/workbenches.js';
 import {
   buildArxivUrl,
   buildArxivRequest,
@@ -20,6 +26,13 @@ import {
 const now = new Date('2026-08-28T12:00:00.000Z');
 
 describe('workbench query builders', () => {
+  it('uses one six-hour TTL for every remote workbench', () => {
+    expect(REMOTE_CACHE_TTL).toBe(6 * 60 * 60 * 1000);
+    expect(['today', 'code', 'models', 'datasets', 'papers']
+      .map((section) => WORKBENCHES[section].cacheTtl)).toEqual(Array(5).fill(REMOTE_CACHE_TTL));
+    expect(WORKBENCHES.library.cacheTtl).toBe(Infinity);
+  });
+
   it('creates independent defaults for every workbench', () => {
     const first = createDefaultFilters();
     const second = createDefaultFilters();

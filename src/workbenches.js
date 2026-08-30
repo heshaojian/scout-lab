@@ -13,6 +13,8 @@ const control = (id, label, options, type = 'select', placement = 'primary') => 
 
 const option = (value, label, group) => ({ value, label, ...(group ? { group } : {}) });
 
+export const REMOTE_CACHE_TTL = 6 * 60 * 60 * 1000;
+
 export const MODEL_TASK_OPTIONS = [
   option('all', 'All tasks'),
 
@@ -179,7 +181,7 @@ export const WORKBENCHES = {
     subtitle: 'A small cross-source queue using one consistent card design.',
     defaults: {},
     controls: [],
-    cacheTtl: 30 * 60 * 1000,
+    cacheTtl: REMOTE_CACHE_TTL,
   },
   code: {
     id: 'code',
@@ -196,7 +198,7 @@ export const WORKBENCHES = {
       control('spokenLanguage', 'Spoken language', SPOKEN_LANGUAGE_OPTIONS),
       control('language', 'Language', CODE_LANGUAGE_OPTIONS),
     ],
-    cacheTtl: 30 * 60 * 1000,
+    cacheTtl: REMOTE_CACHE_TTL,
   },
   models: {
     id: 'models',
@@ -271,7 +273,7 @@ export const WORKBENCHES = {
         option('month', 'Updated this month'),
       ], 'select', 'advanced'),
     ],
-    cacheTtl: 60 * 60 * 1000,
+    cacheTtl: REMOTE_CACHE_TTL,
   },
   datasets: {
     id: 'datasets',
@@ -328,7 +330,7 @@ export const WORKBENCHES = {
       control('access', 'Access', [option('all', 'All access'), option('open', 'Open'), option('gated', 'Gated')], 'select', 'advanced'),
       control('topic', 'AI topic', TOPICS, 'select', 'advanced'),
     ],
-    cacheTtl: 60 * 60 * 1000,
+    cacheTtl: REMOTE_CACHE_TTL,
   },
   papers: {
     id: 'papers',
@@ -358,7 +360,7 @@ export const WORKBENCHES = {
         option('relevance', 'Relevance'),
       ]),
     ],
-    cacheTtl: 24 * 60 * 60 * 1000,
+    cacheTtl: REMOTE_CACHE_TTL,
   },
   library: {
     id: 'library',

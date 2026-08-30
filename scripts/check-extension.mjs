@@ -19,6 +19,7 @@ const requiredFiles = [
   'src/services/query.js',
   'src/services/normalizers.js',
   'src/services/storage.js',
+  'src/services/startup.js',
   'src/services/archive.js',
   'src/services/archiveFormat.js',
   'src/services/dataReset.js',
@@ -32,6 +33,8 @@ const requiredFiles = [
   'docs/ui-design.md',
   'tests/acceptance/browser-matrix.md',
   'tests/e2e/code-results.spec.js',
+  'tests/e2e/startup-cache.spec.js',
+  'tests/startup.test.js',
 ];
 
 const readJson = async (path) => JSON.parse(await readFile(path, 'utf8'));
@@ -59,8 +62,8 @@ if (manifest.name !== 'Scout Lab') {
   fail('manifest.json name must be Scout Lab');
 }
 
-if (manifest.version !== '1.0.2') {
-  fail('manifest.json must use the public release version 1.0.2');
+if (manifest.version !== '1.0.3') {
+  fail('manifest.json must use the public release version 1.0.3');
 }
 
 for (const size of ['16', '32', '48', '128']) {

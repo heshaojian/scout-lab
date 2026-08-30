@@ -6,10 +6,10 @@ import {
   mergeBackupData,
   parseBackup,
   summarizeBackup,
-} from './services/backup.js?v=1.0.2';
-import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=1.0.2';
-import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.2';
-import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.2';
+} from './services/backup.js?v=1.0.3';
+import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=1.0.3';
+import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.3';
+import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.3';
 import {
   applyDurableData,
   getDurableData,
@@ -29,9 +29,10 @@ import {
   setSnapshot,
   setUserItemState,
   setWorkbenchFilters,
-} from './services/storage.js?v=1.0.2';
-import { getLibraryCards } from './services/library.js?v=1.0.2';
-import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.2';
+} from './services/storage.js?v=1.0.3';
+import { getLibraryCards } from './services/library.js?v=1.0.3';
+import { createStartupWarmup } from './services/startup.js?v=1.0.3';
+import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.3';
 import {
   escapeHtml,
   renderCard,
@@ -41,8 +42,8 @@ import {
   renderSourceLink,
   renderSourceUnavailable,
   updateSearchResults,
-} from './ui/render.js?v=1.0.2';
-import { renderSettingsDrawer } from './ui/settings.js?v=1.0.2';
+} from './ui/render.js?v=1.0.3';
+import { renderSettingsDrawer } from './ui/settings.js?v=1.0.3';
 import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.js';
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -301,7 +302,7 @@ const snapshotResult = (section, filters, result) => {
   });
 };
 
-const load = async ({ force = false, clear = false } = {}) => {
+const load = async ({ force = false, clear = false, resultPromise = null } = {}) => {
   const requestId = state.requestId + 1;
   const section = state.selectedSection;
   const filters = { ...state.filters[section] };
@@ -321,12 +322,12 @@ const load = async ({ force = false, clear = false } = {}) => {
     return;
   }
 
-  const result = await fetchSection(section, filters, {
-    force: force || section === 'code',
+  const result = await (resultPromise || fetchSection(section, filters, {
+    force,
     allFilters: state.filters,
     todayMix: state.settings.preferences.todayMix,
     userState: state.userState,
-  });
+  }));
   if (state.requestId !== requestId) return;
 
   snapshotResult(section, filters, result);
@@ -746,6 +747,12 @@ const boot = async () => {
   });
   setState({ archive: await getArchiveStatus() });
 
+  const warmup = createStartupWarmup({
+    filters: state.filters,
+    todayMix: state.settings.preferences.todayMix,
+    userState: state.userState,
+  });
+
   const snapshot = getSnapshot(todayKey())?.sections?.[state.selectedSection];
   const trustedSnapshot = state.selectedSection === 'code'
     ? snapshot?.status?.sourceRevision === GITHUB_TRENDING_SOURCE_REVISION
@@ -757,7 +764,8 @@ const boot = async () => {
     render();
   }
 
-  await load();
+  await load({ resultPromise: warmup.requests[state.selectedSection] || null });
+  void warmup.settled;
 };
 
 render();
