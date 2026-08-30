@@ -136,3 +136,12 @@
   color: var(--signal);
   text-decoration: underline;
 }
+
+:root[data-text-size="large"] .filter-toggle,
+:root[data-text-size="large"] .more-filters summary {
+  font-size: 14px;
+}
+
+:root[data-text-size="large"] .more-filters summary span {
+  font-size: 12px;
+}

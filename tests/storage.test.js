@@ -4,6 +4,7 @@ import {
   getCache,
   hydrateLibraryAnnotations,
   getDailyNote,
+  getPreferences,
   getSnapshot,
   getSettings,
   getUserState,
@@ -15,6 +16,7 @@ import {
   setCache,
   setFilterDefaults,
   setDailyNote,
+  setPreferences,
   setSnapshot,
   setUserItemState,
   setWorkbenchFilters,
@@ -63,10 +65,12 @@ describe('query-aware storage', () => {
   it('resets preferences and filter defaults without deleting annotations', () => {
     setUserItemState('github:one', { favorite: true });
     setFilterDefaults('code', { language: 'python' });
+    setPreferences({ textSize: 'standard' });
 
     resetPreferences();
 
     expect(getWorkbenchFilterDefaults('code').language).toBe('all');
+    expect(getPreferences().textSize).toBe('large');
     expect(getUserState()['github:one'].favorite).toBe(true);
   });
 

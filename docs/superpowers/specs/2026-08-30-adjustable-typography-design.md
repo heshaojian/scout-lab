@@ -29,7 +29,8 @@ Large uses explicit design tokens and selector overrides rather than viewport sc
 
 - brand title: 21px;
 - sidebar supporting text: 12-13px;
-- intention and navigation text: 14-15px;
+- intention text: 15px;
+- navigation and inherited input text: at least 17px;
 - main workbench title: 26px;
 - header subtitle: 14px;
 - filters, status, buttons, and compact metadata: 13-14px;

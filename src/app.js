@@ -6,10 +6,10 @@ import {
   mergeBackupData,
   parseBackup,
   summarizeBackup,
-} from './services/backup.js?v=1.0.3';
-import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=1.0.3';
-import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.3';
-import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.3';
+} from './services/backup.js?v=1.0.4';
+import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=1.0.4';
+import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.4';
+import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.4';
 import {
   applyDurableData,
   getDurableData,
@@ -29,10 +29,10 @@ import {
   setSnapshot,
   setUserItemState,
   setWorkbenchFilters,
-} from './services/storage.js?v=1.0.3';
-import { getLibraryCards } from './services/library.js?v=1.0.3';
-import { createStartupWarmup } from './services/startup.js?v=1.0.3';
-import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.3';
+} from './services/storage.js?v=1.0.4';
+import { getLibraryCards } from './services/library.js?v=1.0.4';
+import { createStartupWarmup } from './services/startup.js?v=1.0.4';
+import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.4';
 import {
   escapeHtml,
   renderCard,
@@ -42,8 +42,8 @@ import {
   renderSourceLink,
   renderSourceUnavailable,
   updateSearchResults,
-} from './ui/render.js?v=1.0.3';
-import { renderSettingsDrawer } from './ui/settings.js?v=1.0.3';
+} from './ui/render.js?v=1.0.4';
+import { renderSettingsDrawer } from './ui/settings.js?v=1.0.4';
 import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.js';
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -65,6 +65,7 @@ const applyAppearance = (preferences) => {
     : preferences.theme;
   document.documentElement.dataset.theme = resolvedTheme;
   document.documentElement.dataset.themeChoice = preferences.theme;
+  document.documentElement.dataset.textSize = preferences.textSize;
   document.documentElement.dataset.density = preferences.density;
   document.documentElement.style.colorScheme = resolvedTheme;
 };

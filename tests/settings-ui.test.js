@@ -16,6 +16,8 @@ describe('settings drawer renderer', () => {
     expect(drawer).toBeTruthy();
     expect(drawer.getAttribute('aria-label')).toBe('Settings');
     expect(document.querySelector('[data-setting="theme"][data-value="dark"]').getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('[data-setting="textSize"][data-value="large"]').getAttribute('aria-pressed')).toBe('true');
+    expect(document.querySelector('[aria-label="Text size"]')).toBeTruthy();
     expect(document.querySelector('[data-setting="density"]')).toBeTruthy();
     expect(document.querySelector('[data-setting="startupSection"]')).toBeTruthy();
     expect(document.querySelectorAll('[data-today-lane]')).toHaveLength(4);

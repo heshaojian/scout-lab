@@ -8,6 +8,11 @@ const THEME_OPTIONS = [
   { value: 'dark', label: 'Dark' },
 ];
 
+const TEXT_SIZE_OPTIONS = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'large', label: 'Large' },
+];
+
 const DENSITY_OPTIONS = [
   { value: 'comfortable', label: 'Comfortable' },
   { value: 'compact', label: 'Compact' },
@@ -107,6 +112,7 @@ export const renderSettingsDrawer = ({
           <section class="settings-section" aria-labelledby="appearance-heading">
             <h3 id="appearance-heading">Appearance</h3>
             ${segment('theme', 'Theme', THEME_OPTIONS, preferences.theme)}
+            ${segment('textSize', 'Text size', TEXT_SIZE_OPTIONS, preferences.textSize)}
             ${segment('density', 'Density', DENSITY_OPTIONS, preferences.density)}
           </section>
 

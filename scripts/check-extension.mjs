@@ -62,8 +62,8 @@ if (manifest.name !== 'Scout Lab') {
   fail('manifest.json name must be Scout Lab');
 }
 
-if (manifest.version !== '1.0.3') {
-  fail('manifest.json must use the public release version 1.0.3');
+if (manifest.version !== '1.0.4') {
+  fail('manifest.json must use the public release version 1.0.4');
 }
 
 for (const size of ['16', '32', '48', '128']) {

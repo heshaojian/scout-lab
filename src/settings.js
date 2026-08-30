@@ -4,6 +4,7 @@ export const SETTINGS_VERSION = 3;
 export const TODAY_LANES = ['code', 'models', 'datasets', 'papers'];
 
 const THEMES = new Set(['system', 'light', 'dark']);
+const TEXT_SIZES = new Set(['standard', 'large']);
 const DENSITIES = new Set(['comfortable', 'compact']);
 const STARTUP_SECTIONS = new Set(['last-used', ...SECTION_ORDER]);
 const LINK_BEHAVIORS = new Set(['foreground', 'background']);
@@ -17,6 +18,7 @@ const DEFAULT_TODAY_MIX = Object.freeze({
 
 export const DEFAULT_PREFERENCES = Object.freeze({
   theme: 'system',
+  textSize: 'large',
   density: 'comfortable',
   startupSection: 'last-used',
   openLinks: 'foreground',
@@ -49,6 +51,7 @@ export const normalizeTodayMix = (value) => {
 
 export const normalizePreferences = (value = {}) => ({
   theme: THEMES.has(value?.theme) ? value.theme : DEFAULT_PREFERENCES.theme,
+  textSize: TEXT_SIZES.has(value?.textSize) ? value.textSize : DEFAULT_PREFERENCES.textSize,
   density: DENSITIES.has(value?.density) ? value.density : DEFAULT_PREFERENCES.density,
   startupSection: STARTUP_SECTIONS.has(value?.startupSection)
     ? value.startupSection

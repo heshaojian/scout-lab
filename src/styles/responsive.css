@@ -144,6 +144,10 @@
     grid-template-columns: 1fr;
   }
 
+  :root[data-density="compact"] .grid {
+    grid-template-columns: 1fr;
+  }
+
   .feed-status {
     flex-direction: column;
     gap: 3px;

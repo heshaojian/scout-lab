@@ -23,7 +23,7 @@
 
 .settings-drawer {
   position: relative;
-  width: min(420px, 100vw);
+  width: min(var(--settings-drawer-width), 100vw);
   height: 100%;
   border-left: 1px solid var(--line);
   background: var(--rail);
@@ -301,4 +301,35 @@
   color: var(--muted);
   font-size: 10px;
   line-height: 1.5;
+}
+
+:root[data-text-size="large"] .settings-header h2 {
+  font-size: 22px;
+}
+
+:root[data-text-size="large"] .settings-section h3 {
+  font-size: 15px;
+}
+
+:root[data-text-size="large"] .settings-section-heading span,
+:root[data-text-size="large"] .settings-label,
+:root[data-text-size="large"] .settings-help,
+:root[data-text-size="large"] .default-row span,
+:root[data-text-size="large"] .settings-message,
+:root[data-text-size="large"] .import-review p {
+  font-size: 12px;
+}
+
+:root[data-text-size="large"] .settings-field select,
+:root[data-text-size="large"] .settings-segment button,
+:root[data-text-size="large"] .today-lane > span,
+:root[data-text-size="large"] .default-row strong,
+:root[data-text-size="large"] .stepper output,
+:root[data-text-size="large"] .icon-text-button,
+:root[data-text-size="large"] .settings-secondary,
+:root[data-text-size="large"] .settings-primary,
+:root[data-text-size="large"] .settings-danger,
+:root[data-text-size="large"] .settings-link,
+:root[data-text-size="large"] .import-review strong {
+  font-size: 13px;
 }

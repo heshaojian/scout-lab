@@ -39,6 +39,7 @@ describe('settings schema', () => {
   it('falls back malformed preferences independently', () => {
     const preferences = normalizePreferences({
       theme: 'dark',
+      textSize: 'tiny',
       density: 'tiny',
       startupSection: 'papers',
       openLinks: 'elsewhere',
@@ -47,11 +48,17 @@ describe('settings schema', () => {
 
     expect(preferences).toEqual({
       theme: 'dark',
+      textSize: 'large',
       density: 'comfortable',
       startupSection: 'papers',
       openLinks: 'foreground',
       todayMix: { code: 4, models: 0, datasets: 0, papers: 0 },
     });
+  });
+
+  it('keeps Standard text independent from theme and density', () => {
+    expect(normalizePreferences({ theme: 'light', textSize: 'standard', density: 'compact' }))
+      .toMatchObject({ theme: 'light', textSize: 'standard', density: 'compact' });
   });
 
   it('validates Today lane ranges and combined totals', () => {

@@ -38,6 +38,7 @@ const cardTypography = (page) => page.locator('.card').first().evaluate((card) =
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
+    if (sessionStorage.getItem('scout-lab:reading-comfort-seeded')) return;
     localStorage.clear();
     localStorage.setItem('scout-lab:data-schema', '2');
     localStorage.setItem('scout-lab:settings', JSON.stringify({
@@ -46,14 +47,102 @@ test.beforeEach(async ({ page }) => {
         startupSection: 'code',
         density: 'comfortable',
         theme: 'light',
+        textSize: 'standard',
       },
     }));
+    sessionStorage.setItem('scout-lab:reading-comfort-seeded', 'true');
   });
   await page.route('**/__scout/github-trending**', (route) => route.fulfill({
     status: 200,
     contentType: 'text/html',
     body: trendingHtml,
   }));
+});
+
+test('Large text applies across both rails, persists, and can return to Standard', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await page.goto('/newtab.html');
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('group', { name: 'Text size' }).getByRole('button', { name: 'Large' }).click();
+
+  await expect(page.locator('html')).toHaveAttribute('data-text-size', 'large');
+  const large = await page.evaluate(() => {
+    const size = (selector) => Number.parseFloat(getComputedStyle(document.querySelector(selector)).fontSize);
+    return {
+      rail: Number.parseFloat(getComputedStyle(document.querySelector('.shell')).gridTemplateColumns),
+      brand: size('.brand h1'),
+      nav: size('.nav button'),
+      heading: size('.header h2'),
+      subtitle: size('.header p'),
+      status: size('.feed-status'),
+      note: size('[data-daily-note]'),
+      settingsLabel: size('.settings-label'),
+      settingsButton: size('.settings-segment button'),
+      drawer: document.querySelector('.settings-drawer').getBoundingClientRect().width,
+    };
+  });
+  expect(large).toMatchObject({ rail: 248, brand: 21, heading: 26, subtitle: 14, status: 13, note: 16 });
+  expect(large.nav).toBeGreaterThanOrEqual(17);
+  expect(large.settingsLabel).toBeGreaterThanOrEqual(12);
+  expect(large.settingsButton).toBeGreaterThanOrEqual(12);
+  expect(large.drawer).toBeGreaterThanOrEqual(440);
+  expect(await cardTypography(page)).toMatchObject({
+    title: 20, summary: 16, badge: 13, metric: 13, tag: 13, secondary: 13, action: 14,
+  });
+
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-text-size', 'large');
+  await expect(page.locator('.grid .card')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await expect(page.getByRole('group', { name: 'Text size' }).getByRole('button', { name: 'Large' }))
+    .toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('group', { name: 'Text size' }).getByRole('button', { name: 'Standard' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-text-size', 'standard');
+  expect(await cardTypography(page)).toMatchObject({ title: 18, summary: 15 });
+  expect(await page.locator('.shell').evaluate((shell) => Number.parseFloat(getComputedStyle(shell).gridTemplateColumns)))
+    .toBe(228);
+});
+
+test('text size and density combinations avoid overflow across supported viewports', async ({ page }) => {
+  await page.goto('/newtab.html');
+  const viewports = [
+    { width: 1440, height: 900 },
+    { width: 900, height: 900 },
+    { width: 390, height: 844 },
+  ];
+
+  for (const textSize of ['standard', 'large']) {
+    for (const density of ['comfortable', 'compact']) {
+      await page.evaluate(({ nextTextSize, nextDensity }) => {
+        const settings = JSON.parse(localStorage.getItem('scout-lab:settings'));
+        localStorage.setItem('scout-lab:settings', JSON.stringify({
+          ...settings,
+          preferences: { ...settings.preferences, textSize: nextTextSize, density: nextDensity },
+        }));
+      }, { nextTextSize: textSize, nextDensity: density });
+      for (const viewport of viewports) {
+        await page.setViewportSize(viewport);
+        await page.reload();
+        await page.locator('.grid .card').first().waitFor({ state: 'visible' });
+        await expect(page.locator('html')).toHaveAttribute('data-text-size', textSize);
+        await expect(page.locator('html')).toHaveAttribute('data-density', density);
+        const layout = await page.evaluate(() => ({
+          documentWidth: document.documentElement.scrollWidth,
+          viewportWidth: window.innerWidth,
+          shellClientWidth: document.querySelector('.shell').clientWidth,
+          shellScrollWidth: document.querySelector('.shell').scrollWidth,
+          overflowing: [...document.querySelectorAll('body *')]
+            .filter((element) => element.getBoundingClientRect().right > window.innerWidth + 1)
+            .slice(0, 5)
+            .map((element) => `${element.tagName.toLowerCase()}.${element.className}`),
+        }));
+        const mode = `${textSize}/${density}/${viewport.width}x${viewport.height}`;
+        expect(layout.documentWidth, `${mode}: ${layout.overflowing.join(', ')}`)
+          .toBeLessThanOrEqual(layout.viewportWidth);
+        expect(layout.shellScrollWidth, mode).toBeLessThanOrEqual(layout.shellClientWidth);
+      }
+    }
+  }
 });
 
 test('Comfortable density is a three-column long-reading surface', async ({ page }) => {

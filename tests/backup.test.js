@@ -77,7 +77,7 @@ describe('portable backup', () => {
   it('merges annotations by timestamp and daily records by date', () => {
     const imported = {
       ...localData(),
-      settings: normalizeSettings({ selectedSection: 'papers', preferences: { theme: 'dark' } }),
+      settings: normalizeSettings({ selectedSection: 'papers', preferences: { theme: 'dark', textSize: 'standard' } }),
       userState: {
         'github:one': { favorite: false, comment: 'Older', updatedAt: '2026-08-29T09:00:00.000Z' },
         'github:two': { favorite: true, updatedAt: '2026-08-29T11:00:00.000Z' },
@@ -90,6 +90,7 @@ describe('portable backup', () => {
 
     expect(merged.settings.selectedSection).toBe('papers');
     expect(merged.settings.preferences.theme).toBe('dark');
+    expect(merged.settings.preferences.textSize).toBe('standard');
     expect(merged.userState['github:one'].comment).toBe('Local');
     expect(merged.userState['github:two'].favorite).toBe(true);
     expect(merged.dailyNotes).toEqual({ '2026-08-28': 'Keep me', '2026-08-29': 'Imported' });

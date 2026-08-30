@@ -28,6 +28,8 @@
   --dataset: #1b7b5c;
   --paper: #943558;
   --danger: #a13939;
+  --rail-width: 228px;
+  --settings-drawer-width: 420px;
   --rail-padding: 22px 16px;
   --main-padding: 24px 30px 40px;
   --grid-gap: 18px;
@@ -103,6 +105,28 @@
   --summary-lines: 2;
 }
 
+:root[data-text-size="large"] {
+  --rail-width: 248px;
+  --settings-drawer-width: 460px;
+  --card-min-height: 390px;
+  --card-title-size: 20px;
+  --card-title-min-height: 52px;
+  --card-summary-size: 16px;
+  --card-summary-min-height: 103px;
+  --card-badge-size: 13px;
+  --card-metric-size: 13px;
+  --card-tag-size: 13px;
+  --card-meta-size: 13px;
+  --card-action-size: 14px;
+  --card-label-size: 13px;
+}
+
+:root[data-text-size="large"][data-density="compact"] {
+  --card-min-height: 292px;
+  --card-summary-min-height: 52px;
+  --summary-lines: 2;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -165,7 +189,7 @@ a:focus-visible {
 .shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 228px minmax(0, 1fr);
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
 }
 
 .rail {
@@ -793,6 +817,61 @@ a:focus-visible {
 .skeleton.short { width: 45%; }
 .skeleton.title { width: 80%; }
 .skeleton.body { width: 100%; }
+
+:root[data-text-size="large"] .brand h1 {
+  font-size: 21px;
+}
+
+:root[data-text-size="large"] .brand p,
+:root[data-text-size="large"] .kicker {
+  font-size: 12px;
+}
+
+:root[data-text-size="large"] .intention strong {
+  font-size: 15px;
+}
+
+:root[data-text-size="large"] .nav button,
+:root[data-text-size="large"] .search {
+  font-size: 17px;
+}
+
+:root[data-text-size="large"] .count,
+:root[data-text-size="large"] .archive-status,
+:root[data-text-size="large"] .settings-trigger {
+  font-size: 13px;
+}
+
+:root[data-text-size="large"] .header h2 {
+  font-size: 26px;
+}
+
+:root[data-text-size="large"] .header p {
+  font-size: 14px;
+}
+
+:root[data-text-size="large"] .control,
+:root[data-text-size="large"] .segment button,
+:root[data-text-size="large"] .notice,
+:root[data-text-size="large"] .empty-state {
+  font-size: 14px;
+}
+
+:root[data-text-size="large"] .reset,
+:root[data-text-size="large"] .feed-status,
+:root[data-text-size="large"] .mini-button,
+:root[data-text-size="large"] .archive-preview {
+  font-size: 13px;
+}
+
+:root[data-text-size="large"] .empty-state strong {
+  font-size: 17px;
+}
+
+:root[data-text-size="large"] .note-strip textarea {
+  font-size: 16px;
+  line-height: 1.55;
+}
 
 @keyframes pulse {
   from { opacity: .55; }
