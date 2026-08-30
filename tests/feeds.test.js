@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { composeTodayCards, fetchSection } from '../src/services/feeds.js';
+import { composeTodayCards, DESCRIPTION_REVISION, fetchSection } from '../src/services/feeds.js';
 import { setCache } from '../src/services/storage.js';
 import { createDefaultFilters } from '../src/workbenches.js';
 
@@ -70,6 +70,25 @@ describe('feed integration', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('fills a missing Trending description from the repository README', async () => {
+    const withoutDescription = trendingHtml.replace(
+      '<p class="col-9 color-fg-muted my-1 pr-4">A useful toolkit for building reliable AI agents.</p>',
+      '',
+    );
+    const fetchMock = vi.fn(async (url) => `${url}`.includes('github.com/trending')
+      ? response(withoutDescription, { type: 'text/html' })
+      : response('<article class="markdown-body"><p>A README description for the agent toolkit.</p></article>', { type: 'text/html' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await fetchSection('code', createDefaultFilters().code, { force: true });
+
+    expect(result.cards[0]).toMatchObject({
+      summary: 'A README description for the agent toolkit.',
+      details: { descriptionSource: 'readme' },
+    });
+    expect(fetchMock.mock.calls.map(([url]) => `${url}`)).toContain('https://github.com/example-labs/agent-kit');
+  });
+
   it('returns no repository cards and never calls Search when Trending parsing fails', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       response('<html><body>changed</body></html>', { type: 'text/html' }),
@@ -129,9 +148,12 @@ describe('feed integration', () => {
   it('deduplicates simultaneous matching source requests', async () => {
     let release;
     const pending = new Promise((resolve) => { release = resolve; });
-    const fetchMock = vi.fn(async () => {
-      await pending;
-      return response([{ id: 'owner/model', downloads: 10, likes: 2, tags: [] }]);
+    const fetchMock = vi.fn(async (url) => {
+      if (`${url}`.includes('/api/models')) {
+        await pending;
+        return response([{ id: 'owner/model', downloads: 10, likes: 2, tags: [] }]);
+      }
+      return response('# Model\n\nA useful model README.', { type: 'text/markdown' });
     });
     vi.stubGlobal('fetch', fetchMock);
     const filters = createDefaultFilters().models;
@@ -141,8 +163,29 @@ describe('feed integration', () => {
     release();
     const results = await Promise.all([first, second]);
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls.filter(([url]) => `${url}`.includes('/api/models'))).toHaveLength(1);
     expect(results[0].cards).toEqual(results[1].cards);
+  });
+
+  it('uses a model README description and reuses its independent item cache', async () => {
+    const fetchMock = vi.fn(async (url) => {
+      if (`${url}`.includes('/api/models')) {
+        return response([{ id: 'owner/model', downloads: 10, likes: 2, trendingScore: 3, tags: [] }]);
+      }
+      return response('# Model\n\nA source model card for dependable planning.', { type: 'text/markdown' });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const filters = createDefaultFilters().models;
+
+    const first = await fetchSection('models', filters, { force: true });
+    const second = await fetchSection('models', filters, { force: true });
+
+    expect(first.cards[0]).toMatchObject({
+      summary: 'A source model card for dependable planning.',
+      details: { descriptionSource: 'readme' },
+    });
+    expect(second.cards[0].summary).toBe(first.cards[0].summary);
+    expect(fetchMock.mock.calls.filter(([url]) => `${url}`.endsWith('/raw/main/README.md'))).toHaveLength(1);
   });
 
   it('loads model, dataset, community paper, and arXiv workbenches', async () => {
@@ -170,7 +213,7 @@ describe('feed integration', () => {
 
   it('uses an expired matching cache when a source request fails', async () => {
     const filters = createDefaultFilters().models;
-    const query = { section: 'models', filters };
+    const query = { section: 'models', filters, descriptionRevision: DESCRIPTION_REVISION };
     setCache(query, [{ id: 'saved:model', type: 'Model' }], -1, { status: { label: 'Saved models', stale: false } });
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
 

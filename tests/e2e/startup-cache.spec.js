@@ -9,7 +9,7 @@ const datasets = [{ id: 'scout/dataset', downloads: 20, likes: 4, trendingScore:
 const papers = [{ paper: { id: '2608.10000', title: 'Scout paper', summary: 'Summary', upvotes: 6, authors: [] } }];
 
 test('cold startup warms every remote workbench and later new tabs reuse the cache', async ({ page, context }) => {
-  const requests = { github: 0, models: 0, datasets: 0, community: 0, arxiv: 0 };
+  const requests = { github: 0, models: 0, modelReadmes: 0, datasets: 0, community: 0, arxiv: 0 };
   await page.addInitScript(() => {
     localStorage.clear();
     localStorage.setItem('scout-lab:data-schema', '2');
@@ -24,6 +24,14 @@ test('cold startup warms every remote workbench and later new tabs reuse the cac
   await context.route('https://huggingface.co/api/models**', (route) => {
     requests.models += 1;
     return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(models) });
+  });
+  await context.route('https://huggingface.co/**/raw/main/README.md', (route) => {
+    requests.modelReadmes += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: 'text/markdown',
+      body: '# Scout model\n\nA model card used to verify startup description caching.',
+    });
   });
   await context.route('https://huggingface.co/api/datasets**', (route) => {
     requests.datasets += 1;
@@ -40,18 +48,25 @@ test('cold startup warms every remote workbench and later new tabs reuse the cac
 
   await page.goto('/newtab.html');
   await expect(page.getByRole('heading', { name: "Today's queue" })).toBeVisible();
-  await expect.poll(() => requests).toEqual({ github: 1, models: 1, datasets: 1, community: 1, arxiv: 1 });
+  await expect(page.locator('.grid .card')).toHaveCount(6);
+  await expect.poll(() => requests).toEqual({
+    github: 1, models: 1, modelReadmes: 1, datasets: 1, community: 1, arxiv: 1,
+  });
 
   for (const section of ['Code', 'Models', 'Datasets', 'Papers']) {
     await page.getByRole('button', { name: section, exact: true }).click();
     await expect(page.getByRole('heading', { name: section, exact: true })).toBeVisible();
   }
 
-  expect(requests).toEqual({ github: 1, models: 1, datasets: 1, community: 1, arxiv: 1 });
+  expect(requests).toEqual({
+    github: 1, models: 1, modelReadmes: 1, datasets: 1, community: 1, arxiv: 1,
+  });
 
   const secondNewTab = await context.newPage();
   await secondNewTab.goto('/newtab.html');
   await expect(secondNewTab.getByRole('heading', { name: "Today's queue" })).toBeVisible();
   await secondNewTab.waitForTimeout(100);
-  expect(requests).toEqual({ github: 1, models: 1, datasets: 1, community: 1, arxiv: 1 });
+  expect(requests).toEqual({
+    github: 1, models: 1, modelReadmes: 1, datasets: 1, community: 1, arxiv: 1,
+  });
 });

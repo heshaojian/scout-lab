@@ -45,6 +45,8 @@ Code mirrors the public GitHub Trending repository order and period-star values.
 
 GitHub Trending is the only ranking source. Scout Lab never substitutes GitHub Search results when Trending is unavailable; it shows an honest unavailable state and a direct link to GitHub instead.
 
+Cards use GitHub Trending's description when available. If Trending omits it, Scout Lab extracts a short plain-text introduction from the repository README and keeps the repository's factual language, star, and fork summary as the final fallback.
+
 ![GitHub Trending repositories in Scout Lab](./store/assets/screenshot-code-trending.png)
 
 ### Models
@@ -59,6 +61,8 @@ Models follows Hugging Face's discovery vocabulary while keeping the interface p
 - family grouping so quantizations, fine-tunes, adapters, and merges do not overwhelm the grid
 
 Cards expose available task, parameter, format, license, access, inference, date, like, download, trending, base-model, and variant information without changing the shared card layout.
+
+Because the Hugging Face model-list API does not include model-card prose, Scout Lab reads a short introduction from each representative model's README. README excerpts are cached for seven days; factual model metadata remains visible when a model card is missing or unavailable.
 
 ![Hugging Face model discovery in Scout Lab](./store/assets/screenshot-models-discovery.png)
 
@@ -207,6 +211,7 @@ newtab.html
     query.js                 Source requests, URL validation, stable cache keys
     feeds.js                 Fetching, normalization, caching, failure handling
     normalizers.js           GitHub, Hugging Face, and arXiv card adapters
+    descriptions.js          Bounded README extraction and seven-day item cache
     startup.js               Concurrent startup cache warming
     storage.js               Local preferences, annotations, notes, snapshots
     library.js               Saved-card membership, filtering, migration
@@ -225,8 +230,9 @@ newtab.html
 4. The selected workbench renders a trusted daily snapshot when available.
 5. A stable query key checks the six-hour cache or fetches the public source.
 6. Source adapters normalize results into shared cards.
-7. Results update the grid, query cache, and current daily snapshot.
-8. Favorites and comments preserve safe card snapshots in Library.
+7. Missing Code and Models prose is enriched from a bounded, cached README excerpt.
+8. Results update the grid, query cache, and current daily snapshot.
+9. Favorites and comments preserve safe card snapshots in Library.
 
 ## Development And Verification
 
@@ -257,7 +263,7 @@ Create and smoke-test the versioned Chrome Web Store archive:
 npm run test:release
 ```
 
-For release `1.0.4`, the package is written to `dist/scout-lab-1.0.4.zip`. The smoke test loads that ZIP as an actual extension, opens `chrome://newtab`, and verifies live GitHub Trending order and period-star parity.
+For release `1.0.5`, the package is written to `dist/scout-lab-1.0.5.zip`. The smoke test loads that ZIP as an actual extension, opens `chrome://newtab`, and verifies live GitHub Trending order and period-star parity.
 
 The repository keeps unit, integration, real-browser, live-source, package, and acceptance tests under version control. See [Testing Scout Lab](./docs/testing.md) for the test map, CI behavior, coverage requirements, and maintenance rules.
 

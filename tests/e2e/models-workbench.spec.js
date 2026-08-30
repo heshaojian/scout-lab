@@ -33,6 +33,14 @@ test.beforeEach(async ({ page }) => {
       preferences: { startupSection: 'models', density: 'comfortable', theme: 'dark' },
     }));
   });
+  await page.route('https://huggingface.co/**/raw/main/README.md', (route) => {
+    const id = new URL(route.request().url()).pathname.split('/raw/main/')[0].slice(1);
+    return route.fulfill({
+      status: 200,
+      contentType: 'text/markdown',
+      body: `# ${id}\n\n${id} is documented for dependable local AI experimentation.`,
+    });
+  });
 });
 
 test('Models aligns sorting, filters, metadata, and family grouping with Hugging Face', async ({ page }) => {
@@ -53,6 +61,8 @@ test('Models aligns sorting, filters, metadata, and family grouping with Hugging
   await expect(page.getByLabel('Sort')).toHaveValue('trending');
   await expect(page.locator('.grid .card')).toHaveCount(2);
   await expect(page.getByRole('heading', { name: 'Qwen/Qwen-7B' })).toBeVisible();
+  await expect(page.locator('[data-id="hf-model:Qwen/Qwen-7B"]'))
+    .toContainText('Qwen/Qwen-7B is documented for dependable local AI experimentation.');
   await expect(page.getByText('7B', { exact: true }).first()).toBeVisible();
   await expect(page.getByText('Inference available', { exact: true }).first()).toBeVisible();
 

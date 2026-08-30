@@ -50,6 +50,28 @@ test('Code renders the exact Trending order and three GitHub-native filters', as
   expect(apiCalls).toBe(0);
 });
 
+test('Code shows README prose when GitHub Trending has no description', async ({ page }) => {
+  const withoutDescription = trendingHtml.replace(
+    '<p class="col-9 color-fg-muted my-1 pr-4">A useful toolkit for building reliable AI agents.</p>',
+    '',
+  );
+  await page.route('**/__scout/github-trending**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'text/html',
+    body: withoutDescription,
+  }));
+  await page.route('https://github.com/example-labs/agent-kit', (route) => route.fulfill({
+    status: 200,
+    contentType: 'text/html',
+    body: '<article class="markdown-body"><p>A clear README description for the agent toolkit.</p></article>',
+  }));
+
+  await page.goto('/newtab.html');
+
+  await expect(page.locator('[data-id="github:example-labs/agent-kit"]'))
+    .toContainText('A clear README description for the agent toolkit.');
+});
+
 test('English and Chinese map to GitHub spoken_language_code', async ({ page }) => {
   const spokenLanguages = [];
   await page.route('**/__scout/github-trending**', (route) => {
@@ -125,7 +147,7 @@ test('Code ignores a legacy Search-backed cache entry', async ({ page }) => {
 test('Code reuses a current completed cache entry on startup', async ({ page }) => {
   let requests = 0;
   await page.addInitScript(() => {
-    const query = '{"filters":{"language":"all","spokenLanguage":"all","time":"day"},"section":"code","sourceRevision":"github-trending-v3"}';
+    const query = '{"filters":{"language":"all","spokenLanguage":"all","time":"day"},"section":"code","sourceRevision":"github-trending-v4"}';
     localStorage.setItem(`scout-lab:cache:v4:${query}`, JSON.stringify({
       cards: [{
         id: 'github:cached/repository',
@@ -135,7 +157,7 @@ test('Code reuses a current completed cache entry on startup', async ({ page }) 
         title: 'cached/repository',
         url: 'https://github.com/cached/repository',
       }],
-      status: { label: 'GitHub Trending', sourceRevision: 'github-trending-v3' },
+      status: { label: 'GitHub Trending', sourceRevision: 'github-trending-v4' },
       expiresAt: Date.now() + 60_000,
       savedAt: new Date().toISOString(),
     }));
@@ -154,7 +176,7 @@ test('Code reuses a current completed cache entry on startup', async ({ page }) 
 test('Code refreshes an expired current cache entry on startup', async ({ page }) => {
   let requests = 0;
   await page.addInitScript(() => {
-    const query = '{"filters":{"language":"all","spokenLanguage":"all","time":"day"},"section":"code","sourceRevision":"github-trending-v3"}';
+    const query = '{"filters":{"language":"all","spokenLanguage":"all","time":"day"},"section":"code","sourceRevision":"github-trending-v4"}';
     localStorage.setItem(`scout-lab:cache:v4:${query}`, JSON.stringify({
       cards: [{
         id: 'github:expired/repository',
@@ -164,7 +186,7 @@ test('Code refreshes an expired current cache entry on startup', async ({ page }
         title: 'expired/repository',
         url: 'https://github.com/expired/repository',
       }],
-      status: { label: 'GitHub Trending', sourceRevision: 'github-trending-v3' },
+      status: { label: 'GitHub Trending', sourceRevision: 'github-trending-v4' },
       expiresAt: Date.now() - 1,
       savedAt: new Date(Date.now() - (7 * 60 * 60 * 1000)).toISOString(),
     }));

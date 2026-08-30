@@ -21,11 +21,13 @@ import {
   parseGithubTrending,
   parseHuggingFaceDatasetsPage,
 } from './normalizers.js';
+import { DESCRIPTION_REVISION, enrichCardDescriptions } from './descriptions.js';
 import { getCache, getStaleCache, setCache } from './storage.js';
 
 const REQUEST_TIMEOUT = 10_000;
 const pendingRequests = new Map();
-export const GITHUB_TRENDING_SOURCE_REVISION = 'github-trending-v3';
+export const GITHUB_TRENDING_SOURCE_REVISION = 'github-trending-v4';
+export { DESCRIPTION_REVISION };
 
 const fallbackCards = {
   models: [{
@@ -85,7 +87,8 @@ const deduplicate = (key, task) => {
 const fetchCode = async (filters) => {
   const request = buildGithubRequest(filters);
   const html = await fetchText(resolveGithubRequestUrl(request), { headers: { Accept: 'text/html' } });
-  const cards = ensureTrendingCards(parseGithubTrending(html, filters.time));
+  const parsed = ensureTrendingCards(parseGithubTrending(html, filters.time));
+  const cards = await enrichCardDescriptions(parsed);
   return {
     cards,
     status: {
@@ -103,9 +106,13 @@ const fetchModels = async (filters) => {
   const data = await fetchJson(buildModelsUrl(filters));
   if (!Array.isArray(data)) throw new Error('Hugging Face models returned an unexpected response');
   const normalized = data.map((item) => normalizeModel(item, filters.rank));
-  const cards = groupModelCards(filterModelsByUpdated(normalized, filters.updated)
+  const grouped = groupModelCards(filterModelsByUpdated(normalized, filters.updated)
     .filter((card) => matchesTopic(card, filters.topic))).slice(0, 24);
-  return { cards, status: { label: 'Hugging Face models', stale: false } };
+  const cards = await enrichCardDescriptions(grouped);
+  return {
+    cards,
+    status: { label: 'Hugging Face models', stale: false, descriptionRevision: DESCRIPTION_REVISION },
+  };
 };
 
 const fetchDatasets = async (filters) => {
@@ -243,6 +250,7 @@ export const fetchSection = async (section, filters, options = {}) => {
     section,
     filters,
     ...(['code', 'today'].includes(section) ? { sourceRevision: GITHUB_TRENDING_SOURCE_REVISION } : {}),
+    ...(['models', 'today'].includes(section) ? { descriptionRevision: DESCRIPTION_REVISION } : {}),
     ...(section === 'today' ? { todayMix: normalizedOptions.todayMix, hiddenIds } : {}),
   };
   const key = stableSerialize(query);

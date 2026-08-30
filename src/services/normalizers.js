@@ -55,7 +55,7 @@ export const parseGithubTrending = (html, time = 'week') => {
     if (!repositoryLink) return null;
 
     const path = repositoryLink.getAttribute('href').replace(/^\//, '').replace(/\/$/, '');
-    const description = article.querySelector('p')?.textContent || 'No description provided.';
+    const description = cleanText(article.querySelector('p')?.textContent || '');
     const language = cleanText(article.querySelector('[itemprop="programmingLanguage"]')?.textContent || 'Not specified');
     const starLink = article.querySelector(`a[href="/${path}/stargazers"]`);
     const forkLink = article.querySelector(`a[href="/${path}/forks"]`);
@@ -70,7 +70,11 @@ export const parseGithubTrending = (html, time = 'week') => {
       type: 'Code',
       title: path,
       url: `https://github.com/${path}`,
-      summary: description,
+      summary: description || [
+        language === 'Not specified' ? 'GitHub repository' : `${language} repository`,
+        totalStars ? `${compactNumber(totalStars)} stars` : '',
+        forks ? `${compactNumber(forks)} forks` : '',
+      ].filter(Boolean).join(' · ') + '.',
       tags: [language, 'GitHub Trending'],
       owner: path.split('/')[0],
     });
@@ -85,7 +89,10 @@ export const parseGithubTrending = (html, time = 'week') => {
         metric('forks', 'Forks', forks, 'Cumulative GitHub forks'),
       ],
       secondary: { left: language, right: `${compactNumber(totalStars)} stars · ${compactNumber(forks)} forks` },
-      details: { language, totalStars, forks, periodStars, time },
+      details: {
+        language, totalStars, forks, periodStars, time,
+        descriptionSource: description ? 'source' : 'fallback',
+      },
     };
   }).filter(Boolean);
 };
@@ -148,6 +155,14 @@ export const normalizeModel = (model, rank = 'trending') => {
   const pipeline = model.pipeline_tag || 'Task not specified';
   const license = tagValue(tags, 'license:') || 'Not specified';
   const baseModelId = directBaseModel(tags);
+  const factualSummary = [
+    pipeline.replaceAll('-', ' ').replace(/^./, (character) => character.toUpperCase()),
+    parameterLabel === 'Not specified' ? 'parameters not specified' : `${parameterLabel} parameters`,
+    library === 'Not specified' ? '' : library,
+    license === 'Not specified' ? '' : license,
+    access,
+    inferenceAvailable ? 'Inference available' : '',
+  ].filter(Boolean).join(' · ');
   const card = baseCard({
     id: `hf-model:${id}`,
     source: 'huggingface',
@@ -155,7 +170,7 @@ export const normalizeModel = (model, rank = 'trending') => {
     type: 'Model',
     title: id,
     url: `https://huggingface.co/${id}`,
-    summary: `${pipeline.replaceAll('-', ' ')} model on Hugging Face.`,
+    summary: `${factualSummary}.`,
     tags: [
       pipeline,
       parameters ? parameterLabel : '',
@@ -195,6 +210,7 @@ export const normalizeModel = (model, rank = 'trending') => {
       inferenceAvailable,
       inferenceProviders,
       baseModelId,
+      descriptionSource: 'fallback',
       createdAt: model.createdAt,
       lastModified: model.lastModified,
     },

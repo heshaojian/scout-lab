@@ -6,10 +6,14 @@ import {
   mergeBackupData,
   parseBackup,
   summarizeBackup,
-} from './services/backup.js?v=1.0.4';
-import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=1.0.4';
-import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.4';
-import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.4';
+} from './services/backup.js?v=1.0.5';
+import {
+  DESCRIPTION_REVISION,
+  fetchSection,
+  GITHUB_TRENDING_SOURCE_REVISION,
+} from './services/feeds.js?v=1.0.5';
+import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.5';
+import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.5';
 import {
   applyDurableData,
   getDurableData,
@@ -29,10 +33,10 @@ import {
   setSnapshot,
   setUserItemState,
   setWorkbenchFilters,
-} from './services/storage.js?v=1.0.4';
-import { getLibraryCards } from './services/library.js?v=1.0.4';
-import { createStartupWarmup } from './services/startup.js?v=1.0.4';
-import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.4';
+} from './services/storage.js?v=1.0.5';
+import { getLibraryCards } from './services/library.js?v=1.0.5';
+import { createStartupWarmup } from './services/startup.js?v=1.0.5';
+import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.5';
 import {
   escapeHtml,
   renderCard,
@@ -42,8 +46,8 @@ import {
   renderSourceLink,
   renderSourceUnavailable,
   updateSearchResults,
-} from './ui/render.js?v=1.0.4';
-import { renderSettingsDrawer } from './ui/settings.js?v=1.0.4';
+} from './ui/render.js?v=1.0.5';
+import { renderSettingsDrawer } from './ui/settings.js?v=1.0.5';
 import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.js';
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -757,9 +761,12 @@ const boot = async () => {
   const snapshot = getSnapshot(todayKey())?.sections?.[state.selectedSection];
   const trustedSnapshot = state.selectedSection === 'code'
     ? snapshot?.status?.sourceRevision === GITHUB_TRENDING_SOURCE_REVISION
-    : state.selectedSection === 'today'
-      ? snapshot?.status?.sources?.code?.sourceRevision === GITHUB_TRENDING_SOURCE_REVISION
-      : true;
+    : state.selectedSection === 'models'
+      ? snapshot?.status?.descriptionRevision === DESCRIPTION_REVISION
+      : state.selectedSection === 'today'
+        ? snapshot?.status?.sources?.code?.sourceRevision === GITHUB_TRENDING_SOURCE_REVISION
+          && snapshot?.status?.sources?.models?.descriptionRevision === DESCRIPTION_REVISION
+        : true;
   if (trustedSnapshot && snapshot?.cards?.length) {
     setState({ cards: snapshot.cards, loading: false, status: { ...snapshot.status, label: snapshot.status?.label || 'Saved daily snapshot' } });
     render();

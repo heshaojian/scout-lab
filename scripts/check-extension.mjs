@@ -18,6 +18,7 @@ const requiredFiles = [
   'src/services/backup.js',
   'src/services/query.js',
   'src/services/normalizers.js',
+  'src/services/descriptions.js',
   'src/services/storage.js',
   'src/services/startup.js',
   'src/services/archive.js',
@@ -62,8 +63,8 @@ if (manifest.name !== 'Scout Lab') {
   fail('manifest.json name must be Scout Lab');
 }
 
-if (manifest.version !== '1.0.4') {
-  fail('manifest.json must use the public release version 1.0.4');
+if (manifest.version !== '1.0.5') {
+  fail('manifest.json must use the public release version 1.0.5');
 }
 
 for (const size of ['16', '32', '48', '128']) {

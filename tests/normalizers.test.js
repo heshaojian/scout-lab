@@ -33,8 +33,10 @@ describe('source normalizers', () => {
       id: 'github:example-labs/agent-kit',
       title: 'example-labs/agent-kit',
       url: 'https://github.com/example-labs/agent-kit',
+      summary: 'A useful toolkit for building reliable AI agents.',
       metricLabel: 'Stars this week',
       metricValue: '+373',
+      details: { descriptionSource: 'source' },
     });
     expect(cards[0].metrics).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: 'period-stars', value: 373 }),
@@ -73,6 +75,8 @@ describe('source normalizers', () => {
     });
     expect(model.tags).toEqual(expect.arrayContaining(['180B', 'Transformers', 'other']));
     expect(model.secondary.left).toBe('Open · Inference available');
+    expect(model.summary).toBe('Image text to text · 180B parameters · Transformers · other · Open · Inference available.');
+    expect(model.details.descriptionSource).toBe('fallback');
     expect(dataset.metricValue).toBe('56.9k downloads');
     expect(dataset.details).toMatchObject({ size: '1K<n<10K', language: 'en', license: 'apache-2.0' });
 

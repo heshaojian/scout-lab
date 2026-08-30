@@ -8,7 +8,7 @@ import { JSDOM } from 'jsdom';
 import { parseGithubTrending } from '../src/services/normalizers.js';
 
 const root = process.cwd();
-const archive = resolve(root, 'dist/scout-lab-1.0.4.zip');
+const archive = resolve(root, 'dist/scout-lab-1.0.5.zip');
 const temporaryRoot = await mkdtemp(resolve(tmpdir(), 'scout-lab-release-'));
 const extensionPath = resolve(temporaryRoot, 'extension');
 const profilePath = resolve(temporaryRoot, 'profile');
@@ -52,11 +52,15 @@ try {
     throw new Error('Packaged release icon did not load.');
   }
   await page.getByRole('button', { name: 'Code', exact: true }).click();
-  await page.locator('.grid .card').first().waitFor({ state: 'visible' });
-  const renderedTitles = await page.locator('.grid .card h3').allTextContents();
-  const renderedPeriodStars = await page.locator('.grid .card .metric').allTextContents();
   const expectedTitles = sourceCards.slice(0, 24).map((card) => card.title);
   const expectedPeriodStars = sourceCards.slice(0, 24).map((card) => card.metricValue);
+  await page.waitForFunction(
+    (expectedCount) => document.querySelectorAll('.grid .card h3').length === expectedCount,
+    expectedTitles.length,
+    { timeout: 20_000 },
+  );
+  const renderedTitles = await page.locator('.grid .card h3').allTextContents();
+  const renderedPeriodStars = await page.locator('.grid .card .metric').allTextContents();
   if (JSON.stringify(renderedTitles) !== JSON.stringify(expectedTitles)) {
     throw new Error('Packaged Code repository order differs from GitHub Trending.');
   }
