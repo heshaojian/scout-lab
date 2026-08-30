@@ -24,6 +24,8 @@ Tests are part of the repository and are release gates. Product behavior must no
 | Settings validation, migration, and defaults | `tests/settings.test.js` |
 | Local persistence and immutable state updates | `tests/storage.test.js` |
 | Shared cards, controls, and workbench rendering | `tests/ui.test.js` |
+| Library membership, filtering, sorting, snapshot migration, and backup safety | `tests/library.test.js`, `tests/storage.test.js`, `tests/backup.test.js` |
+| Real-browser Library add, hide, filter, search, reload, and removal workflow | `tests/e2e/library.spec.js` |
 
 Deterministic source fixtures live in `tests/fixtures/`. They keep parser behavior testable when an upstream site is unavailable or changes unexpectedly.
 
@@ -37,7 +39,7 @@ Browser acceptance is intentionally separate from deterministic unit and integra
 
 `quality.yml` runs on every push and pull request. It verifies the extension structure, executes the deterministic suite with coverage, enforces the configured 80% coverage thresholds, and rejects high-severity dependency vulnerabilities.
 
-The same workflow runs the Playwright browser regression suite against the real local page. Its Code tests verify exact Trending order and metrics, English and Chinese filtering, legacy Search-cache rejection, and the no-fallback unavailable state without relying on live network availability. Models tests verify all seven Hugging Face sort mappings, all 52 model-visible tasks and their exact API values, modality grouping, primary and advanced filters, source metadata, family grouping, base and variant links, saved defaults, reset, search, card actions, and mobile overflow. Reading-comfort tests measure desktop, medium, and mobile column counts; minimum card font sizes; summary line height and clamp; Comfortable versus Compact density; overflow; and low-glare light/dark surfaces.
+The same workflow runs the Playwright browser regression suite against the real local page. Its Code tests verify exact Trending order and metrics, English and Chinese filtering, legacy Search-cache rejection, and the no-fallback unavailable state without relying on live network availability. Models tests verify all seven Hugging Face sort mappings, all 52 model-visible tasks and their exact API values, modality grouping, primary and advanced filters, source metadata, family grouping, base and variant links, saved defaults, reset, search, card actions, and mobile overflow. Library tests verify automatic membership, hidden-item review, local-only loading, filtering, search, reload persistence, and removal when the last qualifying annotation is cleared. Reading-comfort tests measure desktop, medium, and mobile column counts; minimum card font sizes; summary line height and clamp; Comfortable versus Compact density; overflow; and low-glare light/dark surfaces.
 
 `live-sources.yml` runs daily and on demand. It performs bounded read-only checks against GitHub, Hugging Face, and arXiv. GitHub checks cover daily, weekly, and monthly Trending HTML plus English and Chinese spoken-language variants. Dataset checks cover all nine source sorts, including structured page parsing for the two row-count sorts. No token or repository secret is required. Keeping it separate prevents temporary source downtime or rate limiting from blocking deterministic pull-request validation.
 

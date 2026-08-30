@@ -76,7 +76,7 @@ export const renderCard = (card, { user = {}, progress = {}, commentingId = null
       <div class="card-footer">
         <div class="card-actions">
           ${actionButton('Favorite', 'favorite', itemState.favorite ? '&#9733;' : '&#9734;', itemState.favorite)}
-          ${actionButton('Hide', 'hide', '&minus;')}
+          ${actionButton(itemState.hidden ? 'Unhide' : 'Hide', 'hide', itemState.hidden ? '&#43;' : '&minus;')}
           ${actionButton('Comment', 'comment', '&#9998;', Boolean(note))}
         </div>
         ${safeUrl
@@ -157,6 +157,13 @@ export const renderEmptyState = (filters, { clearTopic = false } = {}) => `
     ${clearTopic
       ? '<button class="mini-button" type="button" data-filter="topic" data-value="all">Clear AI topic</button>'
       : '<button class="mini-button" type="button" data-command="reset-filters">Reset filters</button>'}
+  </section>
+`;
+
+export const renderLibraryEmptyState = () => `
+  <section class="empty-state library-empty">
+    <strong>Your Library is ready.</strong>
+    <span>Favorite an item or add a note anywhere in Scout Lab to keep it here automatically.</span>
   </section>
 `;
 

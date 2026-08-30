@@ -34,7 +34,7 @@ const validateSettings = (settings) => {
   assertObject(preferences, 'Settings preferences');
   if (!['system', 'light', 'dark'].includes(preferences.theme)) throw new Error('Settings contains an invalid theme.');
   if (!['comfortable', 'compact'].includes(preferences.density)) throw new Error('Settings contains an invalid density.');
-  if (!['last-used', 'today', 'code', 'models', 'datasets', 'papers', 'learn'].includes(preferences.startupSection)) {
+  if (!['last-used', 'today', 'code', 'models', 'datasets', 'papers', 'learn', 'library'].includes(preferences.startupSection)) {
     throw new Error('Settings contains an invalid startup workbench.');
   }
   if (!['foreground', 'background'].includes(preferences.openLinks)) throw new Error('Settings contains an invalid link behavior.');
@@ -52,10 +52,21 @@ const validateUserState = (value) => {
       throw new Error(`Annotation ${id} has an invalid comment.`);
     }
     assertTimestamp(entry.updatedAt, `Annotation ${id}`);
+    if (entry.savedAt !== undefined) assertTimestamp(entry.savedAt, `Annotation ${id}`);
+    const libraryCard = entry.libraryCard === undefined ? undefined : validateSnapshotValue(entry.libraryCard);
+    if (libraryCard !== undefined) {
+      assertObject(libraryCard, `Annotation ${id} Library card`);
+      if (libraryCard.id !== id || !libraryCard.title || !libraryCard.type || !libraryCard.source
+        || !validateSourceUrl(libraryCard.url, libraryCard.source)) {
+        throw new Error(`Annotation ${id} has an invalid Library card.`);
+      }
+    }
     return [id, {
       ...(entry.favorite === undefined ? {} : { favorite: entry.favorite }),
       ...(entry.hidden === undefined ? {} : { hidden: entry.hidden }),
       ...(entry.comment === undefined ? {} : { comment: entry.comment }),
+      ...(entry.savedAt === undefined ? {} : { savedAt: entry.savedAt }),
+      ...(libraryCard === undefined ? {} : { libraryCard }),
       updatedAt: entry.updatedAt,
     }];
   }));

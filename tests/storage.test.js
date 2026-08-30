@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getCache,
   getLearnProgress,
+  hydrateLibraryAnnotations,
   getDailyNote,
   getSnapshot,
   getSettings,
@@ -116,6 +117,22 @@ describe('query-aware storage', () => {
     expect(first['item:1'].comment).toBeUndefined();
     expect(second['item:1']).toMatchObject({ favorite: true, comment: 'Read this.' });
     expect(getUserState()).toEqual(second);
+  });
+
+  it('stores Library snapshots with annotations and backfills legacy favorites', () => {
+    const card = {
+      id: 'github:one', source: 'github', section: 'code', type: 'Code', title: 'one',
+      url: 'https://github.com/owner/one', summary: 'One.', tags: [], links: [],
+    };
+    setUserItemState(card.id, { favorite: true }, card);
+    expect(getUserState()[card.id]).toMatchObject({ favorite: true, libraryCard: { title: 'one' } });
+
+    localStorage.setItem('scout-lab:user-state', JSON.stringify({
+      'github:legacy': { comment: 'Remember', updatedAt: '2026-08-28T00:00:00Z' },
+    }));
+    setSnapshot('2026-08-28', { sections: { code: { cards: [{ ...card, id: 'github:legacy', title: 'legacy' }] } } });
+    const hydrated = hydrateLibraryAnnotations();
+    expect(hydrated['github:legacy'].libraryCard.title).toBe('legacy');
   });
 
   it('recovers from malformed stored JSON', () => {

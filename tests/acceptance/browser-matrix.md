@@ -16,7 +16,7 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 
 ## Shell And Navigation
 
-- [ ] Today, Code, Models, Datasets, Papers, and Learn tabs open the correct workbench.
+- [ ] Today, Code, Models, Datasets, Papers, Learn, and Library tabs open the correct workbench.
 - [ ] Today shows Search and Refresh without Topic, Reset filters, or an empty filter bar.
 - [ ] The active tab, page title, source label, filters, and grid update together.
 - [ ] Search filters the current cards and clearing search restores them.
@@ -62,6 +62,19 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 - [ ] Hide removes the card, persists after reload, and can be restored through the hidden-items flow.
 - [ ] Comment creates, edits, and removes a note without changing the source content.
 - [ ] Card actions remain usable on desktop, compact desktop, and mobile.
+
+## Library Review
+
+- [ ] Library makes no network request and shows Search without Refresh.
+- [ ] Favoriting or commenting on any source card adds it immediately to Library.
+- [ ] A hidden but favorited or annotated card remains visible in Library and can be unhidden there.
+- [ ] All, Favorites, and Notes views work independently and in combination with content-type and source filters.
+- [ ] Recently updated, Recently saved, and Title sorts produce stable ordering.
+- [ ] Library search includes card metadata and personal comment text.
+- [ ] Removing the favorite while retaining a comment keeps the item; clearing the final comment removes it.
+- [ ] Library cards and notes persist after reload, cache expiry, source failure, export, and import.
+- [ ] The empty Library state explains how automatic membership works.
+- [ ] Library cards and controls have no overflow at all supported viewports.
 
 ## Long-Session Reading Comfort
 

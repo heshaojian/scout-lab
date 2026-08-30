@@ -174,6 +174,19 @@ describe('shared workbench renderer', () => {
       .toBe('Any rows');
   });
 
+  it('renders the Library review controls in the shared filter bar', () => {
+    document.body.innerHTML = renderFilters(WORKBENCHES.library, WORKBENCHES.library.defaults);
+
+    expect([...document.querySelectorAll('[data-filter="view"]')].map(({ textContent }) => textContent.trim()))
+      .toEqual(['All', 'Favorites', 'Notes']);
+    expect([...document.querySelector('[aria-label="Content type"]').options].map(({ value }) => value))
+      .toEqual(['all', 'Code', 'Model', 'Dataset', 'Paper', 'Learn']);
+    expect([...document.querySelector('[aria-label="Source"]').options].map(({ value }) => value))
+      .toEqual(['all', 'github', 'huggingface', 'arxiv', 'learn']);
+    expect([...document.querySelector('[aria-label="Sort"]').options].map(({ value }) => value))
+      .toEqual(['updated', 'saved', 'title']);
+  });
+
   it('renders validated related-model links inside a collapsed family list', () => {
     document.body.innerHTML = renderCard({
       ...baseCard,

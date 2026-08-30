@@ -44,7 +44,7 @@ The design should optimize for repeated daily use rather than one-time explorati
 
 ## Core Sections
 
-Scout Lab uses one shared shell and one consistent content-card grid across six filtered workbenches. The detailed behavior, data contracts, failure states, and acceptance criteria are defined in [Filtered Grid Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
+Scout Lab uses one shared shell and one consistent content-card grid across seven workbenches. The detailed behavior, data contracts, failure states, and acceptance criteria are defined in [Filtered Grid Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
 
 ### Today
 
@@ -128,6 +128,14 @@ Initial sources:
 
 This section is a curated personal syllabus, not a scraped popularity feed. It tracks Not started, In progress, and Done states for maintained course, cookbook, and exercise links.
 
+### Library
+
+Sources: saved cards from every Scout Lab workbench
+
+Purpose: review historical favorites and personal notes without depending on a live feed.
+
+Membership is automatic: favoriting a card or saving a non-empty comment keeps it in Library, and removing both removes it. Hidden discovery items remain reviewable here. Search and filters cover favorites versus notes, content type, source, and recency or title sorting. Each qualifying annotation stores a bounded, validated card snapshot so the history survives reloads, cache expiry, source outages, and backup round trips.
+
 ## First-Screen Experience
 
 The first screen is the product. There should be no marketing hero and no onboarding wall.
@@ -135,7 +143,7 @@ The first screen is the product. There should be no marketing hero and no onboar
 Layout:
 
 - left rail with Scout Lab identity, section navigation, and archive status
-- sections: Today, Code, Models, Datasets, Papers, Learn
+- sections: Today, Code, Models, Datasets, Papers, Learn, Library
 - workbench-specific filter bar with no more than four primary controls
 - one stable content-card grid with source-specific filters and metadata
 - shared daily note and archive status
@@ -234,6 +242,7 @@ src/
     datasets.js
     papers.js
     learn.js
+    library.js
   components/
     shell.js
     controls.js

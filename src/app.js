@@ -17,6 +17,7 @@ import {
   getSettings,
   getSnapshot,
   getUserState,
+  hydrateLibraryAnnotations,
   resetPreferences,
   restoreAllFactoryFilterDefaults,
   restoreFactoryFilterDefaults,
@@ -30,12 +31,14 @@ import {
   setUserItemState,
   setWorkbenchFilters,
 } from './services/storage.js?v=0.3.0';
+import { getLibraryCards } from './services/library.js?v=0.3.0';
 import { isValidTodayMix, resolveStartupSection } from './settings.js?v=0.3.0';
 import {
   escapeHtml,
   renderCard,
   renderEmptyState,
   renderFilters,
+  renderLibraryEmptyState,
   renderSourceUnavailable,
   updateSearchResults,
 } from './ui/render.js?v=0.3.1';
@@ -45,6 +48,7 @@ import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.
 const todayKey = () => new Date().toISOString().slice(0, 10);
 const app = document.querySelector('#app');
 const initialSettings = getSettings();
+const initialUserState = hydrateLibraryAnnotations();
 
 const systemTheme = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
 
@@ -65,7 +69,7 @@ let state = {
   filters: initialSettings.filters,
   settings: initialSettings,
   cards: [],
-  userState: getUserState(),
+  userState: initialUserState,
   learnProgress: getLearnProgress(),
   archive: { connected: false, name: '' },
   loading: true,
@@ -114,13 +118,13 @@ const activeWorkbench = () => {
 
 const applyUserState = (cards) => cards
   .map((card) => ({ ...card, user: state.userState[card.id] || {} }))
-  .filter((card) => !card.user.hidden);
+  .filter((card) => state.selectedSection === 'library' || !card.user.hidden);
 
 const visibleCards = () => {
   const cards = applyUserState(state.cards);
   const query = state.search.trim().toLowerCase();
   if (!query) return cards;
-  return cards.filter((card) => `${card.title} ${card.summary} ${(card.tags || []).join(' ')} ${card.owner || ''}`
+  return cards.filter((card) => `${card.title} ${card.summary} ${(card.tags || []).join(' ')} ${card.owner || ''} ${state.userState[card.id]?.comment || ''}`
     .toLowerCase().includes(query));
 };
 
@@ -160,6 +164,10 @@ const cardsHtml = (filters, cards) => {
     })).join('');
   }
   if (state.loading) return loadingCardsHtml();
+  if (state.selectedSection === 'library'
+    && getLibraryCards(state.userState, WORKBENCHES.library.defaults).length === 0) {
+    return renderLibraryEmptyState();
+  }
   if (state.selectedSection === 'code' && state.status.unavailable) {
     return renderSourceUnavailable({ url: state.status.sourceUrl });
   }
@@ -218,7 +226,7 @@ const render = () => {
           <div><h2>${escapeHtml(workbench.title)}</h2><p>${escapeHtml(workbench.subtitle)}</p></div>
           <div class="tools">
             <input class="search" value="${escapeHtml(state.search)}" placeholder="Search this tab" aria-label="Search this tab">
-            <button class="primary" type="button" data-command="refresh">Refresh</button>
+            ${state.selectedSection === 'library' ? '' : '<button class="primary" type="button" data-command="refresh">Refresh</button>'}
           </div>
         </header>
 
@@ -288,6 +296,19 @@ const load = async ({ force = false, clear = false } = {}) => {
   setState({ requestId, loading: true, cards: clear ? [] : state.cards, notice: '' });
   render();
 
+  if (section === 'library') {
+    const userState = hydrateLibraryAnnotations();
+    if (state.requestId !== requestId) return;
+    setState({
+      cards: getLibraryCards(userState, filters),
+      loading: false,
+      status: { label: 'Saved Library', stale: false },
+      userState,
+    });
+    render();
+    return;
+  }
+
   const result = await fetchSection(section, filters, {
     force,
     allFilters: state.filters,
@@ -328,8 +349,14 @@ const updateFilters = async (patch) => {
 };
 
 const updateItem = (id, patch) => {
-  setUserItemState(id, patch);
-  setState({ userState: getUserState() });
+  const card = state.cards.find((item) => item.id === id);
+  const userState = setUserItemState(id, patch, card);
+  setState({
+    userState,
+    ...(state.selectedSection === 'library'
+      ? { cards: getLibraryCards(userState, state.filters.library) }
+      : {}),
+  });
   render();
 };
 
@@ -425,6 +452,7 @@ const applyPendingImport = async () => {
   try {
     const merged = mergeBackupData(getDurableData(), state.pendingImport.data);
     applyDurableData(merged);
+    hydrateLibraryAnnotations();
     const nextSettings = getSettings();
     applyAppearance(nextSettings.preferences);
     setState({
@@ -627,7 +655,7 @@ const onClick = async (event) => {
 
   if (action === 'favorite') updateItem(id, { favorite: !current.favorite });
   if (action === 'hide') {
-    updateItem(id, { hidden: true });
+    updateItem(id, { hidden: !current.hidden });
     if (state.selectedSection === 'today') await load({ force: true });
   }
   if (action === 'comment') {

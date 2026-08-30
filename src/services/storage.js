@@ -5,6 +5,7 @@ import {
 } from '../settings.js';
 import { createDefaultFilters, normalizeWorkbenchFilters } from '../workbenches.js';
 import { stableSerialize } from './query.js';
+import { backfillLibraryAnnotations, updateLibraryAnnotation } from './library.js';
 
 const STORE_PREFIX = 'scout-lab';
 const ONE_HOUR = 60 * 60 * 1000;
@@ -48,15 +49,11 @@ export const removeCache = (query) => remove(queryCacheKey(query));
 
 export const getUserState = () => read('user-state', {});
 
-export const setUserItemState = (itemId, patch) => {
+export const setUserItemState = (itemId, patch, card, now = new Date()) => {
   const current = getUserState();
   const next = {
     ...current,
-    [itemId]: {
-      ...(current[itemId] || {}),
-      ...patch,
-      updatedAt: new Date().toISOString(),
-    },
+    [itemId]: updateLibraryAnnotation(current[itemId], patch, card?.id === itemId ? card : undefined, now),
   };
   return write('user-state', next);
 };
@@ -158,6 +155,13 @@ const entriesByPrefix = (prefix) => {
 
 export const getAllDailyNotes = () => entriesByPrefix('note:');
 export const getAllSnapshots = () => entriesByPrefix('snapshot:');
+
+export const hydrateLibraryAnnotations = () => {
+  const current = getUserState();
+  const hydrated = backfillLibraryAnnotations(current, getAllSnapshots());
+  if (stableSerialize(hydrated) !== stableSerialize(current)) write('user-state', hydrated);
+  return hydrated;
+};
 
 export const getDurableData = () => ({
   settings: getSettings(),

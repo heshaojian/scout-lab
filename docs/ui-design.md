@@ -30,6 +30,8 @@ The approved filtered-grid layout uses:
 | Models             |                                                    |
 | Datasets           |                                                    |
 | Papers             |                                                    |
+| Learn              |                                                    |
+| Library            |                                                    |
 |                    |                                                    |
 | iCloud Connected   +----------------------------------------------------+
 | [Save today]       | Daily note + archive preview                       |
@@ -61,6 +63,10 @@ Hugging Face Daily Papers and arXiv in the shared grid. A source segment switche
 ### Learn
 
 A curated catalog in the shared grid. In-progress resources appear first. Controls: focus, format, level, and progress; cards show effort and use Start, Resume, or Review according to saved progress.
+
+### Library
+
+A local review workbench in the shared grid. It has Search but no Refresh because it makes no source request. View switches between All, Favorites, and Notes; additional controls filter by content type and source, then sort by recent update, recent save, or title. A hidden item remains visible here when it is still favorited or annotated.
 
 ## Shared Card Anatomy
 
@@ -100,12 +106,14 @@ Topic is a source-translated workbench control. It does not imply that every sou
 
 Every card supports:
 
-- Favorite: keep this item in the reading list and daily archive
+- Favorite: keep this item in Library and the daily archive
 - Hide: remove this item from the visible feed
 - Comment: add a personal note
 - Open: go to the source page
 
-The app should call the visible action "Hide", not "Remove", because the source item still exists.
+The app should call the visible action "Hide", not "Remove", because the source item still exists. In Library, a hidden card exposes Unhide and remains reviewable.
+
+Favorite or a non-empty Comment adds an item to Library automatically. Removing the favorite and clearing the comment removes it immediately. Library stores a safe display snapshot with the annotation, so the card remains readable after live results change.
 
 ## Daily Archive
 
@@ -167,6 +175,8 @@ Detailed settings behavior and acceptance criteria live in [Friendly Settings](.
 - iCloud export is manual-first: the user clicks "Save today".
 
 Detailed behavior and complete acceptance criteria live in [Filtered Grid Workbenches](./superpowers/specs/2026-08-28-source-native-workbenches-design.md).
+
+The durable historical review contract lives in [Library-First Review](./superpowers/specs/2026-08-29-library-first-review-design.md).
 
 The source contracts for the final three discovery tabs live in [Datasets, Papers, and Learn Reliability](./superpowers/specs/2026-08-29-datasets-papers-learn-reliability-design.md).
 

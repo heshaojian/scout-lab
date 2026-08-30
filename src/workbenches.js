@@ -388,6 +388,30 @@ export const WORKBENCHES = {
     ],
     cacheTtl: Infinity,
   },
+  library: {
+    id: 'library',
+    label: 'Library',
+    title: 'Library',
+    subtitle: 'Review the favorites and notes you chose to keep.',
+    defaults: { view: 'all', type: 'all', source: 'all', sort: 'updated' },
+    controls: [
+      control('view', 'View', [
+        option('all', 'All'), option('favorites', 'Favorites'), option('notes', 'Notes'),
+      ], 'segment'),
+      control('type', 'Content type', [
+        option('all', 'All content'), option('Code', 'Code'), option('Model', 'Models'),
+        option('Dataset', 'Datasets'), option('Paper', 'Papers'), option('Learn', 'Learn'),
+      ]),
+      control('source', 'Source', [
+        option('all', 'All sources'), option('github', 'GitHub'), option('huggingface', 'Hugging Face'),
+        option('arxiv', 'arXiv'), option('learn', 'Learning'),
+      ]),
+      control('sort', 'Sort', [
+        option('updated', 'Recently updated'), option('saved', 'Recently saved'), option('title', 'Title'),
+      ]),
+    ],
+    cacheTtl: Infinity,
+  },
 };
 
 export const SECTION_ORDER = Object.keys(WORKBENCHES);
