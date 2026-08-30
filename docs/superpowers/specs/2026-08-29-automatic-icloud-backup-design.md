@@ -13,7 +13,7 @@ The user authorizes one folder through the existing `Choose folder` action. Afte
 ## 2. Goals
 
 1. Back up every durable Scout Lab record automatically after it changes.
-2. Keep favorite, comment, hide, learning, settings, note, and snapshot actions fast and local-first.
+2. Keep favorite, comment, hide, settings, note, and snapshot actions fast and local-first.
 3. Survive interrupted writes with a second complete recovery file.
 4. Make backup health visible without adding distracting notifications.
 5. Restore only from validated data and only after explicit user confirmation.
@@ -37,7 +37,6 @@ Automatic backup uses the existing versioned Scout Lab backup envelope and inclu
 
 - settings and saved filter defaults
 - user annotations, including favorites, hidden state, comments, and Library card snapshots
-- learning progress
 - daily notes
 - daily source snapshots
 
@@ -86,7 +85,6 @@ When this feature first appears over an existing connected archive handle, missi
 All durable writes go through the storage service. After a successful local write, storage marks iCloud state dirty and emits one backup-needed signal. Covered mutations are:
 
 - favorite, comment, hide, and unhide
-- learning progress
 - daily-note edits
 - daily snapshot writes
 - settings, current filters, and saved defaults
