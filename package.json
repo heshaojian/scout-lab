@@ -1,6 +1,6 @@
 {
   "name": "scout-lab",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "license": "MIT",
@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "test:live": "node scripts/check-live-sources.mjs"
+    "test:live": "node scripts/check-live-sources.mjs",
+    "package": "node scripts/package-extension.mjs",
+    "test:release": "npm run package && node scripts/smoke-release.mjs",
+    "capture:store": "node scripts/capture-store-assets.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

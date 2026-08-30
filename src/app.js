@@ -6,10 +6,10 @@ import {
   mergeBackupData,
   parseBackup,
   summarizeBackup,
-} from './services/backup.js?v=0.3.0';
-import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=0.3.0';
-import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=0.3.0';
-import { ensureCurrentDataSchema } from './services/dataReset.js?v=0.4.0';
+} from './services/backup.js?v=1.0.0';
+import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=1.0.0';
+import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.0';
+import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.0';
 import {
   applyDurableData,
   getDurableData,
@@ -29,9 +29,9 @@ import {
   setSnapshot,
   setUserItemState,
   setWorkbenchFilters,
-} from './services/storage.js?v=0.3.0';
-import { getLibraryCards } from './services/library.js?v=0.3.0';
-import { isValidTodayMix, resolveStartupSection } from './settings.js?v=0.3.0';
+} from './services/storage.js?v=1.0.0';
+import { getLibraryCards } from './services/library.js?v=1.0.0';
+import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.0';
 import {
   escapeHtml,
   renderCard,
@@ -40,8 +40,8 @@ import {
   renderLibraryEmptyState,
   renderSourceUnavailable,
   updateSearchResults,
-} from './ui/render.js?v=0.3.1';
-import { renderSettingsDrawer } from './ui/settings.js?v=0.3.0';
+} from './ui/render.js?v=1.0.0';
+import { renderSettingsDrawer } from './ui/settings.js?v=1.0.0';
 import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.js';
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -205,8 +205,8 @@ const render = () => {
     <div class="shell">
       <aside class="rail">
         <div class="brand">
-          <div class="mark" aria-hidden="true">SL</div>
-          <div><h1>Scout Lab</h1><p>AI learning new tab</p></div>
+          <img class="mark" src="./assets/icons/icon-48.png" alt="">
+          <div><h1>Scout Lab</h1><p>AI discovery new tab</p></div>
         </div>
 
         <section class="intention">

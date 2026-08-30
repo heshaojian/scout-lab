@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scout Lab Store Tile</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 440px; height: 280px; margin: 0; overflow: hidden; }
+    body {
+      position: relative;
+      display: grid;
+      grid-template-columns: 142px 1fr;
+      align-items: center;
+      padding: 34px 34px 34px 26px;
+      background: #17201e;
+      color: #f2f6f4;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    body::before, body::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      width: 8px;
+      height: 50%;
+    }
+    body::before { top: 0; background: #08b981; }
+    body::after { bottom: 0; background: #1589ef; }
+    img { width: 122px; height: 122px; object-fit: contain; }
+    h1 { margin: 0 0 12px; font-size: 40px; line-height: 1; letter-spacing: 0; }
+    p { margin: 0; color: #b9c8c3; font-size: 17px; line-height: 1.45; letter-spacing: 0; }
+    .sources { display: flex; gap: 8px; margin-top: 21px; }
+    .sources span { width: 28px; height: 5px; }
+    .sources span:nth-child(1) { background: #08b981; }
+    .sources span:nth-child(2) { background: #1589ef; }
+    .sources span:nth-child(3) { background: #f6ad20; }
+  </style>
+</head>
+<body>
+  <img src="../assets/icons/icon-128.png" alt="">
+  <div>
+    <h1>Scout Lab</h1>
+    <p>AI signals for<br>every new tab.</p>
+    <div class="sources" aria-hidden="true"><span></span><span></span><span></span></div>
+  </div>
+</body>
+</html>

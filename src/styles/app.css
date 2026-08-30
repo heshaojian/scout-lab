@@ -187,17 +187,10 @@ a:focus-visible {
 }
 
 .mark {
-  width: 34px;
-  height: 34px;
-  flex: 0 0 34px;
-  border: 2px solid var(--ink);
-  border-radius: 7px;
-  background: var(--signal);
-  display: grid;
-  place-items: center;
-  color: #111111;
-  font-size: 14px;
-  font-weight: 850;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  object-fit: contain;
 }
 
 .brand h1 {

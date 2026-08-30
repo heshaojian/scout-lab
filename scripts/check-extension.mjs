@@ -2,6 +2,10 @@ import { access, readFile } from 'node:fs/promises';
 
 const requiredFiles = [
   'manifest.json',
+  'assets/icons/icon-16.png',
+  'assets/icons/icon-32.png',
+  'assets/icons/icon-48.png',
+  'assets/icons/icon-128.png',
   'newtab.html',
   'playwright.config.js',
   'scripts/dev-server.mjs',
@@ -53,6 +57,14 @@ if (manifest.manifest_version !== 3) {
 
 if (manifest.name !== 'Scout Lab') {
   fail('manifest.json name must be Scout Lab');
+}
+
+if (manifest.version !== '1.0.0') {
+  fail('manifest.json must use the public release version 1.0.0');
+}
+
+for (const size of ['16', '32', '48', '128']) {
+  if (manifest.icons?.[size] !== `assets/icons/icon-${size}.png`) fail(`Missing ${size}px release icon`);
 }
 
 if (manifest.chrome_url_overrides?.newtab !== 'newtab.html') {
