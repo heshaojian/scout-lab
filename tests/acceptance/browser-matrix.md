@@ -31,7 +31,8 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 
 - [ ] Automated Code smoke tests pass: `npm run test:e2e`.
 - [ ] Today honors its configured source counts and labels unavailable slots clearly.
-- [ ] Code exposes no mode switch; time range, spoken language, programming language, topic, and search controls change the visible query meaning.
+- [ ] Code exposes no mode switch; time range, spoken language, programming language, and search controls change the visible query meaning.
+- [ ] Code identifies GitHub Trending as live, shows an update time, and links to the exact source query.
 - [ ] English and Chinese spoken-language choices match the corresponding GitHub Trending pages.
 - [ ] In the unpacked Chrome extension, Code loads GitHub Trending directly without the local preview server or a CORS/CSP error.
 - [ ] Code cards show repository identity, description, language, total stars, period stars, and destination link.

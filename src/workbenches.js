@@ -186,7 +186,7 @@ export const WORKBENCHES = {
     label: 'Code',
     title: 'Code',
     subtitle: 'GitHub repositories worth reading, running, or learning from.',
-    defaults: { time: 'week', spokenLanguage: 'all', language: 'all', topic: 'all' },
+    defaults: { time: 'day', spokenLanguage: 'all', language: 'all' },
     controls: [
       control('time', 'Time range', [
         option('day', 'Today'),
@@ -195,7 +195,6 @@ export const WORKBENCHES = {
       ]),
       control('spokenLanguage', 'Spoken language', SPOKEN_LANGUAGE_OPTIONS),
       control('language', 'Language', CODE_LANGUAGE_OPTIONS),
-      control('topic', 'AI topic', TOPICS),
     ],
     cacheTtl: 30 * 60 * 1000,
   },

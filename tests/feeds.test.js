@@ -20,7 +20,7 @@ beforeEach(() => {
 });
 
 describe('feed integration', () => {
-  it('loads and caches parseable GitHub Trending cards', async () => {
+  it('loads parseable GitHub Trending cards with live source metadata', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response(trendingHtml, { type: 'text/html' }));
     vi.stubGlobal('fetch', fetchMock);
     const filters = createDefaultFilters().code;
@@ -29,7 +29,12 @@ describe('feed integration', () => {
     const second = await fetchSection('code', filters);
 
     expect(first.cards).toHaveLength(2);
-    expect(first.status.label).toBe('GitHub Trending');
+    expect(first.status).toMatchObject({
+      label: 'GitHub Trending',
+      sourceUrl: 'https://github.com/trending?since=daily',
+      updatedAt: expect.any(String),
+    });
+    expect(Number.isNaN(Date.parse(first.status.updatedAt))).toBe(false);
     expect(second.cached).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -50,7 +55,7 @@ describe('feed integration', () => {
       unavailable: true,
       stale: false,
     });
-    expect(result.status.sourceUrl).toBe('https://github.com/trending?since=weekly');
+    expect(result.status.sourceUrl).toBe('https://github.com/trending?since=daily');
   });
 
   it('does not show stale Code data after a failed live request', async () => {
@@ -70,37 +75,6 @@ describe('feed integration', () => {
     expect(result.cards).toEqual([]);
     expect(result.cached).toBe(false);
     expect(result.status.unavailable).toBe(true);
-  });
-
-  it('preserves GitHub order when applying an AI-topic subset', async () => {
-    const html = trendingHtml.replace(
-      'A useful toolkit for building reliable AI agents.',
-      'A useful toolkit for building reliable databases.',
-    );
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(html, { type: 'text/html' })));
-
-    const result = await fetchSection(
-      'code',
-      { ...createDefaultFilters().code, topic: 'evaluation' },
-      { force: true },
-    );
-
-    expect(result.cards).toHaveLength(1);
-    expect(result.cards[0].title).toBe('signal-org/eval-workbench');
-    expect(result.status.label).toBe('GitHub Trending');
-  });
-
-  it('keeps an empty AI-topic subset distinct from a source failure', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response(trendingHtml, { type: 'text/html' })));
-
-    const result = await fetchSection(
-      'code',
-      { ...createDefaultFilters().code, topic: 'multimodal' },
-      { force: true },
-    );
-
-    expect(result.cards).toEqual([]);
-    expect(result.status).toMatchObject({ label: 'GitHub Trending', unavailable: false });
   });
 
   it('does not reuse a pre-parity Code cache entry', async () => {
@@ -217,7 +191,7 @@ describe('feed integration', () => {
     expect(result.status).toMatchObject({ label: 'All sources live', stale: false });
   });
 
-  it('ignores a legacy Today topic and preserves source-owned topic filters', async () => {
+  it('ignores legacy Code topics and preserves GitHub Trending order in Today', async () => {
     const fetchMock = vi.fn(async (url) => {
       const value = `${url}`;
       if (value.includes('github.com/trending')) return response(trendingHtml, { type: 'text/html' });
@@ -236,9 +210,8 @@ describe('feed integration', () => {
     });
 
     expect(result.cards.map(({ title }) => title)).toEqual(expect.arrayContaining([
-      'signal-org/eval-workbench', 'owner/model', 'owner/dataset',
+      'example-labs/agent-kit', 'signal-org/eval-workbench', 'owner/model', 'owner/dataset',
     ]));
-    expect(result.cards.map(({ title }) => title)).not.toContain('example-labs/agent-kit');
   });
 
   it('composes custom Today lanes, alternates papers, and replaces hidden cards', () => {

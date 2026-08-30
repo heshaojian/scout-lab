@@ -25,7 +25,7 @@ import { getCache, getStaleCache, setCache } from './storage.js';
 
 const REQUEST_TIMEOUT = 10_000;
 const pendingRequests = new Map();
-export const GITHUB_TRENDING_SOURCE_REVISION = 'github-trending-v2';
+export const GITHUB_TRENDING_SOURCE_REVISION = 'github-trending-v3';
 
 const fallbackCards = {
   models: [{
@@ -85,8 +85,7 @@ const deduplicate = (key, task) => {
 const fetchCode = async (filters) => {
   const request = buildGithubRequest(filters);
   const html = await fetchText(resolveGithubRequestUrl(request), { headers: { Accept: 'text/html' } });
-  const sourceCards = ensureTrendingCards(parseGithubTrending(html, filters.time));
-  const cards = sourceCards.filter((card) => matchesTopic(card, filters.topic));
+  const cards = ensureTrendingCards(parseGithubTrending(html, filters.time));
   return {
     cards,
     status: {
@@ -95,6 +94,7 @@ const fetchCode = async (filters) => {
       unavailable: false,
       sourceRevision: GITHUB_TRENDING_SOURCE_REVISION,
       sourceUrl: request.url,
+      updatedAt: new Date().toISOString(),
     },
   };
 };

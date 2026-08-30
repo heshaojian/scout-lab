@@ -165,6 +165,13 @@ export const renderSourceUnavailable = ({ url }) => {
   `;
 };
 
+export const renderSourceLink = ({ url, label = 'Open source' }) => {
+  const sourceUrl = validateSourceUrl(url, 'github');
+  return sourceUrl
+    ? `<a class="feed-source-link" data-open-link href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`
+    : '';
+};
+
 export const updateSearchResults = (root, {
   gridHtml,
   countLabel,

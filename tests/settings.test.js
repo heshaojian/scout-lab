@@ -18,7 +18,7 @@ describe('settings schema', () => {
 
     expect(settings.version).toBe(3);
     expect(settings.selectedSection).toBe('models');
-    expect(settings.filters.code).toMatchObject({ language: 'python', topic: 'rag' });
+    expect(settings.filters.code).toEqual({ time: 'day', spokenLanguage: 'all', language: 'python' });
     expect(settings.filters.models.topic).toBe('rag');
     expect(settings.filterDefaults.code.language).toBe('all');
     expect(settings.preferences).toEqual(DEFAULT_PREFERENCES);

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const root = process.cwd();
 const outputDirectory = resolve(root, 'dist');
-const outputName = 'scout-lab-1.0.1.zip';
+const outputName = 'scout-lab-1.0.2.zip';
 const outputPath = resolve(outputDirectory, outputName);
 
 const walk = async (directory) => {

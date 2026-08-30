@@ -4,6 +4,7 @@ import {
   renderCard,
   renderEmptyState,
   renderFilters,
+  renderSourceLink,
   renderSourceUnavailable,
   updateSearchResults,
 } from '../src/ui/render.js';
@@ -80,8 +81,9 @@ describe('shared workbench renderer', () => {
     const html = renderFilters(WORKBENCHES.code, WORKBENCHES.code.defaults);
     document.body.innerHTML = html;
 
-    expect(document.querySelectorAll('.segment, .control')).toHaveLength(4);
+    expect(document.querySelectorAll('.segment, .control')).toHaveLength(3);
     expect(document.querySelector('[aria-label="Mode"]')).toBeNull();
+    expect(document.querySelector('[aria-label="AI topic"]')).toBeNull();
     const spokenLanguage = document.querySelector('[aria-label="Spoken language"]');
     expect(spokenLanguage).toBeTruthy();
     expect([...spokenLanguage.options].map(({ value }) => value)).toEqual([
@@ -243,5 +245,15 @@ describe('shared workbench renderer', () => {
     expect(document.body.textContent).toContain('GitHub Trending is unavailable');
     expect(document.querySelector('[data-command="refresh"]')?.textContent).toContain('Retry');
     expect(document.querySelector('a')?.href).toBe('https://github.com/trending/python?since=weekly&spoken_language_code=zh');
+  });
+
+  it('renders only validated GitHub feed source links', () => {
+    document.body.innerHTML = renderSourceLink({
+      url: 'https://github.com/trending?since=daily',
+      label: 'Open on GitHub',
+    });
+    expect(document.querySelector('a')?.href).toBe('https://github.com/trending?since=daily');
+    expect(document.querySelector('a')?.rel).toContain('noopener');
+    expect(renderSourceLink({ url: 'javascript:alert(1)', label: 'Unsafe' })).toBe('');
   });
 });

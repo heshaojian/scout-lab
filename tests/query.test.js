@@ -27,7 +27,7 @@ describe('workbench query builders', () => {
     first.code.language = 'python';
 
     expect(second.code.language).toBe('all');
-    expect(second.code).toEqual({ time: 'week', spokenLanguage: 'all', language: 'all', topic: 'all' });
+    expect(second.code).toEqual({ time: 'day', spokenLanguage: 'all', language: 'all' });
     expect(second.today).toEqual({});
     expect(Object.keys(second)).toEqual(['today', 'code', 'models', 'datasets', 'papers', 'library']);
   });
@@ -42,12 +42,12 @@ describe('workbench query builders', () => {
       time: 'month',
       language: 'python',
       topic: 'agents',
-    })).toEqual({ time: 'month', spokenLanguage: 'all', language: 'python', topic: 'agents' });
+    })).toEqual({ time: 'month', spokenLanguage: 'all', language: 'python' });
 
     expect(normalizeWorkbenchFilters('code', {
       spokenLanguage: 'unsupported',
       time: 'day',
-    })).toEqual({ time: 'day', spokenLanguage: 'all', language: 'all', topic: 'all' });
+    })).toEqual({ time: 'day', spokenLanguage: 'all', language: 'all' });
   });
 
   it('serializes query state with stable key ordering', () => {

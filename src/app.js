@@ -6,10 +6,10 @@ import {
   mergeBackupData,
   parseBackup,
   summarizeBackup,
-} from './services/backup.js?v=1.0.1';
-import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=1.0.1';
-import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.1';
-import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.1';
+} from './services/backup.js?v=1.0.2';
+import { fetchSection, GITHUB_TRENDING_SOURCE_REVISION } from './services/feeds.js?v=1.0.2';
+import { openInBackground, shouldOpenInBackground } from './services/linkOpening.js?v=1.0.2';
+import { ensureCurrentDataSchema } from './services/dataReset.js?v=1.0.2';
 import {
   applyDurableData,
   getDurableData,
@@ -29,19 +29,20 @@ import {
   setSnapshot,
   setUserItemState,
   setWorkbenchFilters,
-} from './services/storage.js?v=1.0.1';
-import { getLibraryCards } from './services/library.js?v=1.0.1';
-import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.1';
+} from './services/storage.js?v=1.0.2';
+import { getLibraryCards } from './services/library.js?v=1.0.2';
+import { isValidTodayMix, resolveStartupSection } from './settings.js?v=1.0.2';
 import {
   escapeHtml,
   renderCard,
   renderEmptyState,
   renderFilters,
   renderLibraryEmptyState,
+  renderSourceLink,
   renderSourceUnavailable,
   updateSearchResults,
-} from './ui/render.js?v=1.0.1';
-import { renderSettingsDrawer } from './ui/settings.js?v=1.0.1';
+} from './ui/render.js?v=1.0.2';
+import { renderSettingsDrawer } from './ui/settings.js?v=1.0.2';
 import { getWorkbench, SECTION_ORDER, TOPICS, WORKBENCHES } from './workbenches.js';
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -156,8 +157,18 @@ const statusMessage = () => {
   if (state.loading && state.cards.length) return `Refreshing ${state.status.label || 'saved results'}`;
   if (state.loading) return `Loading ${activeWorkbench().label.toLowerCase()}`;
   if (state.status.message) return state.status.message;
+  if (state.selectedSection === 'code' && state.status.updatedAt) {
+    const updatedAt = new Date(state.status.updatedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    return `${state.status.label || 'GitHub Trending'} · Live · Updated ${updatedAt}`;
+  }
   return state.status.label || 'Ready';
 };
+
+const statusSourceHtml = () => (
+  state.selectedSection === 'code' && !state.status.unavailable
+    ? renderSourceLink({ url: state.status.sourceUrl, label: 'Open on GitHub' })
+    : ''
+);
 
 const cardsHtml = (filters, cards) => {
   if (cards.length) {
@@ -174,9 +185,7 @@ const cardsHtml = (filters, cards) => {
   if (state.selectedSection === 'code' && state.status.unavailable) {
     return renderSourceUnavailable({ url: state.status.sourceUrl });
   }
-  return renderEmptyState(filters, {
-    clearTopic: state.selectedSection === 'code' && filters.topic !== 'all',
-  });
+  return renderEmptyState(filters);
 };
 
 const visibleCountLabel = (cards) => (
@@ -240,7 +249,7 @@ const render = () => {
         ` : ''}
 
         <div class="feed-status" aria-live="polite">
-          <span>${escapeHtml(statusMessage())}</span>
+          <span>${escapeHtml(statusMessage())}${statusSourceHtml()}</span>
           <span class="feed-count">${visibleCountLabel(cards)}</span>
         </div>
 
@@ -313,7 +322,7 @@ const load = async ({ force = false, clear = false } = {}) => {
   }
 
   const result = await fetchSection(section, filters, {
-    force,
+    force: force || section === 'code',
     allFilters: state.filters,
     todayMix: state.settings.preferences.todayMix,
     userState: state.userState,

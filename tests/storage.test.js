@@ -26,7 +26,7 @@ beforeEach(() => {
 });
 
 describe('query-aware storage', () => {
-  it('migrates the legacy topic into every topic-aware workbench', () => {
+  it('migrates the legacy topic only into topic-aware workbenches', () => {
     localStorage.setItem('scout-lab:settings', JSON.stringify({
       selectedSection: 'models',
       selectedTopic: 'rag',
@@ -35,7 +35,7 @@ describe('query-aware storage', () => {
     const settings = getSettings();
 
     expect(settings.selectedSection).toBe('models');
-    expect(settings.filters.code.topic).toBe('rag');
+    expect(settings.filters.code).not.toHaveProperty('topic');
     expect(settings.filters.models.topic).toBe('rag');
     expect(settings.filters.papers.topic).toBe('rag');
   });

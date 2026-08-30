@@ -15,7 +15,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test('Code renders the exact Trending order and four source filters', async ({ page }) => {
+test('Code renders the exact Trending order and three GitHub-native filters', async ({ page }) => {
   let apiCalls = 0;
   await page.route('**/__scout/github-trending**', (route) => route.fulfill({
     status: 200,
@@ -34,13 +34,19 @@ test('Code renders the exact Trending order and four source filters', async ({ p
   await expect(page.getByLabel('Time range')).toBeVisible();
   await expect(page.getByLabel('Spoken language')).toBeVisible();
   await expect(page.getByLabel('Language', { exact: true })).toBeVisible();
-  await expect(page.getByLabel('AI topic')).toBeVisible();
+  await expect(page.getByLabel('AI topic')).toHaveCount(0);
+  await expect(page.getByLabel('Time range')).toHaveValue('day');
   await expect(page.locator('.grid .card h3')).toHaveText([
     'example-labs/agent-kit',
     'signal-org/eval-workbench',
   ]);
   await expect(page.locator('.grid .card .metric')).toHaveText(['+373', '+120']);
   await expect(page.locator('.feed-status')).toContainText('GitHub Trending');
+  await expect(page.locator('.feed-status')).toContainText('Live');
+  await expect(page.getByRole('link', { name: 'Open on GitHub' })).toHaveAttribute(
+    'href',
+    'https://github.com/trending?since=daily',
+  );
   expect(apiCalls).toBe(0);
 });
 
@@ -79,14 +85,14 @@ test('Code shows an honest unavailable state and never requests Search', async (
   await expect(page.getByRole('button', { name: 'Retry' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Open GitHub Trending' })).toHaveAttribute(
     'href',
-    'https://github.com/trending?since=weekly',
+    'https://github.com/trending?since=daily',
   );
   expect(apiCalls).toBe(0);
 });
 
 test('Code ignores a legacy Search-backed cache entry', async ({ page }) => {
   await page.addInitScript(() => {
-    const query = '{"filters":{"language":"all","time":"week","topic":"all"},"section":"code"}';
+    const query = '{"filters":{"language":"all","spokenLanguage":"all","time":"day"},"section":"code"}';
     localStorage.setItem(`scout-lab:cache:v4:${query}`, JSON.stringify({
       cards: [{
         id: 'github:old/search-result',
@@ -114,6 +120,52 @@ test('Code ignores a legacy Search-backed cache entry', async ({ page }) => {
     'example-labs/agent-kit',
     'signal-org/eval-workbench',
   ]);
+});
+
+test('Code bypasses a current completed cache entry on startup', async ({ page }) => {
+  let requests = 0;
+  await page.addInitScript(() => {
+    const query = '{"filters":{"language":"all","spokenLanguage":"all","time":"day"},"section":"code","sourceRevision":"github-trending-v3"}';
+    localStorage.setItem(`scout-lab:cache:v4:${query}`, JSON.stringify({
+      cards: [{
+        id: 'github:cached/repository',
+        source: 'github',
+        section: 'code',
+        type: 'Code',
+        title: 'cached/repository',
+        url: 'https://github.com/cached/repository',
+      }],
+      status: { label: 'GitHub Trending', sourceRevision: 'github-trending-v3' },
+      expiresAt: Date.now() + 60_000,
+      savedAt: new Date().toISOString(),
+    }));
+  });
+  await page.route('**/__scout/github-trending**', (route) => {
+    requests += 1;
+    return route.fulfill({ status: 200, contentType: 'text/html', body: trendingHtml });
+  });
+
+  await page.goto('/newtab.html');
+
+  await expect(page.getByRole('heading', { name: 'cached/repository' })).toHaveCount(0);
+  await expect(page.locator('.grid .card h3')).toHaveText([
+    'example-labs/agent-kit',
+    'signal-org/eval-workbench',
+  ]);
+  expect(requests).toBe(1);
+});
+
+test('Code requests live data again when refreshed', async ({ page }) => {
+  let requests = 0;
+  await page.route('**/__scout/github-trending**', (route) => {
+    requests += 1;
+    return route.fulfill({ status: 200, contentType: 'text/html', body: trendingHtml });
+  });
+
+  await page.goto('/newtab.html');
+  await expect(page.locator('.grid .card')).toHaveCount(2);
+  await page.getByRole('button', { name: 'Refresh' }).click();
+  await expect.poll(() => requests).toBe(2);
 });
 
 test('Code filters and cards remain usable on mobile', async ({ page }) => {
