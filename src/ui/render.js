@@ -92,11 +92,20 @@ const renderSegment = (control, value) => `
   </div>
 `;
 
+const renderSelectOptions = (options, value) => options.map((item, index) => {
+  const optionHtml = `<option value="${escapeHtml(item.value)}" ${item.value === value ? 'selected' : ''}>${escapeHtml(item.label)}</option>`;
+  if (!item.group) return optionHtml;
+
+  const opensGroup = options[index - 1]?.group !== item.group;
+  const closesGroup = options[index + 1]?.group !== item.group;
+  return `${opensGroup ? `<optgroup label="${escapeHtml(item.group)}">` : ''}${optionHtml}${closesGroup ? '</optgroup>' : ''}`;
+}).join('');
+
 const renderSelect = (control, value) => `
   <label class="control-wrap">
     <span class="sr-only">${escapeHtml(control.label)}</span>
     <select class="control" data-filter="${escapeHtml(control.id)}" aria-label="${escapeHtml(control.label)}">
-      ${control.options.map((item) => `<option value="${escapeHtml(item.value)}" ${item.value === value ? 'selected' : ''}>${escapeHtml(item.label)}</option>`).join('')}
+      ${renderSelectOptions(control.options, value)}
     </select>
   </label>
 `;

@@ -35,6 +35,8 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 - [ ] In the unpacked Chrome extension, Code loads GitHub Trending directly without the local preview server or a CORS/CSP error.
 - [ ] Code cards show repository identity, description, language, total stars, period stars, and destination link.
 - [ ] Models exposes the seven Hugging Face sort choices in source order and each returns the expected ranking.
+- [ ] Models Task exposes all 52 model-visible Hugging Face tasks under Multimodal, Natural Language Processing, Audio, Computer Vision, Reinforcement Learning, Tabular, and Other groups.
+- [ ] Selecting a task from each group loads matching results, while All tasks removes the pipeline restriction.
 - [ ] Models task and parameter-size filters, Base models only, and Inference available work independently and together.
 - [ ] Models More filters supports library or format, license, access, compatible app, and updated date without viewport overflow.
 - [ ] Quantizations, fine-tunes, adapters, and merges are grouped beneath the base model, and every variant link opens the matching Hugging Face page.

@@ -45,7 +45,7 @@ The first row contains the daily-use controls in this order:
 - Inference available
 - More filters
 
-The task menu covers common Hugging Face model tasks, including text generation, image/text tasks, video, speech, and feature extraction.
+The task menu covers every Hugging Face pipeline task that is visible in the Models filter. Native modality groups keep the complete taxonomy scannable while preserving exact `pipeline_tag` values.
 
 **More filters** is a native disclosure containing independent selectors for:
 

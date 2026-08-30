@@ -106,6 +106,53 @@ describe('shared workbench renderer', () => {
     ]);
   });
 
+  it('renders every Hugging Face model-visible task in modality groups', () => {
+    document.body.innerHTML = renderFilters(WORKBENCHES.models, WORKBENCHES.models.defaults);
+
+    const task = document.querySelector('[aria-label="Task"]');
+    const expectedByGroup = {
+      Multimodal: [
+        'audio-text-to-text', 'image-text-to-text', 'image-text-to-image', 'image-text-to-video',
+        'visual-question-answering', 'document-question-answering', 'video-text-to-text',
+        'visual-document-retrieval', 'any-to-any',
+      ],
+      'Natural Language Processing': [
+        'text-classification', 'token-classification', 'table-question-answering',
+        'question-answering', 'zero-shot-classification', 'translation', 'summarization',
+        'feature-extraction', 'text-generation', 'fill-mask', 'sentence-similarity', 'text-ranking',
+      ],
+      Audio: [
+        'text-to-speech', 'text-to-audio', 'automatic-speech-recognition', 'audio-to-audio',
+        'audio-classification', 'voice-activity-detection',
+      ],
+      'Computer Vision': [
+        'depth-estimation', 'image-classification', 'object-detection', 'image-segmentation',
+        'text-to-image', 'image-to-text', 'image-to-image', 'image-to-video',
+        'unconditional-image-generation', 'video-classification', 'text-to-video',
+        'zero-shot-image-classification', 'mask-generation', 'zero-shot-object-detection',
+        'text-to-3d', 'image-to-3d', 'image-feature-extraction', 'keypoint-detection', 'video-to-video',
+      ],
+      'Reinforcement Learning': ['reinforcement-learning', 'robotics'],
+      Tabular: ['tabular-classification', 'tabular-regression', 'time-series-forecasting'],
+      Other: ['graph-ml'],
+    };
+
+    expect([...task.children].filter(({ tagName }) => tagName === 'OPTION').map(({ value }) => value)).toEqual(['all']);
+    expect(Object.fromEntries([...task.querySelectorAll('optgroup')].map((group) => [
+      group.label,
+      [...group.querySelectorAll('option')].map(({ value }) => value),
+    ]))).toEqual(expectedByGroup);
+    expect(task.querySelectorAll('optgroup option')).toHaveLength(52);
+    const taskValues = [...task.options].map(({ value }) => value);
+    for (const hiddenTask of ['tabular-to-text', 'table-to-text', 'multiple-choice', 'text-retrieval', 'other']) {
+      expect(taskValues).not.toContain(hiddenTask);
+    }
+    expect(task.querySelector('option[value="fill-mask"]')?.textContent).toBe('Fill-Mask');
+    expect(task.querySelector('option[value="automatic-speech-recognition"]')?.textContent)
+      .toBe('Automatic Speech Recognition');
+    expect(task.querySelector('option[value="graph-ml"]')?.textContent).toBe('Graph Machine Learning');
+  });
+
   it('renders validated related-model links inside a collapsed family list', () => {
     document.body.innerHTML = renderCard({
       ...baseCard,

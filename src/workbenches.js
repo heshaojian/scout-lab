@@ -11,7 +11,70 @@ const control = (id, label, options, type = 'select', placement = 'primary') => 
   id, label, options, type, placement,
 });
 
-const option = (value, label) => ({ value, label });
+const option = (value, label, group) => ({ value, label, ...(group ? { group } : {}) });
+
+export const MODEL_TASK_OPTIONS = [
+  option('all', 'All tasks'),
+
+  option('audio-text-to-text', 'Audio-Text-to-Text', 'Multimodal'),
+  option('image-text-to-text', 'Image-Text-to-Text', 'Multimodal'),
+  option('image-text-to-image', 'Image-Text-to-Image', 'Multimodal'),
+  option('image-text-to-video', 'Image-Text-to-Video', 'Multimodal'),
+  option('visual-question-answering', 'Visual Question Answering', 'Multimodal'),
+  option('document-question-answering', 'Document Question Answering', 'Multimodal'),
+  option('video-text-to-text', 'Video-Text-to-Text', 'Multimodal'),
+  option('visual-document-retrieval', 'Visual Document Retrieval', 'Multimodal'),
+  option('any-to-any', 'Any-to-Any', 'Multimodal'),
+
+  option('text-classification', 'Text Classification', 'Natural Language Processing'),
+  option('token-classification', 'Token Classification', 'Natural Language Processing'),
+  option('table-question-answering', 'Table Question Answering', 'Natural Language Processing'),
+  option('question-answering', 'Question Answering', 'Natural Language Processing'),
+  option('zero-shot-classification', 'Zero-Shot Classification', 'Natural Language Processing'),
+  option('translation', 'Translation', 'Natural Language Processing'),
+  option('summarization', 'Summarization', 'Natural Language Processing'),
+  option('feature-extraction', 'Feature Extraction', 'Natural Language Processing'),
+  option('text-generation', 'Text Generation', 'Natural Language Processing'),
+  option('fill-mask', 'Fill-Mask', 'Natural Language Processing'),
+  option('sentence-similarity', 'Sentence Similarity', 'Natural Language Processing'),
+  option('text-ranking', 'Text Ranking', 'Natural Language Processing'),
+
+  option('text-to-speech', 'Text-to-Speech', 'Audio'),
+  option('text-to-audio', 'Text-to-Audio', 'Audio'),
+  option('automatic-speech-recognition', 'Automatic Speech Recognition', 'Audio'),
+  option('audio-to-audio', 'Audio-to-Audio', 'Audio'),
+  option('audio-classification', 'Audio Classification', 'Audio'),
+  option('voice-activity-detection', 'Voice Activity Detection', 'Audio'),
+
+  option('depth-estimation', 'Depth Estimation', 'Computer Vision'),
+  option('image-classification', 'Image Classification', 'Computer Vision'),
+  option('object-detection', 'Object Detection', 'Computer Vision'),
+  option('image-segmentation', 'Image Segmentation', 'Computer Vision'),
+  option('text-to-image', 'Text-to-Image', 'Computer Vision'),
+  option('image-to-text', 'Image-to-Text', 'Computer Vision'),
+  option('image-to-image', 'Image-to-Image', 'Computer Vision'),
+  option('image-to-video', 'Image-to-Video', 'Computer Vision'),
+  option('unconditional-image-generation', 'Unconditional Image Generation', 'Computer Vision'),
+  option('video-classification', 'Video Classification', 'Computer Vision'),
+  option('text-to-video', 'Text-to-Video', 'Computer Vision'),
+  option('zero-shot-image-classification', 'Zero-Shot Image Classification', 'Computer Vision'),
+  option('mask-generation', 'Mask Generation', 'Computer Vision'),
+  option('zero-shot-object-detection', 'Zero-Shot Object Detection', 'Computer Vision'),
+  option('text-to-3d', 'Text-to-3D', 'Computer Vision'),
+  option('image-to-3d', 'Image-to-3D', 'Computer Vision'),
+  option('image-feature-extraction', 'Image Feature Extraction', 'Computer Vision'),
+  option('keypoint-detection', 'Keypoint Detection', 'Computer Vision'),
+  option('video-to-video', 'Video-to-Video', 'Computer Vision'),
+
+  option('reinforcement-learning', 'Reinforcement Learning', 'Reinforcement Learning'),
+  option('robotics', 'Robotics', 'Reinforcement Learning'),
+
+  option('tabular-classification', 'Tabular Classification', 'Tabular'),
+  option('tabular-regression', 'Tabular Regression', 'Tabular'),
+  option('time-series-forecasting', 'Time Series Forecasting', 'Tabular'),
+
+  option('graph-ml', 'Graph Machine Learning', 'Other'),
+];
 
 export const SPOKEN_LANGUAGE_OPTIONS = [
   option('all', 'Any spoken language'),
@@ -94,19 +157,7 @@ export const WORKBENCHES = {
         option('most-parameters', 'Most parameters'),
         option('least-parameters', 'Least parameters'),
       ]),
-      control('task', 'Task', [
-        option('all', 'All tasks'),
-        option('text-generation', 'Text generation'),
-        option('any-to-any', 'Any-to-any'),
-        option('image-text-to-text', 'Image-text-to-text'),
-        option('image-to-text', 'Image-to-text'),
-        option('image-to-image', 'Image-to-image'),
-        option('text-to-image', 'Text-to-image'),
-        option('text-to-video', 'Text-to-video'),
-        option('text-to-speech', 'Text-to-speech'),
-        option('feature-extraction', 'Feature extraction'),
-        option('automatic-speech-recognition', 'Speech recognition'),
-      ]),
+      control('task', 'Task', MODEL_TASK_OPTIONS),
       control('size', 'Parameter size', [
         option('any', 'Any size'),
         option('under-1b', '<1B'),

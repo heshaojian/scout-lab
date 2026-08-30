@@ -108,6 +108,31 @@ test('Models aligns sorting, filters, metadata, and family grouping with Hugging
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
+test('every grouped Models task sends its exact Hugging Face pipeline tag', async ({ page }) => {
+  const requests = [];
+  await page.route('https://huggingface.co/api/models**', (route) => {
+    requests.push(new URL(route.request().url()));
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(models) });
+  });
+
+  await page.goto('/newtab.html');
+  await expect.poll(() => requests.length).toBeGreaterThan(0);
+  expect(requests[0].searchParams.has('pipeline_tag')).toBe(false);
+
+  const taskValues = await page.getByLabel('Task').locator('optgroup option').evaluateAll((options) => (
+    options.map(({ value }) => value)
+  ));
+  expect(taskValues).toHaveLength(52);
+
+  for (const task of taskValues) {
+    await page.getByLabel('Task').selectOption(task);
+    expect(requests.at(-1).searchParams.get('pipeline_tag')).toBe(task);
+  }
+
+  await page.getByLabel('Task').selectOption('all');
+  await expect(page.getByLabel('Task')).toHaveValue('all');
+});
+
 test('Models daily actions, saved defaults, reset, search, and mobile layout remain usable', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route('https://huggingface.co/api/models**', (route) => route.fulfill({
