@@ -15,6 +15,7 @@ Tests are part of the repository and are release gates. Product behavior must no
 | Real-browser Code parity and failure states | `tests/e2e/code-results.spec.js` |
 | Real-browser Models sorting, filters, grouping, links, actions, and mobile layout | `tests/e2e/models-workbench.spec.js` |
 | Real-browser Datasets, Papers, and Learn source and interaction flows | `tests/e2e/discovery-workbenches.spec.js` |
+| Today fixed composition without topic/filter chrome | `tests/feeds.test.js`, `tests/ui.test.js`, `tests/e2e/reading-comfort.spec.js` |
 | Reading typography, density, themes, and responsive grid | `tests/e2e/reading-comfort.spec.js` |
 | Foreground and background link opening | `tests/linkOpening.test.js` |
 | GitHub, Hugging Face, and arXiv normalization | `tests/normalizers.test.js` |

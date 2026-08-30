@@ -222,9 +222,11 @@ const render = () => {
           </div>
         </header>
 
-        <section class="filters" aria-label="${escapeHtml(workbench.label)} filters">
-          ${renderFilters(workbench, filters)}
-        </section>
+        ${workbench.controls.length ? `
+          <section class="filters" aria-label="${escapeHtml(workbench.label)} filters">
+            ${renderFilters(workbench, filters)}
+          </section>
+        ` : ''}
 
         <div class="feed-status" aria-live="polite">
           <span>${escapeHtml(statusMessage())}</span>

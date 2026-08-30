@@ -200,3 +200,15 @@ test('all workbenches retain shared reading type and source-specific controls', 
   await progress.selectOption('in-progress');
   await expect(progress).toHaveValue('in-progress');
 });
+
+test('Today is a fixed briefing without topic or filter chrome', async ({ page }) => {
+  await page.goto('/newtab.html');
+  await page.getByRole('button', { name: /Today/ }).click();
+
+  await expect(page.getByRole('heading', { name: "Today's queue" })).toBeVisible();
+  await expect(page.getByLabel('Topic')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Today filters' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Reset filters' })).toHaveCount(0);
+  await expect(page.getByLabel('Search this tab')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Refresh' })).toBeVisible();
+});

@@ -232,6 +232,30 @@ describe('feed integration', () => {
     expect(result.status).toMatchObject({ label: 'All sources live', stale: false });
   });
 
+  it('ignores a legacy Today topic and preserves source-owned topic filters', async () => {
+    const fetchMock = vi.fn(async (url) => {
+      const value = `${url}`;
+      if (value.includes('github.com/trending')) return response(trendingHtml, { type: 'text/html' });
+      if (value.includes('/api/models')) return response([{ id: 'owner/model', downloads: 10, likes: 2, trendingScore: 3, tags: [] }]);
+      if (value.includes('/api/datasets')) return response([{ id: 'owner/dataset', downloads: 20, likes: 4, trendingScore: 5, tags: [] }]);
+      if (value.includes('/api/daily_papers')) return response([{ paper: { id: '2608.10000', title: 'Paper', summary: 'Summary', upvotes: 6, authors: [] }, numComments: 1 }]);
+      if (value.includes('export.arxiv.org') || value.includes('/__scout/arxiv')) return response(arxivXml, { type: 'application/atom+xml' });
+      throw new Error(`Unexpected URL: ${value}`);
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const filters = createDefaultFilters();
+    filters.code = { ...filters.code, topic: 'evaluation' };
+
+    const result = await fetchSection('today', { topic: 'multimodal' }, {
+      force: true, allFilters: filters, learnProgress: {},
+    });
+
+    expect(result.cards.map(({ title }) => title)).toEqual(expect.arrayContaining([
+      'signal-org/eval-workbench', 'owner/model', 'owner/dataset',
+    ]));
+    expect(result.cards.map(({ title }) => title)).not.toContain('example-labs/agent-kit');
+  });
+
   it('composes custom Today lanes, alternates papers, and replaces hidden cards', () => {
     const card = (id, type) => ({ id, type });
     const result = composeTodayCards({

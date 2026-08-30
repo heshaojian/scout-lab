@@ -52,7 +52,7 @@ Sources: all configured sources
 
 Purpose: provide a concise daily briefing without inventing a cross-source popularity score.
 
-The briefing grid contains two code items, one model, one dataset, two papers, and the next learning item. Every item uses the same card structure as its source tab. Each source uses its saved default query.
+The briefing grid contains two code items, one model, one dataset, two papers, and the next learning item. Every item uses the same card structure as its source tab. Each source uses its own filter state. Today has no topic or filter bar; Search only narrows the already composed queue.
 
 ### Code
 

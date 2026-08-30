@@ -17,6 +17,7 @@ For theme or layout changes, repeat the affected cases with System, Light, and D
 ## Shell And Navigation
 
 - [ ] Today, Code, Models, Datasets, Papers, and Learn tabs open the correct workbench.
+- [ ] Today shows Search and Refresh without Topic, Reset filters, or an empty filter bar.
 - [ ] The active tab, page title, source label, filters, and grid update together.
 - [ ] Search filters the current cards and clearing search restores them.
 - [ ] Reset filters restores the saved defaults for the current workbench.

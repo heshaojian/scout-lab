@@ -40,7 +40,7 @@ The approved filtered-grid layout uses:
 
 ### Today
 
-The default section. It mixes a small cross-source queue in the same grid and card design used by every source tab.
+The default section. It mixes a small cross-source queue in the same grid and card design used by every source tab. It has Search and Refresh but no filter bar: topic exploration belongs to the individual source tabs.
 
 ### Code
 

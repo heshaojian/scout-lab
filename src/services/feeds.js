@@ -192,14 +192,14 @@ export const composeTodayCards = (lanes, mix, userState = {}) => {
   };
 };
 
-const fetchToday = async (filters, options) => {
+const fetchToday = async (_filters, options) => {
   const allFilters = options.allFilters || {};
   const sourceFilters = {
-    code: { ...getWorkbench('code').defaults, ...allFilters.code, topic: filters.topic },
-    models: { ...getWorkbench('models').defaults, ...allFilters.models, topic: filters.topic },
-    datasets: { ...getWorkbench('datasets').defaults, ...allFilters.datasets, topic: filters.topic },
-    community: { ...getWorkbench('papers').defaults, ...allFilters.papers, source: 'community', topic: filters.topic },
-    arxiv: { ...getWorkbench('papers').defaults, ...allFilters.papers, source: 'arxiv', sort: 'newest', topic: filters.topic },
+    code: { ...getWorkbench('code').defaults, ...allFilters.code },
+    models: { ...getWorkbench('models').defaults, ...allFilters.models },
+    datasets: { ...getWorkbench('datasets').defaults, ...allFilters.datasets },
+    community: { ...getWorkbench('papers').defaults, ...allFilters.papers, source: 'community' },
+    arxiv: { ...getWorkbench('papers').defaults, ...allFilters.papers, source: 'arxiv', sort: 'newest' },
     learn: { ...getWorkbench('learn').defaults, ...allFilters.learn },
   };
   const sharedOptions = { ...options, force: false };

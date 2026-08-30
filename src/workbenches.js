@@ -177,8 +177,8 @@ export const WORKBENCHES = {
     label: 'Today',
     title: "Today's queue",
     subtitle: 'A small cross-source queue using one consistent card design.',
-    defaults: { topic: 'all' },
-    controls: [control('topic', 'Topic', TOPICS)],
+    defaults: {},
+    controls: [],
     cacheTtl: 30 * 60 * 1000,
   },
   code: {

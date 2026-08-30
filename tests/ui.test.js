@@ -192,11 +192,8 @@ describe('shared workbench renderer', () => {
     expect(document.querySelector('.model-variants').textContent).not.toContain('<unsafe>');
   });
 
-  it('keeps Today composition in Settings instead of offering a filter-default command', () => {
-    document.body.innerHTML = renderFilters(WORKBENCHES.today, WORKBENCHES.today.defaults);
-
-    expect(document.querySelector('[data-command="save-filter-default"]')).toBeNull();
-    expect(document.querySelector('[data-command="reset-filters"]')).toBeTruthy();
+  it('renders no filter chrome for the fixed Today composition', () => {
+    expect(renderFilters(WORKBENCHES.today, WORKBENCHES.today.defaults)).toBe('');
   });
 
   it('renders paper PDF links, comments, favorites, and learning progress in shared slots', () => {

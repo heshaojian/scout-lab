@@ -132,6 +132,7 @@ const renderControl = (control, filters) => {
 };
 
 export const renderFilters = (workbench, filters) => {
+  if (!workbench.controls.length) return '';
   const visible = workbench.controls.filter(({ placement }) => placement !== 'advanced');
   const advanced = workbench.controls.filter(({ placement }) => placement === 'advanced');
   const activeAdvanced = advanced.filter(({ id }) => filters[id] !== workbench.defaults[id]).length;

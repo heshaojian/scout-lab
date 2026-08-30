@@ -28,7 +28,12 @@ describe('workbench query builders', () => {
 
     expect(second.code.language).toBe('all');
     expect(second.code).toEqual({ time: 'week', spokenLanguage: 'all', language: 'all', topic: 'all' });
+    expect(second.today).toEqual({});
     expect(Object.keys(second)).toEqual(['today', 'code', 'models', 'datasets', 'papers', 'learn']);
+  });
+
+  it('drops the removed legacy Today topic filter', () => {
+    expect(normalizeWorkbenchFilters('today', { topic: 'agents' })).toEqual({});
   });
 
   it('drops legacy Code modes while preserving supported filters', () => {
